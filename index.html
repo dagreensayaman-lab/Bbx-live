@@ -203,9 +203,18 @@ body.nosel{user-select:none;cursor:grabbing}
    ===================================================================== */
 
 // ⬇️ Coller ici la config Firebase (Realtime Database). null = mode test local.
-const FIREBASE_CONFIG = null;
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys",
+  authDomain: "bbx-live.firebaseapp.com",
+  databaseURL: "https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bbx-live",
+  storageBucket: "bbx-live.firebasestorage.app",
+  messagingSenderId: "559192276580",
+  appId: "1:559192276580:web:7820ed3825b8dc3add6971"
+};
 // Lien vers l'app Tabata perso (affiché à la fin du cours)
 const LIEN_TABATA_PERSO = '';
+const APP_VERSION = '1.1-firebase';
 
 /* ---------- utilitaires ---------- */
 const $ = s => document.querySelector(s);
@@ -410,7 +419,7 @@ const S = {
 function beatAt(st, t){ return st.running ? st.beat0 + (t - st.startAt) * st.bpm / 60000 : st.beat0; }
 
 /* ---------- synchronisation ---------- */
-function loadScript(src){ return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = ko; document.head.appendChild(s); }); }
+function loadScript(src){ return new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('script Firebase bloqué ou introuvable')); document.head.appendChild(s); setTimeout(() => ko(new Error('délai dépassé en chargeant Firebase')), 10000); }); }
 const Sync = {
   mode:FIREBASE_CONFIG ? 'firebase' : 'local', offset:0, connected:false, h:{ state:[], plan:[], parts:[] },
   on(ev, f){ this.h[ev].push(f); }, emit(ev, v){ this.h[ev].forEach(f => f(v)); },
@@ -418,7 +427,7 @@ const Sync = {
   async init(){
     if(this.mode === 'firebase'){
       try{ await this.initFB(); return; }
-      catch(e){ console.error(e); this.mode = 'local'; toast('Connexion en ligne impossible : mode test local'); }
+      catch(e){ console.error(e); this.fbError = (e && (e.message || e.type)) || 'chargement impossible'; this.mode = 'local'; toast('Connexion en ligne impossible : ' + this.fbError); }
     }
     this.initLocal();
   },
@@ -695,7 +704,9 @@ function segHTML(step, sg, b, ctx){
    ===================================================================== */
 function renderStatus(){
   const el = $('#status'); if(!el) return;
-  el.innerHTML = Sync.mode === 'local' ? `<span class="dot"></span>Mode test` : `<span class="dot${Sync.connected ? ' ok' : ''}"></span>${Sync.connected ? 'Connecté' : 'Connexion…'}`;
+  el.title = 'Version ' + APP_VERSION + (Sync.fbError ? ' · erreur : ' + Sync.fbError : '');
+  el.onclick = () => toast('Version ' + APP_VERSION + ' · ' + (Sync.mode === 'firebase' ? 'synchro en ligne' : Sync.fbError ? 'erreur : ' + Sync.fbError : 'pas de config Firebase (mode test)'));
+  el.innerHTML = Sync.fbError ? `<span class="dot" style="background:#ff5a6e"></span>Hors ligne` : Sync.mode === 'local' ? `<span class="dot"></span>Mode test` : `<span class="dot${Sync.connected ? ' ok' : ''}"></span>${Sync.connected ? 'Connecté' : 'Connexion…'}`;
 }
 const LOGO = `<div class="logo"><span class="p">B</span><span class="t">BX</span> <span class="k">LIVE</span></div>`;
 function studentJoin(){
