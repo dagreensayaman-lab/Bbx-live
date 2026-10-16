@@ -4628,6 +4628,7 @@ const RY = (() => {
     for(let k = k0; k <= k1; k++){
       const f = acPh < 0 ? (tpl[1000] ? 1000 : 1500) : (((k % 4) + 4) % 4 === acPh ? 1500 : 1000), T = tpl[f]; if(!T) continue;
       let s0 = at(k), bl = 0, bc = -1e9; for(let l = -3; l <= 3; l++){ const c = corr(T, s0 + l); if(c > bc){ bc = c; bl = l; } } s0 += bl;
+      if(bc < .35 * (T.E || (T.E = T.reduce((q, v, i) => i % 2 ? q : q + v * v, 0)))) continue; // pas de clic à cet endroit (avant le début / après la fin du clic)
       for(let i = 0; i < L; i++){ const j = s0 + i; if(j >= 0 && j < y.length) y[j] -= T[i]; }
     }
     return y;
@@ -4681,6 +4682,7 @@ const RY = (() => {
     const res = Math.min(.02, minSt / 8), cands = [];
     for(let phi = 0; phi < P; phi += res){
       if(c0b != null){ const r = (((phi - c0b) % minSt) + minSt) % minSt; if(Math.min(r, minSt - r) > dmax) continue; }
+      if(o.start != null){ const r = (((phi - o.start / spb) % P) + P) % P; if(Math.min(r, P - r) > dmax) continue; } // début de la phrase connu (exercice guidé)
       cands.push({ phi, s:score(phi) });
     }
     if(!cands.length) return null;
@@ -4693,7 +4695,8 @@ const RY = (() => {
     // affinage : on recentre sur les sons réussis
     if(best.hits.length >= 3 && c0b == null){ const dm = mean(best.hits.map(h => h.d)); best = assign(best.phi + dm / spb); }
     function assign(phi){
-      const b0 = beats[0], b1 = beats[beats.length - 1], inst = [];
+      // exercice guidé : on ne compte que les tours demandés (pas le décompte, pas après la fin)
+      const b0 = o.start != null ? o.start / spb : beats[0], b1 = o.start != null && o.cycles ? o.start / spb + o.cycles * P - minSt / 2 : beats[beats.length - 1], inst = [];
       for(let k = Math.floor((b0 - phi) / P) - 1; k <= Math.ceil((b1 - phi) / P); k++)
         ev.forEach(e => { const tb = phi + k * P + e.b, tl = tolS(e) / spb; if(tb >= b0 - tl && tb <= b1 + tl) inst.push({ e, k, tb }); });
       const pairs = [];
@@ -4713,7 +4716,7 @@ const RY = (() => {
     const cells = G.cells.map(c => { const h = best.hits.filter(x => x.e === c), m = best.miss.filter(x => x.e === c).length, x = best.extra.filter(z => z.cell === c).length, f = fam.bad.filter(z => z.e === c);
       return c.ev ? { h:h.length, m, x, r:h.length ? Math.round(mean(h.map(z => z.d)) * 1000) : 0, f:f.length, fh:f.length ? f[0].heard : '' } : { x }; });
     const nh = best.hits.length, nm = best.miss.length, nx = best.extra.length, ds = best.hits.map(h => h.d * 1000);
-    const cyc = Math.max(1, Math.round((ons[ons.length - 1].t - ons[0].t) / (P * spb)));
+    const cyc = o.cycles || Math.max(1, Math.round((ons[ons.length - 1].t - ons[0].t) / (P * spb)));
     return { v:V, pct:Math.round(100 * nh / Math.max(1, nh + nm + nx)), hits:nh, miss:nm, extra:nx, reg:Math.round(std(ds)), off, anc:c0b != null, sons:fam.pct, sep:+fam.sep.toFixed(2), conf:fam.bad.length,
       cells, cyc, phi:+(best.phi * spb).toFixed(3), _best:best };
   }
@@ -4766,7 +4769,11 @@ const RY = (() => {
         } }); } }
     const c0 = opt.c0 != null ? opt.c0 : clk.c0;
     let m = null;
-    if(opt.bpm && opt.pat && opt.pat.length) m = match(ons, opt.bpm, opt.pat, { c0, lat:opt.lat });
+    let start = opt.start != null ? opt.start : null;
+    if(start != null && opt.bpm && opt.pat){ const spb = 60 / opt.bpm, P = grid(opt.pat).P * spb;
+      if(c0 != null && opt.c0 == null) start = c0 + Math.round((start - c0) / spb) * spb; // calé sur le clic entendu
+      const end = start + (opt.cycles || 1) * P; ons = ons.filter(o => o.t > start - .2 && o.t < end + .2); }
+    if(opt.bpm && opt.pat && opt.pat.length) m = match(ons, opt.bpm, opt.pat, { c0, lat:opt.lat, start, cycles:opt.cycles });
     else if(opt.bpm && opt.libre && ons.length >= 3){ const tok = opt.son || 'X'; m = match(ons, opt.bpm, [{ div:2, tok:tok + ' ' + tok }], { c0, lat:opt.lat }); if(m){ m.libre = true; m.pct = Math.round(100 * m.hits / Math.max(1, m.hits + m.extra)); m.miss = 0; } }
     const q = quality(m ? m._best.hits.map(h => ({ o:h.o, k:h.e.tok })) : ons.map(o => ({ o, k:'?' })));
     const out = { v:V, n:ons.length, dur:+(x.length / sr).toFixed(1), clic:c0 != null, ms:Date.now() - t0, q };
