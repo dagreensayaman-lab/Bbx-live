@@ -4528,6 +4528,9 @@ const RY = (() => {
   const FAM = { grave:['B','P','Bf','Bm','Bo','Pu','Bh','Bb'], aigu:['Ts','T','S','Tss','Ch','Tk','St','H','Tch','Sh','Ss'], medium:['K','Pch','Pf','L','Kch','Psh','Ks','Kt','Kh','Ksh','Pff','Cl'] };
   const FAMOF = {}; Object.entries(FAM).forEach(([f, l]) => l.forEach(n => { FAMOF[n.toLowerCase()] = f; }));
   const FAM_LAB = { grave:'grave', aigu:'aigu', medium:'medium' };
+  // sons qui durent (inspirés, charleys ouverts, tout son noté avec ~)
+  const LONG = new Set(['k~', 'ts', 'ts~', 'th~', 'tss', 'sh', 's', 'ss', 'pf', 'psh']);
+  const isLong = tok => { const k = String(tok || '').toLowerCase(); return LONG.has(k) || k.endsWith('~'); };
   function famOf(tok){
     const t = String(tok || '').trim(); if(!t || t === '.' || t === '-') return null;
     const k = t.toLowerCase(); if(FAMOF[k]) return FAMOF[k];
@@ -4678,7 +4681,12 @@ const RY = (() => {
       let best = null; cs.forEach(([j, sh]) => { const d = pos - (evb[j] + sh); if(!best || Math.abs(d) < Math.abs(best.d)) best = { e:ev[j], d }; }); return best;
     };
     const c0b = o.c0 != null ? o.c0 / spb : null, dmax = .12 / spb;
-    const score = phi => { let s = 0; for(const b of beats){ const pos = ((b - phi) % P + P) % P, n = near(pos), tb = tolS(n.e) / spb; if(Math.abs(n.d) < tb) s += 1 - .5 * (n.d / tb) * (n.d / tb); else s -= .3; } return s; };
+    // un seul son compte par case attendue (le plus proche) ; les autres comptent comme « en trop »
+    const score = phi => { const bestW = new Map(); let s = 0, n0 = 0;
+      for(const b of beats){ const pos = ((b - phi) % P + P) % P, n = near(pos), tb = tolS(n.e) / spb;
+        if(Math.abs(n.d) < tb){ const key = Math.round((b - phi - n.d - n.e.b) / P) + ':' + n.e.i, w = 1 - .5 * (n.d / tb) * (n.d / tb), o = bestW.get(key); if(o == null) bestW.set(key, w); else { bestW.set(key, Math.max(o, w)); n0++; } }
+        else n0++; }
+      bestW.forEach(w => { s += w; }); return s - .3 * n0; };
     const res = Math.min(.02, minSt / 8), cands = [];
     for(let phi = 0; phi < P; phi += res){
       if(c0b != null){ const r = (((phi - c0b) % minSt) + minSt) % minSt; if(Math.min(r, minSt - r) > dmax) continue; }
@@ -4689,9 +4697,14 @@ const RY = (() => {
     const bestS = Math.max(...cands.map(c => c.s));
     // à égalité de placement (phrases répétitives), on garde celui où les familles de sons se séparent le mieux
     const tops = cands.filter(c => c.s >= bestS - .6).sort((a, b) => b.s - a.s), pick = [];
-    tops.forEach(c => { if(!pick.some(p => Math.abs(p.phi - c.phi) < minSt / 2 || Math.abs(Math.abs(p.phi - c.phi) - P) < minSt / 2)) pick.push(c); });
+    const sepB = Math.min(minSt / 2, .05 / spb); // deux calages à plus de 50 ms l'un de l'autre sont comparés (attaque / souffle d'un son long)
+    tops.forEach(c => { if(!pick.some(p => Math.abs(p.phi - c.phi) < sepB || Math.abs(Math.abs(p.phi - c.phi) - P) < sepB)) pick.push(c); });
     let best = null;
-    pick.slice(0, 8).forEach(c => { const r = assign(c.phi); r.sep = famSep(r); r.key = r.hits.length - .5 * (r.miss.length + r.extra.length) + .8 * r.sep; if(!best || r.key > best.key + 1e-9) best = r; });
+    pick.slice(0, 12).forEach(c => { const r = assign(c.phi); r.sep = famSep(r);
+      // un son long (attaque + souffle) : il faut caler la grille sur l'attaque, pas sur le souffle → pénalité si un « son en trop » précède de peu un son long réussi
+      const pre = r.extra.filter(x => r.hits.some(h => isLong(h.e.tok) && h.o.t > x.o.t && h.o.t - x.o.t < .16)).length;
+      const dSt = o.start != null ? Math.min(Math.abs((((c.phi - o.start / spb) % P) + P) % P), P - Math.abs((((c.phi - o.start / spb) % P) + P) % P)) / dmax : 0;
+      r.key = r.hits.length - .5 * (r.miss.length + r.extra.length) + .8 * r.sep - 1.2 * pre - .5 * dSt; if(!best || r.key > best.key + 1e-9) best = r; });
     // affinage : on recentre sur les sons réussis
     if(best.hits.length >= 3 && c0b == null){ const dm = mean(best.hits.map(h => h.d)); best = assign(best.phi + dm / spb); }
     function assign(phi){
@@ -4708,6 +4721,13 @@ const RY = (() => {
       const extra = ons.filter((_, j) => !uj.has(j)).map(x => { const pos = ((x.t / spb - phi) % P + P) % P; let c = G.cells[0], bd = 1e9; G.cells.forEach(cc => { const d = Math.min(Math.abs(pos - cc.b), P - Math.abs(pos - cc.b)); if(d < bd){ bd = d; c = cc; } }); return { o:x, cell:c }; });
       return { phi, hits, miss, extra };
     }
+    // Sons longs (inward K~, charleys ouverts Ts / Ts~ / Th~…) : le souffle qui suit l'attaque peut ressembler à une 2e attaque.
+    // Un « son en trop » qui arrive juste après un son long, avec le même timbre et pas plus fort, est la queue de ce son.
+    const tails = [];
+    best.extra = best.extra.filter(x => { const t = x.o.t;
+      const h = best.hits.filter(z => z.o.t < t && t - z.o.t < .4).sort((p, q) => q.o.t - p.o.t)[0]; if(!h || !isLong(h.e.tok)) return true;
+      const same = Math.abs(Math.log2(Math.max(60, x.o.c) / Math.max(60, h.o.c))) < 1 && x.o.db <= h.o.db + 1.5;
+      if(same){ tails.push(x); return false; } return true; });
     // décalage par rapport au clic (seulement si on a un repère exact)
     let off = null;
     if(c0b != null && best.hits.length >= 3){ const r = (((best.phi - c0b) % minSt) + minSt) % minSt, sh = (r > minSt / 2 ? r - minSt : r) * spb; off = Math.round((sh + median(best.hits.map(h => h.d)) - (o.lat || 0)) * 1000); }
@@ -4718,7 +4738,7 @@ const RY = (() => {
     const nh = best.hits.length, nm = best.miss.length, nx = best.extra.length, ds = best.hits.map(h => h.d * 1000);
     const cyc = o.cycles || Math.max(1, Math.round((ons[ons.length - 1].t - ons[0].t) / (P * spb)));
     return { v:V, pct:Math.round(100 * nh / Math.max(1, nh + nm + nx)), hits:nh, miss:nm, extra:nx, reg:Math.round(std(ds)), off, anc:c0b != null, sons:fam.pct, sep:+fam.sep.toFixed(2), conf:fam.bad.length,
-      cells, cyc, phi:+(best.phi * spb).toFixed(3), _best:best };
+      cells, cyc, queues:tails.length, phi:+(best.phi * spb).toFixed(3), _best:best };
   }
   function famVecs(hits){ return hits.filter(h => h.e.fam).map(h => ({ h, f:h.e.fam, v:[Math.log2(Math.max(60, h.o.c)), h.o.lo * 3, h.o.hi * 3] })); }
   function famStats(V){
@@ -4796,11 +4816,11 @@ const RY = (() => {
     else if(src && src.arrayBuffer) buf = await src.arrayBuffer();
     const AC = window.AudioContext || window.webkitAudioContext, c = ctx || new AC();
     const ab = await new Promise((ok, ko) => { const p = c.decodeAudioData(buf.slice ? buf.slice(0) : buf, ok, ko); if(p && p.then) p.then(ok, ko); });
-    const ch = ab.numberOfChannels, n = ab.length, x = new Float32Array(n);
-    for(let k = 0; k < ch; k++){ const d = ab.getChannelData(k); for(let i = 0; i < n; i++) x[i] += d[i] / ch; }
-    return { x, sr:ab.sampleRate };
+    const ch = ab.numberOfChannels, n = ab.length, x = new Float32Array(n), chans = [];
+    for(let k = 0; k < ch; k++){ const d = ab.getChannelData(k); chans.push(Float32Array.from(d)); for(let i = 0; i < n; i++) x[i] += d[i] / ch; }
+    return { x, sr:ab.sampleRate, chans };
   }
-  return { V, FAM, FAM_LAB, famOf, onsets, notch, features, findClicks, grid, match, analyze, compact, cellOf, decode, quality, fft };
+  return { V, FAM, FAM_LAB, famOf, isLong, onsets, notch, features, findClicks, grid, match, analyze, compact, cellOf, decode, quality, fft };
 })();
 /* ===== fin RYTHME ===== */
 // ---------- analyse rythmique des devoirs (élève avant l'envoi, prof à l'écoute) ----------
