@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Labo rythme</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#29AADC;--card:#fff;--ink:#17324a;--mut:#6b8396;--pink:#f58bb0;--cyan:#7fd6f0;--yel:#ffe27a;--vio:#b9a2f0;--ok:#3fbf6f;--mid:#f2b705;--low:#ef5b6e;--conf:#9b6bdf}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Nunito,system-ui,sans-serif;color:var(--ink)}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1{color:#fff;font-weight:900;margin:6px 0 2px;font-size:1.9rem;text-shadow:0 3px 0 rgba(0,0,0,.12)}.sub{color:#eaf8ff;margin:0 0 14px;font-weight:700}
+.card{background:var(--card);border-radius:20px;padding:14px 16px;margin:0 0 14px;box-shadow:0 5px 0 rgba(0,0,0,.08)}
+.card h2{margin:0 0 8px;font-size:1.15rem;font-weight:900}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.sp{flex:1}
+label{font-weight:700;font-size:.9rem}input,select{font:inherit;border:2px solid #d5e7f2;border-radius:12px;padding:6px 10px;background:#f7fcff}
+input[type=range]{padding:0}
+#tok{min-width:260px;flex:1;font-weight:800;letter-spacing:.5px}
+button{font:inherit;font-weight:800;border:0;border-radius:14px;padding:8px 14px;cursor:pointer;background:#eef6fb;color:var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+button:active{transform:translateY(2px);box-shadow:none}button:disabled{opacity:.5}
+.b-pink{background:var(--pink);color:#fff}.b-cyan{background:var(--cyan)}.b-yel{background:var(--yel)}.b-vio{background:var(--vio)}.big{font-size:1.15rem;padding:11px 20px}
+.small{font-size:.85rem}.muted{color:var(--mut)}
+.res{border-radius:14px;padding:9px 12px;font-size:1rem;border-left:6px solid var(--bg);background:#eef8fd}.res.ok{border-color:var(--ok);background:#eafaf0}.res.mid{border-color:var(--mid);background:#fff8e1}.res.low{border-color:var(--low);background:#fdecef}
+.res b.pc{font-size:1.6rem;font-weight:900;margin-right:6px}
+.grid{display:flex;flex-direction:column;gap:6px;margin:10px 0}.mes{display:flex;gap:10px;flex-wrap:wrap}.beat{display:flex;gap:3px;padding:3px;border-radius:10px;background:#f2f8fc}
+.tk{min-width:38px;text-align:center;border-radius:9px;padding:4px 6px;font-weight:900;background:var(--c,#cde);color:#fff;box-shadow:0 0 0 2px #fff,0 0 0 4px #ccc;position:relative}
+.tk.ok{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ok)}.tk.mid{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--mid)}.tk.low{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--low);opacity:.75}.tk.conf{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--conf)}
+.tk small{display:block;font-size:.62rem;font-weight:700;opacity:.95}
+.sil{min-width:38px;text-align:center;color:#9bb;font-weight:900;padding:4px 0}.sil.x{color:var(--low)}
+canvas{width:100%;height:190px;border-radius:12px;background:#0f2a3d;display:block}
+.tl{overflow-x:auto}.tl canvas{min-width:100%}
+table{border-collapse:collapse;width:100%;font-size:.82rem}th,td{padding:3px 6px;border-bottom:1px solid #e3eef5;text-align:right}th{color:var(--mut)}td:first-child,th:first-child{text-align:left}
+.tag{display:inline-block;border-radius:8px;padding:0 7px;font-weight:800;color:#fff}
+.fam-grave{background:#e0607e}.fam-medium{background:#8b6fd6}.fam-aigu{background:#2fb3d9}.fam-x{background:#9ab}
+.meter{height:12px;border-radius:8px;background:#e6f2f9;overflow:hidden;flex:1;min-width:120px}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fbf6f,#f2b705,#ef5b6e)}
+.count{font-size:3rem;font-weight:900;color:var(--pink);min-width:60px;text-align:center}
+.steps li{margin:3px 0}.pill{display:inline-block;background:#fff3c4;border-radius:10px;padding:1px 8px;font-weight:800}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:760px){.two{grid-template-columns:1fr}}
+details summary{cursor:pointer;font-weight:800}
+.leg span{margin-right:10px}
+.chead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.chead h1{margin:6px 0}.langs{display:flex;gap:4px}
+button.mini{padding:4px 10px;font-size:.85rem}
+.prog{display:flex;gap:5px;margin:0 0 12px}.prog i{flex:1;height:8px;border-radius:6px;background:rgba(255,255,255,.35)}.prog i.ok{background:#fff}.prog i.on{background:var(--yel)}
+.consent{max-height:46vh;overflow:auto;background:#f6fbfe;border:2px solid #d5e7f2;border-radius:14px;padding:4px 14px;margin:8px 0 12px;font-size:.92rem;line-height:1.45}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}.chip{display:inline-flex;align-items:center;gap:4px;border:2px solid #d5e7f2;border-radius:14px;padding:5px 11px;cursor:pointer;background:#f7fcff;font-weight:700}.chip.on{background:#d9f3fc;border-color:var(--bg)}.chip input{display:none}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:8px 0;font-weight:700}.chk input{margin-top:4px;transform:scale(1.25)}
+.cpar{background:#fff6dc;border-radius:14px;padding:8px 12px;margin:8px 0}
+.err{color:var(--low);font-weight:800;min-height:1.2em}
+.prise{border:2px solid #e3eef5;border-radius:16px;padding:10px 12px;margin:10px 0}.prise.fait{border-color:#bfe9cf;background:#f6fdf8}
+.cons{border-radius:12px;padding:7px 10px;margin:6px 0;background:#eafaf0;font-weight:700}.cons.warn{background:#fff1c2}
+.tgrid{display:flex;flex-direction:column;gap:3px;margin:6px 0;overflow-x:auto}.trow{display:flex;gap:3px;align-items:center;opacity:.8}.trow.now{opacity:1}
+.tlab{min-width:44px;font-size:.75rem;font-weight:800;color:var(--mut)}.trow.now .tlab{color:var(--pink)}
+.tc{flex:1 1 0;min-width:18px;max-width:38px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-weight:900;font-size:.8rem;color:#fff;background:var(--c);border:2px solid transparent}
+.tc[style*="transparent"]{color:#9bb;background:#f2f8fc}.tc.beat{margin-left:4px}
+.tc.sp{border-color:var(--low);box-shadow:0 0 0 2px #fff inset}.tc.sp.oubli{background:#fdecef!important;color:var(--low)}.tc.sp.trop{border-style:dashed}.tc.sp.swap{border-color:var(--conf)}
+.tc.cur{transform:scale(1.25);box-shadow:0 0 0 3px var(--yel)}
+.countbig{font-size:1.6rem;font-weight:900;color:var(--pink);margin:4px 0}
+.decl{margin-top:8px;background:#f2f8fc;border-radius:12px;padding:8px 10px}
+.bigtok{display:inline-block;min-width:46px;text-align:center;border-radius:10px;padding:4px 8px;color:#fff;background:var(--c)}
+.code{font-size:1.6rem;font-weight:900;letter-spacing:2px}
+.kpi{background:#f2f8fc;border-radius:14px;padding:6px 12px;text-align:center;font-size:.8rem}.kpi b{display:block;font-size:1.4rem}
+.adt td,.adt th{text-align:left}
+
+</style></head><body><div class="wrap">
+<div id="collect" hidden></div><div id="admin" hidden></div>
+<div id="labo">
+<h1>🧪 Labo rythme</h1>
+<p class="sub">Tester l'analyse automatique : est-ce que l'appli entend juste ? (BBX Classroom)</p>
+<div class="card" id="sharecard"></div>
+
+<div class="card">
+  <h2>1. La phrase à jouer</h2>
+  <div class="row">
+    <label>Phrase <input id="tok" value="B . K . B B K ." title="Un son par case, « . » = silence. Ex. : B . K . B B K ."></label>
+    <label>Cases par temps <select id="div"><option value="1">1 (noires)</option><option value="2" selected>2 (croches)</option><option value="4">4 (doubles)</option></select></label>
+    <label>BPM <input id="bpm" type="number" min="50" max="200" value="90" style="width:80px"></label>
+    <label>Tours <input id="cyc" type="number" min="1" max="16" value="4" style="width:64px"></label>
+  </div>
+  <div class="row small muted" style="margin-top:6px">Familles reconnues : <span class="tag fam-grave">grave</span> B, P, Bf… · <span class="tag fam-medium">medium</span> K, Pch, Pf, L… · <span class="tag fam-aigu">aigu</span> Ts, T, S… · <span id="famchk"></span></div>
+</div>
+
+<div class="two">
+<div class="card">
+  <h2>2. S'enregistrer</h2>
+  <div class="row"><label><input type="radio" name="mode" value="hp" checked> 🔊 Clic au haut-parleur</label><label><input type="radio" name="mode" value="casque"> 🎧 Casque</label></div>
+  <div class="small muted" id="modehelp"></div>
+  <div class="row" style="margin-top:8px"><button class="b-pink big" id="rec">● Enregistrer</button><div class="count" id="count"></div><div class="meter"><i id="lvl"></i></div></div>
+  <div class="small muted" style="margin-top:6px">1 mesure de décompte (4 clics), puis joue la phrase <span id="ntours">4</span> fois. L'enregistrement s'arrête tout seul.</div>
+  <div class="row" style="margin-top:10px"><button id="calib" class="b-yel">🎚 Mesurer la latence du micro</button><span class="small" id="latinfo"></span></div>
+</div>
+<div class="card">
+  <h2>3. Ou tester un fichier / un exemple</h2>
+  <div class="row"><label class="b-cyan" style="padding:8px 14px;border-radius:14px;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.12)">📂 Ouvrir un enregistrement<input type="file" id="file" accept="audio/*,video/webm" hidden></label></div>
+  <div class="small muted" style="margin:6px 0">Mets la phrase et le BPM du fichier en haut avant de l'ouvrir. Le clic doit s'entendre dans le fichier pour mesurer le décalage.</div>
+  <div class="small"><b>Exemples synthétiques</b> (sons de synthèse, pour vérifier le moteur) :</div>
+  <div class="row" style="margin-top:4px">
+    <button data-ex="propre">✅ Propre</button><button data-ex="oubli">✗ 2 oubliés</button><button data-ex="trop">+ 2 en trop</button><button data-ex="swap">🔀 K au lieu de B</button><button data-ex="retard">🐢 40 ms en retard (clic)</button><button data-ex="flou">〰 Irrégulier</button>
+  </div>
+</div>
+</div>
+
+<div class="card" id="out" hidden>
+  <div class="row"><h2 style="margin:0">4. Résultat</h2><span class="sp"></span><audio id="play" controls></audio><button id="dl">💾 Enregistrement (.wav)</button><button id="cp">📋 Copier le résultat</button></div>
+  <div id="res" style="margin-top:8px"></div>
+  <div id="grid" class="grid"></div>
+  <div class="small muted leg"><span>🟢 réussi</span><span>🟡 parfois</span><span>🔴 souvent raté</span><span>🟣 son confondu</span><span>+ en trop</span><span>chiffres = décalage moyen (ms)</span></div>
+  <h2 style="margin-top:12px">Ligne du temps</h2>
+  <div class="small muted leg"><span>│ gris : cases attendues</span><span>▼ couleur : son entendu (famille)</span><span>✕ rouge : oublié</span><span>● rouge : en trop</span><span>┊ jaune : clic</span></div>
+  <div class="tl"><canvas id="cv" height="190"></canvas></div>
+  <div class="row small" style="margin-top:6px"><label>Zoom <input type="range" id="zoom" min="1" max="8" value="1"></label><span class="sp"></span>
+    <label title="Plus bas = détecte des sons plus faibles (et plus de faux sons)">Sensibilité <input type="range" id="sens" min="2" max="20" value="7"></label>
+    <label title="Sons ignorés s'ils sont X dB plus faibles que les plus forts">Plage <input type="range" id="dyn" min="20" max="60" value="38"></label><button id="again">↻ Ré-analyser</button></div>
+  <details style="margin-top:10px"><summary>Détail des sons détectés</summary><div style="overflow-x:auto"><table id="tab"></table></div></details>
+</div>
+
+<div class="card small">
+  <h2>Comment lire / ce qui est fiable</h2>
+  <ul class="steps">
+    <li><b>Placement</b> (oubliés, en trop, bien placés) : fiable avec un micro correct et une pièce calme.</li>
+    <li><b>Décalage</b> 🐢/🐇 : mesuré au clic près (± 10 ms) <b>seulement</b> si le clic s'entend dans l'enregistrement (haut-parleur), ou au casque après <span class="pill">🎚 latence mesurée</span>.</li>
+    <li><b>Régularité</b> 〰 : l'écart type des décalages. ± 10 ms = très régulier, ± 30 ms = flottant.</li>
+    <li><b>Sons confondus</b> 🔀 : on compare chaque son aux autres sons <i>du même enregistrement</i> (graves / medium / aigus). Ça marche bien entre familles différentes (K au lieu de B), pas entre deux sons proches (Pch / Pf).</li>
+    <li>Pour me faire progresser : enregistre une phrase propre, une avec un oubli, une avec un son en trop, une avec un K à la place d'un B, puis envoie les .wav à Claude avec la phrase et le BPM.</li>
+  </ul>
+</div>
+</div>
+</div>
+<script>
+/* ===== RYTHME : moteur d'analyse rythmique (partagé app + labo) ===== */
+// Entrée : signal mono (Float32Array), sampleRate, et ce que l'élève devait jouer (pat + bpm).
+// Sortie : sons détectés (onsets), placement sur la grille (ok / oubliés / en trop), décalage, régularité, sons confondus.
+const RY = (() => {
+  const V = 1;
+  // Familles de sons (pour repérer un K à la place d'un P) : grave = lèvres/kick, aigu = hi-hat, medium = snares
+  const FAM = { grave:['B','P','Bf','Bm','Bo','Pu','Bh','Bb'], aigu:['Ts','T','S','Tss','Ch','Tk','St','H','Tch','Sh','Ss'], medium:['K','Pch','Pf','L','Kch','Psh','Ks','Kt','Kh','Ksh','Pff','Cl'] };
+  const FAMOF = {}; Object.entries(FAM).forEach(([f, l]) => l.forEach(n => { FAMOF[n.toLowerCase()] = f; }));
+  const FAM_LAB = { grave:'grave', aigu:'aigu', medium:'medium' };
+  function famOf(tok){
+    const t = String(tok || '').trim(); if(!t || t === '.' || t === '-') return null;
+    const k = t.toLowerCase(); if(FAMOF[k]) return FAMOF[k];
+    if(/^[bp]$/i.test(t) || /^b/i.test(t)) return 'grave';
+    if(/^(t|s|ts)/i.test(t)) return 'aigu';
+    if(/^k/i.test(t)) return 'medium';
+    return null;
+  }
+  function fft(re, im){
+    const n = re.length;
+    for(let i = 1, j = 0; i < n; i++){ let b = n >> 1; for(; j & b; b >>= 1) j ^= b; j ^= b; if(i < j){ let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+    for(let len = 2; len <= n; len <<= 1){ const a = -2 * Math.PI / len, wr = Math.cos(a), wi = Math.sin(a), h = len >> 1;
+      for(let i = 0; i < n; i += len){ let cr = 1, ci = 0;
+        for(let k = 0; k < h; k++){ const p = i + k, q = p + h, vr = re[q] * cr - im[q] * ci, vi = re[q] * ci + im[q] * cr; re[q] = re[p] - vr; im[q] = im[p] - vi; re[p] += vr; im[p] += vi; const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t; } } }
+  }
+  const HANN = {}; const hann = n => HANN[n] || (HANN[n] = Float32Array.from({ length:n }, (_, i) => .5 - .5 * Math.cos(2 * Math.PI * i / (n - 1))));
+  const pct = (a, p) => { if(!a.length) return 0; const s = Array.from(a).sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.floor(p * (s.length - 1))))]; };
+  const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+  const std = a => { if(a.length < 2) return 0; const m = mean(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1)); };
+  const median = a => pct(a, .5);
+  // Caractéristiques d'un son à partir de l'instant s (≈ 43 ms)
+  function features(x, sr, s){
+    const N = 2048, w = hann(N), re = new Float32Array(N), im = new Float32Array(N);
+    for(let i = 0; i < N; i++){ const v = x[s + i]; re[i] = v === undefined ? 0 : v * w[i]; }
+    fft(re, im);
+    let tot = 0, cen = 0, low = 0, high = 0, clk = 0; const bf = sr / N;
+    const near = f => { for(const c of [1000, 3000, 5000, 1500, 4500, 7500]) if(Math.abs(f - c) <= 45) return true; return false; };
+    const P = new Float32Array(N / 2);
+    for(let k = 1; k < N / 2; k++){ const f = k * bf, e = re[k] * re[k] + im[k] * im[k]; P[k] = e; tot += e; cen += f * e; if(f < 250) low += e; if(f > 4000) high += e; if(near(f)) clk += e; }
+    // tonalité du clic (pic étroit à 1000 ou 1500 Hz par rapport aux fréquences voisines) : repère le clic même mélangé à un son
+    let ton = 0, tf = 0; for(const fc of [1000, 1500]){ const kc = Math.round(fc / bf); let pk = 0, nb = 0, nn = 0; for(let k = kc - 1; k <= kc + 1; k++) pk = Math.max(pk, P[k]); for(let k = kc - 14; k <= kc + 14; k++){ if(Math.abs(k - kc) < 4) continue; nb += P[k]; nn++; } const tv = pk / (nb / nn + 1e-12); if(tv > ton){ ton = tv; tf = fc; } }
+    let pk = 0; const L = Math.min(x.length, s + Math.round(.03 * sr)); for(let i = s; i < L; i++){ const a = Math.abs(x[i]); if(a > pk) pk = a; }
+    tot = tot || 1e-12;
+    return { c:Math.round(cen / tot), lo:+(low / tot).toFixed(3), hi:+(high / tot).toFixed(3), clk:+(clk / tot).toFixed(3), ton:Math.round(Math.min(999, ton)), tf, db:+(20 * Math.log10(pk || 1e-6)).toFixed(1) };
+  }
+  // Détection des attaques (flux spectral + seuil adaptatif + affinage à l'échantillon près)
+  function onsets(x, sr, o){
+    o = o || {};
+    const N = sr > 32000 ? 1024 : 512, H = N >> 2, w = hann(N), F = Math.max(0, Math.floor((x.length - N) / H) + 1);
+    const flux = new Float32Array(F), rms = new Float32Array(F);
+    let prev = new Float32Array(N / 2); const re = new Float32Array(N), im = new Float32Array(N);
+    for(let f = 0; f < F; f++){ const o0 = f * H; let e = 0;
+      for(let i = 0; i < N; i++){ const v = x[o0 + i]; e += v * v; re[i] = v * w[i]; im[i] = 0; }
+      rms[f] = Math.sqrt(e / N); fft(re, im);
+      const cur = new Float32Array(N / 2); let fl = 0;
+      for(let k = 1; k < N / 2; k++){ const m = Math.log(1 + 1000 * Math.sqrt(re[k] * re[k] + im[k] * im[k])); cur[k] = m; const d = m - prev[k]; if(d > 0) fl += d; }
+      flux[f] = fl; prev = cur; }
+    const p99 = pct(flux, .99) || 1, rmax = pct(rms, .995) || 1e-6, floor = pct(rms, .1);
+    const gate = Math.max(floor * 4, rmax * Math.pow(10, -(o.dynDb || 38) / 20), 0.002);
+    const W = Math.max(3, Math.round(.15 * sr / H)), delta = (o.sens != null ? o.sens : .07) * p99;
+    const peaks = [];
+    for(let f = 1; f < F - 1; f++){
+      if(flux[f] < flux[f - 1] || flux[f] <= flux[f + 1]) continue;
+      const loc = []; for(let j = Math.max(0, f - W); j <= Math.min(F - 1, f + W); j++) loc.push(flux[j]);
+      const thr = median(loc) * 1.4 + delta;
+      const r2 = Math.max(rms[f], rms[Math.min(F - 1, f + 1)], rms[Math.min(F - 1, f + 2)]);
+      if(flux[f] > thr && r2 > gate) peaks.push({ f, v:flux[f] });
+    }
+    // enveloppe fine (1 ms) pour dater l'attaque précisément
+    const m1 = Math.max(1, Math.round(.001 * sr)), cs = new Float64Array(x.length + 1);
+    for(let i = 0; i < x.length; i++) cs[i + 1] = cs[i] + Math.abs(x[i]);
+    const env = i => (cs[Math.min(x.length, i + m1)] - cs[Math.max(0, i)]) / m1, lag = Math.max(1, Math.round(.002 * sr));
+    let all = peaks.map(p => {
+      const s0 = Math.max(lag, p.f * H - H), s1 = Math.min(x.length - m1 - 1, p.f * H + N);
+      let md = 0; const d = []; for(let i = s0; i < s1; i++){ const v = env(i) - env(i - lag); d.push(v); if(v > md) md = v; }
+      let k = 0; while(k < d.length && d[k] < .5 * md) k++;
+      const s = Math.max(0, s0 + k - (lag >> 1));
+      return { t:s / sr, s, v:p.v, str:+(p.v / p99).toFixed(2), ...features(x, sr, s) };
+    });
+    if(o.drop) all = all.filter(z => !o.drop(z));
+    // un seul son par 45 ms : on garde le plus fort
+    const out = [];
+    all.forEach(p => { const l = out[out.length - 1]; if(l && p.t - l.t < .045){ if(p.v > l.v) out[out.length - 1] = p; } else out.push(p); });
+    // fin d'un son fort (souffle, résonance) prise pour une attaque : beaucoup plus faible et juste après → on l'ignore
+    return out.filter((o, i) => !out.slice(Math.max(0, i - 3), i).some(p => o.t - p.t < .16 && o.db < p.db - 22 && o.str < .8));
+  }
+  // Soustraction du clic : le clic du haut-parleur est toujours le même → on en fait un modèle (moyenne des clics seuls) et on l'enlève à chaque temps
+  function unclick(x, sr, ons, clk, spb){
+    const p0 = ons.filter(o => o.ton >= 100 && clk.onGrid(o)), late = o => { let e = 0; for(let i = o.s + Math.round(.02 * sr); i < Math.min(x.length, o.s + Math.round(.08 * sr)); i++) e += x[i] * x[i]; return e; };
+    const el = p0.map(late), emin = Math.min(...el), alone = p0.filter((o, i) => el[i] <= 2.5 * emin + 1e-9); // clics sans son juste après (fin de clic la plus calme)
+    const pure = alone.length >= 2 ? alone : p0; if(pure.length < 2) return null;
+    const ks = pure.map(o => Math.round((o.t - clk.c0) / spb)), n = pure.length;
+    let a = clk.c0, b = spb; const uk = new Set(ks);
+    if(uk.size >= 3){ const mk = mean(ks), mt = mean(pure.map(o => o.t)); let sxy = 0, sxx = 0; ks.forEach((k, i) => { sxy += (k - mk) * (pure[i].t - mt); sxx += (k - mk) * (k - mk); }); b = sxy / sxx; a = mt - b * mk; if(Math.abs(b / spb - 1) > .01){ b = spb; a = clk.c0; } }
+    const pre = Math.round(.004 * sr), L = Math.round(.06 * sr) + pre, at = k => Math.round((a + b * k) * sr) - pre;
+    const corr = (T, s0) => { let c = 0; for(let i = 0; i < L; i += 2) c += T[i] * (x[s0 + i] || 0); return c; };
+    const tpl = {}, acc = {};
+    [1000, 1500].forEach(f => { const g = pure.map((o, i) => ({ o, k:ks[i] })).filter(z => z.o.tf === f); if(!g.length) return;
+      // médiane échantillon par échantillon : un son de l'élève qui tombe juste après un clic ne pollue pas le modèle
+      const ref = Float32Array.from({ length:L }, (_, i) => x[at(g[0].k) + i] || 0), st = g.map(z => { let s0 = at(z.k), bl = 0, bc = -1e9; for(let l = -4; l <= 4; l++){ const c = corr(ref, s0 + l); if(c > bc){ bc = c; bl = l; } } return s0 + bl; });
+      const T = new Float32Array(L), col = new Float32Array(st.length);
+      for(let i = 0; i < L; i++){ st.forEach((s0, j) => { col[j] = x[s0 + i] || 0; }); T[i] = median(col); }
+      const tp = Math.round(.006 * sr); for(let i = 0; i < tp; i++) T[L - 1 - i] *= i / tp; // fondu en fin de modèle
+      tpl[f] = T; g.forEach(z => { const m = ((z.k % 4) + 4) % 4; acc[f] = acc[f] || [0, 0, 0, 0]; acc[f][m]++; }); });
+    // temps forts (1500 Hz tous les 4 temps) : on retrouve leur place
+    const acPh = tpl[1500] && tpl[1000] ? acc[1500].indexOf(Math.max(...acc[1500])) : -1;
+    const y = Float32Array.from(x), k0 = Math.ceil((-a) / b), k1 = Math.floor((x.length / sr - a) / b);
+    for(let k = k0; k <= k1; k++){
+      const f = acPh < 0 ? (tpl[1000] ? 1000 : 1500) : (((k % 4) + 4) % 4 === acPh ? 1500 : 1000), T = tpl[f]; if(!T) continue;
+      let s0 = at(k), bl = 0, bc = -1e9; for(let l = -3; l <= 3; l++){ const c = corr(T, s0 + l); if(c > bc){ bc = c; bl = l; } } s0 += bl;
+      for(let i = 0; i < L; i++){ const j = s0 + i; if(j >= 0 && j < y.length) y[j] -= T[i]; }
+    }
+    return y;
+  }
+  const CLICK_F = [1000, 3000, 5000, 7000, 9000, 11000, 13000, 15000, 1500, 4500, 7500, 10500, 13500];
+  // Filtre coupe-bande (enlève le clic du métronome : 1000/1500 Hz et harmoniques) avant de chercher les sons
+  function notch(x, sr, freqs){
+    let y = Float32Array.from(x);
+    freqs.forEach(f => { if(f >= sr / 2) return; const w = 2 * Math.PI * f / sr, q = 6, al = Math.sin(w) / (2 * q), c = Math.cos(w), a0 = 1 + al, b0 = 1 / a0, b1 = -2 * c / a0, b2 = 1 / a0, a1 = -2 * c / a0, a2 = (1 - al) / a0;
+      let x1 = 0, x2 = 0, y1 = 0, y2 = 0; for(let i = 0; i < y.length; i++){ const v = b0 * y[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = y[i]; y2 = y1; y1 = v; y[i] = v; } });
+    return y;
+  }
+  // Clic du métronome entendu dans l'enregistrement (haut-parleur) : sert de repère exact, puis on l'enlève
+  function findClicks(ons, bpm){
+    if(!bpm) return { c0:null, ons };
+    const spb = 60 / bpm, cd = (a, b) => { const d = Math.abs(a - b) % spb; return Math.min(d, spb - d); };
+    // phase la plus fréquente (± 8 ms), puis moyenne du groupe : d'abord avec les clics seuls (sans son par-dessus), sinon avec tous les sons « tonaux »
+    const tryC = (cand, minN) => {
+      if(cand.length < minN) return null;
+      const ph = cand.map(o => ((o.t % spb) + spb) % spb);
+      let bi = 0, bn = 0; ph.forEach((p, i) => { const n = ph.filter(q => cd(p, q) < .008).length; if(n > bn){ bn = n; bi = i; } });
+      const grp = ph.filter(q => cd(ph[bi], q) < .008); if(grp.length < minN || grp.length / cand.length < .5) return null;
+      const c0 = ph[bi] + mean(grp.map(q => { let d = q - ph[bi]; if(d > spb / 2) d -= spb; if(d < -spb / 2) d += spb; return d; }));
+      return { c0:((c0 % spb) + spb) % spb, R:+(grp.length / cand.length).toFixed(2), n:grp.length };
+    };
+    const r = tryC(ons.filter(o => o.ton >= 100), 3) || tryC(ons.filter(o => o.ton >= 12), 4);
+    if(!r) return { c0:null, ons };
+    // position par rapport au clic (s) : négatif = avant, positif = après
+    const rel = o => { let d = ((o.t - r.c0) % spb + spb) % spb; if(d > spb / 2) d -= spb; return d; };
+    return { ...r, rel, onGrid:(o, tol) => Math.abs(rel(o)) < (tol || .015) };
+  }
+  // Grille attendue : phrases (div, tok) mises bout à bout, en temps (beats)
+  function grid(pat){
+    const cells = []; let b = 0;
+    (pat || []).forEach((p, pi) => { const st = 1 / (+p.div || 2); String(p.tok || '').trim().split(/\s+/).filter(Boolean).forEach(t => { cells.push({ i:cells.length, b, tok:t, st, ph:pi, fam:famOf(t), ev:t !== '.' && t !== '-' }); b += st; }); });
+    return { cells, ev:cells.filter(c => c.ev), P:b };
+  }
+  // Placement des sons sur la grille + statistiques
+  function match(ons, bpm, pat, o){
+    o = o || {};
+    const spb = 60 / bpm, G = grid(pat), ev = G.ev, P = G.P;
+    if(!ev.length || !ons.length || !P) return null;
+    const minSt = Math.min(...G.cells.map(c => c.st)), tolS = c => Math.min(.42 * c.st * spb, .11), beats = ons.map(x => x.t / spb);
+    const evb = ev.map(e => e.b), near = pos => { // événement le plus proche (avec bouclage de la phrase)
+      let lo = 0, hi = evb.length; while(lo < hi){ const m = (lo + hi) >> 1; if(evb[m] < pos) lo = m + 1; else hi = m; }
+      const cs = [[lo % ev.length, lo >= ev.length ? P : 0], [(lo - 1 + ev.length) % ev.length, lo - 1 < 0 ? -P : 0]];
+      let best = null; cs.forEach(([j, sh]) => { const d = pos - (evb[j] + sh); if(!best || Math.abs(d) < Math.abs(best.d)) best = { e:ev[j], d }; }); return best;
+    };
+    const c0b = o.c0 != null ? o.c0 / spb : null, dmax = .12 / spb;
+    const score = phi => { let s = 0; for(const b of beats){ const pos = ((b - phi) % P + P) % P, n = near(pos), tb = tolS(n.e) / spb; if(Math.abs(n.d) < tb) s += 1 - .5 * (n.d / tb) * (n.d / tb); else s -= .3; } return s; };
+    const res = Math.min(.02, minSt / 8), cands = [];
+    for(let phi = 0; phi < P; phi += res){
+      if(c0b != null){ const r = (((phi - c0b) % minSt) + minSt) % minSt; if(Math.min(r, minSt - r) > dmax) continue; }
+      cands.push({ phi, s:score(phi) });
+    }
+    if(!cands.length) return null;
+    const bestS = Math.max(...cands.map(c => c.s));
+    // à égalité de placement (phrases répétitives), on garde celui où les familles de sons se séparent le mieux
+    const tops = cands.filter(c => c.s >= bestS - .6).sort((a, b) => b.s - a.s), pick = [];
+    tops.forEach(c => { if(!pick.some(p => Math.abs(p.phi - c.phi) < minSt / 2 || Math.abs(Math.abs(p.phi - c.phi) - P) < minSt / 2)) pick.push(c); });
+    let best = null;
+    pick.slice(0, 8).forEach(c => { const r = assign(c.phi); r.sep = famSep(r); r.key = r.hits.length - .5 * (r.miss.length + r.extra.length) + .8 * r.sep; if(!best || r.key > best.key + 1e-9) best = r; });
+    // affinage : on recentre sur les sons réussis
+    if(best.hits.length >= 3 && c0b == null){ const dm = mean(best.hits.map(h => h.d)); best = assign(best.phi + dm / spb); }
+    function assign(phi){
+      const b0 = beats[0], b1 = beats[beats.length - 1], inst = [];
+      for(let k = Math.floor((b0 - phi) / P) - 1; k <= Math.ceil((b1 - phi) / P); k++)
+        ev.forEach(e => { const tb = phi + k * P + e.b, tl = tolS(e) / spb; if(tb >= b0 - tl && tb <= b1 + tl) inst.push({ e, k, tb }); });
+      const pairs = [];
+      inst.forEach((it, a) => { const tl = tolS(it.e) / spb; beats.forEach((b, j) => { const d = b - it.tb; if(Math.abs(d) < tl) pairs.push({ a, j, d }); }); });
+      pairs.sort((x, y) => Math.abs(x.d) - Math.abs(y.d));
+      const ua = new Set(), uj = new Set(), hits = [];
+      pairs.forEach(p => { if(ua.has(p.a) || uj.has(p.j)) return; ua.add(p.a); uj.add(p.j); hits.push({ e:inst[p.a].e, k:inst[p.a].k, o:ons[p.j], d:p.d * spb }); });
+      const miss = inst.filter((_, a) => !ua.has(a)).map(it => ({ e:it.e, k:it.k, t:it.tb * spb }));
+      const extra = ons.filter((_, j) => !uj.has(j)).map(x => { const pos = ((x.t / spb - phi) % P + P) % P; let c = G.cells[0], bd = 1e9; G.cells.forEach(cc => { const d = Math.min(Math.abs(pos - cc.b), P - Math.abs(pos - cc.b)); if(d < bd){ bd = d; c = cc; } }); return { o:x, cell:c }; });
+      return { phi, hits, miss, extra };
+    }
+    // décalage par rapport au clic (seulement si on a un repère exact)
+    let off = null;
+    if(c0b != null && best.hits.length >= 3){ const r = (((best.phi - c0b) % minSt) + minSt) % minSt, sh = (r > minSt / 2 ? r - minSt : r) * spb; off = Math.round((sh + median(best.hits.map(h => h.d)) - (o.lat || 0)) * 1000); }
+    // sons confondus (relatif à l'enregistrement : chaque famille comparée aux autres)
+    const fam = famCheck(best);
+    const cells = G.cells.map(c => { const h = best.hits.filter(x => x.e === c), m = best.miss.filter(x => x.e === c).length, x = best.extra.filter(z => z.cell === c).length, f = fam.bad.filter(z => z.e === c);
+      return c.ev ? { h:h.length, m, x, r:h.length ? Math.round(mean(h.map(z => z.d)) * 1000) : 0, f:f.length, fh:f.length ? f[0].heard : '' } : { x }; });
+    const nh = best.hits.length, nm = best.miss.length, nx = best.extra.length, ds = best.hits.map(h => h.d * 1000);
+    const cyc = Math.max(1, Math.round((ons[ons.length - 1].t - ons[0].t) / (P * spb)));
+    return { v:V, pct:Math.round(100 * nh / Math.max(1, nh + nm + nx)), hits:nh, miss:nm, extra:nx, reg:Math.round(std(ds)), off, anc:c0b != null, sons:fam.pct, sep:+fam.sep.toFixed(2), conf:fam.bad.length,
+      cells, cyc, phi:+(best.phi * spb).toFixed(3), _best:best };
+  }
+  function famVecs(hits){ return hits.filter(h => h.e.fam).map(h => ({ h, f:h.e.fam, v:[Math.log2(Math.max(60, h.o.c)), h.o.lo * 3, h.o.hi * 3] })); }
+  function famStats(V){
+    const by = {}; V.forEach(x => (by[x.f] = by[x.f] || []).push(x)); const fs = Object.keys(by).filter(f => by[f].length >= 3); if(fs.length < 2) return null;
+    const cen = {}; fs.forEach(f => { cen[f] = [0, 1, 2].map(d => median(by[f].map(x => x.v[d]))); });
+    const sd = [0, 1, 2].map(d => Math.max(.08, mean(fs.map(f => std(by[f].map(x => x.v[d])))))) ;
+    const dist = (a, b) => Math.sqrt([0, 1, 2].reduce((s, d) => s + ((a[d] - b[d]) / sd[d]) ** 2, 0));
+    let sep = 1e9; fs.forEach(a => fs.forEach(b => { if(a < b) sep = Math.min(sep, dist(cen[a], cen[b])); }));
+    return { by, fs, cen, sd, dist, sep };
+  }
+  function famSep(r){ const s = famStats(famVecs(r.hits)); return s ? Math.min(s.sep, 6) : 0; }
+  function famCheck(r){
+    const V = famVecs(r.hits), s = famStats(V); if(!s || s.sep < 1.2) return { pct:null, sep:s ? s.sep : 0, bad:[] };
+    const bad = [];
+    V.forEach(x => { if(!s.cen[x.f]) return; let nf = x.f, nd = s.dist(x.v, s.cen[x.f]); s.fs.forEach(f => { const d = s.dist(x.v, s.cen[f]); if(d < nd - .6){ nd = d; nf = f; } }); if(nf !== x.f) bad.push({ e:x.h.e, heard:nf, o:x.h.o }); });
+    const n = V.filter(x => s.cen[x.f]).length;
+    return { pct:Math.round(100 * (n - bad.length) / Math.max(1, n)), sep:s.sep, bad };
+  }
+  // Qualité du son (régularité du volume et du timbre) : indicatif
+  // list : [{ o, k }] (k = son attendu) ; la régularité se mesure son par son, puis on fait la moyenne
+  function quality(list){
+    const l = list.filter(z => z && z.o); if(l.length < 3) return null;
+    const by = {}; l.forEach(z => (by[z.k || '?'] = by[z.k || '?'] || []).push(z.o)); const gs = Object.values(by).filter(g => g.length >= 3); if(!gs.length) return null;
+    const w = gs.reduce((s, g) => s + g.length, 0), avg = f => gs.reduce((s, g) => s + f(g) * g.length, 0) / w;
+    return { niv:Math.round(median(l.map(z => z.o.db))), regDb:+avg(g => std(g.map(o => o.db))).toFixed(1), regSt:+avg(g => std(g.map(o => 12 * Math.log2(Math.max(60, o.c))))).toFixed(1), n:l.length };
+  }
+  // Tout-en-un. opt : { bpm, pat:[{div, tok}], libre:bool (devoir « son » : un son par temps ou demi-temps, sans oubli compté), c0, lat }
+  function analyze(x, sr, opt){
+    opt = opt || {}; const t0 = Date.now();
+    let ons = onsets(x, sr, opt), clk = { c0:null };
+    if(opt.bpm && opt.clicks !== false){ clk = findClicks(ons, opt.bpm);
+      if(clk.c0 != null || opt.c0 != null){ // clic entendu : on le filtre, puis on recherche les sons
+        const y = notch(unclick(x, sr, ons, clk, 60 / opt.bpm) || x, sr, CLICK_F), W = Math.round(.015 * sr), en = (a, i) => { let e = 0; for(let k = i; k < Math.min(a.length, i + W); k++) e += a[k] * a[k]; return e; };
+        const pc = clk.rel ? ons.filter(o => o.ton >= 100 && clk.onGrid(o)).map(o => en(x, o.s)) : [], clickE = pc.length >= 2 ? median(pc) : 0;
+        // un « son » qui n'est presque que du clic (l'énergie disparaît avec le filtre) et tombe sur le clic → ce n'est pas l'élève
+        ons = onsets(y, sr, { ...opt, drop:z => { const e = en(y, z.s), f = features(x, sr, z.s), r = e / (en(x, z.s) + 1e-12); z.nr = +r.toFixed(2); z.ton = f.ton; if(!clk.rel) return false; const d = clk.rel(z);
+          if(d > -.015 && d < .06 && r < .1) return true; // reste du clic
+          if(Math.abs(d) >= .015) return false;
+          const quiet = clickE ? e < .2 * clickE : (r < .35 || (z.c > 7000 && f.ton >= 8 && z.db < -6)); // presque rien en dehors du clic
+          if(!quiet) return false;
+          // un son commence peut-être juste après le clic : on cherche son attaque dans les 60 ms
+          const W2 = Math.round(.06 * sr); let e2 = 0; for(let k = z.s; k < Math.min(y.length, z.s + W2); k++) e2 += y[k] * y[k];
+          if(e2 < (clickE ? .15 * clickE : 4 * e)) return true;
+          const lag = Math.round(.002 * sr), m1 = Math.round(.001 * sr), env = i => { let v = 0; for(let k = i; k < i + m1; k++) v += Math.abs(y[k] || 0); return v / m1; };
+          let bi = z.s, bv = -1; for(let i = z.s + Math.round(.004 * sr); i < z.s + W2; i += 2){ const v = env(i) - env(i - lag); if(v > bv){ bv = v; bi = i; } }
+          let k = z.s + Math.round(.004 * sr); while(k < bi && env(k) - env(k - lag) < .5 * bv) k += 2;
+          Object.assign(z, features(y, sr, k), { s:k, t:k / sr, re:1 }); return false;
+        } }); } }
+    const c0 = opt.c0 != null ? opt.c0 : clk.c0;
+    let m = null;
+    if(opt.bpm && opt.pat && opt.pat.length) m = match(ons, opt.bpm, opt.pat, { c0, lat:opt.lat });
+    else if(opt.bpm && opt.libre && ons.length >= 3){ const tok = opt.son || 'X'; m = match(ons, opt.bpm, [{ div:2, tok:tok + ' ' + tok }], { c0, lat:opt.lat }); if(m){ m.libre = true; m.pct = Math.round(100 * m.hits / Math.max(1, m.hits + m.extra)); m.miss = 0; } }
+    const q = quality(m ? m._best.hits.map(h => ({ o:h.o, k:h.e.tok })) : ons.map(o => ({ o, k:'?' })));
+    const out = { v:V, n:ons.length, dur:+(x.length / sr).toFixed(1), clic:c0 != null, ms:Date.now() - t0, q };
+    if(m){ const { _best, ...rest } = m; Object.assign(out, rest); out._best = _best; }
+    out._ons = ons; return out;
+  }
+  // Version légère à stocker (Firebase)
+  function compact(a){
+    if(!a) return null; const r = { v:a.v, n:a.n, dur:a.dur };
+    ['pct', 'hits', 'miss', 'extra', 'reg', 'off', 'sons', 'conf', 'cyc'].forEach(k => { if(a[k] != null) r[k] = a[k]; });
+    if(a.libre) r.libre = true; if(a.clic) r.clic = true; if(a.q) r.q = a.q;
+    if(a.cells) r.cells = a.cells.map(c => c.h == null ? (c.x ? 'x' + c.x : '') : [c.h, c.m, c.x, c.r, c.f, c.fh ? c.fh[0] : ''].join(','));
+    return r;
+  }
+  const cellOf = s => { if(!s || s[0] === 'x') return { x:s ? +s.slice(1) : 0 }; const [h, m, x, r, f, fh] = String(s).split(','); return { h:+h, m:+m, x:+x, r:+r, f:+f, fh:{ g:'grave', a:'aigu', m:'medium' }[fh] || '' }; };
+  // Décodage d'un enregistrement (Blob, ArrayBuffer ou data URL) en signal mono
+  async function decode(src, ctx){
+    let buf = src;
+    if(typeof src === 'string') buf = await (await fetch(src)).arrayBuffer();
+    else if(src && src.arrayBuffer) buf = await src.arrayBuffer();
+    const AC = window.AudioContext || window.webkitAudioContext, c = ctx || new AC();
+    const ab = await new Promise((ok, ko) => { const p = c.decodeAudioData(buf.slice ? buf.slice(0) : buf, ok, ko); if(p && p.then) p.then(ok, ko); });
+    const ch = ab.numberOfChannels, n = ab.length, x = new Float32Array(n);
+    for(let k = 0; k < ch; k++){ const d = ab.getChannelData(k); for(let i = 0; i < n; i++) x[i] += d[i] / ch; }
+    return { x, sr:ab.sampleRate };
+  }
+  return { V, FAM, FAM_LAB, famOf, onsets, notch, features, findClicks, grid, match, analyze, compact, cellOf, decode, quality, fft };
+})();
+/* ===== fin RYTHME ===== */
+
+/* sons de synthèse pour les exemples */
+// Générateur de sons synthétiques pour tester le moteur
+function rnd(seed){ let s = seed || 1; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
+function biquad(x, type, f, q, sr){ const w = 2*Math.PI*f/sr, a = Math.sin(w)/(2*q), c = Math.cos(w); let b0,b1,b2,a0=1+a,a1=-2*c,a2=1-a;
+  if(type==='bp'){ b0=a; b1=0; b2=-a; } else if(type==='hp'){ b0=(1+c)/2; b1=-(1+c); b2=(1+c)/2; } else { b0=(1-c)/2; b1=1-c; b2=(1-c)/2; }
+  const y=new Float32Array(x.length); let x1=0,x2=0,y1=0,y2=0; for(let i=0;i<x.length;i++){ const v=(b0*x[i]+b1*x1+b2*x2-a1*y1-a2*y2)/a0; x2=x1;x1=x[i];y2=y1;y1=v;y[i]=v;} return y; }
+function snd(type, sr, r, gain){ gain = gain||1; const n = Math.round(.15*sr), y = new Float32Array(n);
+  if(type==='grave'){ let ph=0; for(let i=0;i<n;i++){ const t=i/sr, f=50+110*Math.exp(-t*40); ph+=2*Math.PI*f/sr; y[i]=Math.sin(ph)*Math.exp(-t*25)*.8 + (i<sr*.003?(r()*2-1)*.3:0); } }
+  else if(type==='medium'){ const nz=Float32Array.from({length:n},()=>r()*2-1); const b=biquad(nz,'bp',2200,1.2,sr); for(let i=0;i<n;i++){ const t=i/sr; y[i]=b[i]*Math.exp(-t*35)*2.2; } }
+  else if(type==='aigu'){ const nz=Float32Array.from({length:n},()=>r()*2-1); const b=biquad(nz,'hp',7000,.7,sr); for(let i=0;i<n;i++){ const t=i/sr; y[i]=b[i]*Math.exp(-t*60)*1.2; } }
+  else if(type==='click'){ for(let i=0;i<Math.round(.05*sr);i++){ const t=i/sr; y[i]=(Math.sin(2*Math.PI*1000*t)>=0?1:-1)*.25*Math.exp(-t*30); } }
+  const att = Math.round(.002*sr); for(let i=0;i<att;i++) y[i]*=i/att;
+  const fo=Math.round(.02*sr); for(let i=0;i<fo;i++) y[n-1-i]*=i/fo;
+  for(let i=0;i<n;i++) y[i]*=gain; return y; }
+// events: [{t, type, gain}]
+function render(dur, sr, events, noise, seed){ const r=rnd(seed||7), x=new Float32Array(Math.round(dur*sr)); for(let i=0;i<x.length;i++) x[i]=(r()*2-1)*(noise||.001);
+  events.forEach(e=>{ const y=snd(e.type,sr,r,e.gain), s=Math.round(e.t*sr); for(let i=0;i<y.length&&s+i<x.length;i++) x[s+i]+=y[i]; }); return x; }
+window.SYN = { render, rnd };
+
+const $ = s => document.querySelector(s);
+let ac = null; const AC = window.AudioContext || window.webkitAudioContext;
+const ensure = () => { if(!ac) ac = new AC(); if(ac.state === 'suspended') ac.resume(); return ac; };
+const FC = { grave:'#e0607e', medium:'#8b6fd6', aigu:'#2fb3d9' };
+const LAST = { x:null, sr:0, opt:null, a:null };
+const latGet = () => { try{ return JSON.parse(localStorage.getItem('bbx-rylat') || 'null'); }catch(e){ return null; } };
+const latSet = v => { try{ localStorage.setItem('bbx-rylat', JSON.stringify(v)); }catch(e){} };
+function cfg(){ const tok = $('#tok').value.trim().split(/\s+/).filter(Boolean).join(' '), div = +$('#div').value, bpm = Math.max(40, Math.min(240, +$('#bpm').value || 90)), cyc = Math.max(1, Math.min(16, +$('#cyc').value || 4));
+  return { tok, div, bpm, cyc, pat:[{ div, tok }], mode:document.querySelector('[name=mode]:checked').value }; }
+function famInfo(){ const c = cfg(), u = [...new Set(c.tok.split(' ').filter(t => t !== '.'))]; $('#famchk').innerHTML = u.map(t => { const f = RY.famOf(t); return `<span class="tag ${f ? 'fam-' + f : 'fam-x'}">${t}</span>`; }).join(' '); $('#ntours').textContent = c.cyc; }
+['#tok', '#div', '#bpm', '#cyc'].forEach(s => $(s).addEventListener('input', famInfo));
+function modeHelp(){ const m = cfg().mode, L = latGet();
+  $('#modehelp').innerHTML = m === 'hp' ? 'Le clic sort du haut-parleur et s\'entend dans l\'enregistrement : l\'appli s\'en sert comme repère exact, puis l\'enlève. C\'est le mode des devoirs.' : `Le clic est dans le casque (filaire de préférence). L'appli utilise son horloge + la latence du micro${L ? ` (<b>${L.ms} ms</b>, mesurée le ${new Date(L.t).toLocaleDateString()})` : ' — <b>pas encore mesurée</b> : clique sur 🎚'}. C'est le mode des cours en direct.`;
+  $('#latinfo').innerHTML = L ? `Latence : <b>${L.ms} ms</b>` : 'Pas encore mesurée'; }
+document.querySelectorAll('[name=mode]').forEach(r => r.addEventListener('change', modeHelp));
+
+// --- clic (même son que l'appli : carré 1000 Hz, 1500 Hz sur le 1er temps)
+function click(t, acc, bus){ const o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.setValueAtTime(acc ? 1500 : 1000, t);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(acc ? .45 : .28, t + .002); g.gain.exponentialRampToValueAtTime(.0001, t + .05); o.connect(g); g.connect(ac.destination); if(bus) g.connect(bus); o.start(t); o.stop(t + .07); }
+
+// --- enregistrement brut avec horodatage exact (AudioWorklet)
+const WK = `class R extends AudioWorkletProcessor{process(i){const c=i[0];if(c&&c[0]){const m=new Float32Array(c[0].length);for(let k=0;k<c.length;k++){const d=c[k];for(let j=0;j<d.length;j++)m[j]+=d[j]/c.length;}this.port.postMessage({f:currentFrame,d:m},[m.buffer]);}return true;}}registerProcessor('rec-ry',R);`;
+let wkOk = false;
+async function capture(sec, onStart){
+  ensure(); if(!wkOk){ await ac.audioWorklet.addModule(URL.createObjectURL(new Blob([WK], { type:'application/javascript' }))); wkOk = true; }
+  const st = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+  const src = ac.createMediaStreamSource(st), node = new AudioWorkletNode(ac, 'rec-ry'), mute = ac.createGain(); mute.gain.value = 0;
+  src.connect(node); node.connect(mute); mute.connect(ac.destination);
+  const chunks = []; let f0 = null, peak = 0;
+  node.port.onmessage = e => { if(f0 == null) f0 = e.data.f; chunks.push(e.data.d); for(const v of e.data.d){ const a = Math.abs(v); if(a > peak) peak = a; } };
+  const meter = setInterval(() => { $('#lvl').style.width = Math.min(100, peak * 140) + '%'; peak *= .6; }, 80);
+  await new Promise(r => setTimeout(r, 250)); // le flux démarre
+  const t0 = ac.currentTime + .15; onStart && onStart(t0);
+  await new Promise(r => setTimeout(r, (t0 - ac.currentTime + sec) * 1000));
+  clearInterval(meter); $('#lvl').style.width = '0';
+  src.disconnect(); node.disconnect(); st.getTracks().forEach(t => t.stop());
+  const n = chunks.reduce((s, c) => s + c.length, 0), x = new Float32Array(n); let o = 0; chunks.forEach(c => { x.set(c, o); o += c.length; });
+  return { x, sr:ac.sampleRate, tStart:f0 / ac.sampleRate }; // tStart : heure (horloge audio) du 1er échantillon
+}
+$('#rec').onclick = async () => {
+  const c = cfg(), spb = 60 / c.bpm, P = c.tok.split(' ').length / c.div * spb, dur = 4 * spb + c.cyc * P + 1.2;
+  $('#rec').disabled = true;
+  try{ let T0 = 0, timers = [];
+    const r = await capture(dur, t0 => { T0 = t0; for(let b = 0; b * spb < dur - .8; b++) click(t0 + b * spb, b % 4 === 0);
+      for(let b = 0; b < 4; b++) timers.push(setTimeout(() => { $('#count').textContent = 4 - b; }, (t0 - ac.currentTime + b * spb) * 1000));
+      timers.push(setTimeout(() => { $('#count').textContent = '🎤'; }, (t0 - ac.currentTime + 4 * spb) * 1000)); });
+    $('#count').textContent = '';
+    const L = latGet(), opt = { bpm:c.bpm, pat:c.pat };
+    if(c.mode === 'casque'){ opt.c0 = (T0 - r.tStart) + (L ? L.ms / 1000 : 0); opt.clicks = false; }
+    show(r.x, r.sr, opt, { T0:T0 - r.tStart });
+  }catch(e){ alert('Micro indisponible : ' + e.message); }
+  $('#rec').disabled = false;
+};
+$('#calib').onclick = async () => {
+  if(!confirm('Mesure de la latence : mets le volume à moitié, PAS de casque, et reste silencieux 6 secondes. OK ?')) return;
+  const bpm = 100, spb = .6; $('#calib').disabled = true; $('#latinfo').textContent = 'Écoute…';
+  try{ let T0 = 0; const r = await capture(6, t0 => { T0 = t0; for(let b = 0; b < 9; b++) click(t0 + b * spb, b % 4 === 0); });
+    const ons = RY.onsets(r.x, r.sr), cl = RY.findClicks(ons, bpm);
+    if(cl.c0 == null){ $('#latinfo').textContent = '❌ Clic pas entendu : monte le volume et recommence.'; }
+    else { const exp = ((T0 - r.tStart) % spb + spb) % spb; let d = cl.c0 - exp; if(d < -spb / 2) d += spb; if(d > spb / 2) d -= spb; const ms = Math.round(d * 1000);
+      latSet({ ms, t:Date.now(), n:cl.n }); $('#latinfo').innerHTML = `✅ Latence : <b>${ms} ms</b> (${cl.n} clics entendus)`; }
+  }catch(e){ $('#latinfo').textContent = 'Micro indisponible : ' + e.message; }
+  const msg = $('#latinfo').innerHTML; $('#calib').disabled = false; modeHelp(); $('#latinfo').innerHTML = msg;
+};
+$('#file').onchange = async e => { const f = e.target.files[0]; if(!f) return; ensure(); try{ const { x, sr } = await RY.decode(f, ac); const c = cfg(); show(x, sr, { bpm:c.bpm, pat:c.pat }, {}); }catch(err){ alert('Fichier illisible : ' + err.message); } e.target.value = ''; };
+// --- exemples synthétiques
+document.querySelectorAll('[data-ex]').forEach(b => b.onclick = () => {
+  const c = cfg(), sr = 44100, spb = 60 / c.bpm, st = spb / c.div, tok = c.tok.split(' '), P = tok.length * st, ev = [], start = 4 * spb, r = SYN.rnd(11), k = b.dataset.ex;
+  const jit = k === 'flou' ? .04 : .01, late = k === 'retard' ? .04 : 0, idx = tok.map((t, i) => t !== '.' ? i : -1).filter(i => i >= 0);
+  const miss = k === 'oubli' ? [[1, idx[Math.min(1, idx.length - 1)]], [2, idx[idx.length - 1]]] : [], swap = k === 'swap' ? [[1, idx[0]], [3, idx[0]]] : [];
+  for(let y = 0; y < c.cyc; y++) tok.forEach((t, i) => { if(t === '.' || miss.some(m => m[0] === y && m[1] === i)) return; let f = RY.famOf(t) || 'medium'; if(swap.some(m => m[0] === y && m[1] === i)) f = f === 'medium' ? 'grave' : 'medium'; ev.push({ t:start + y * P + i * st + late + (r() * 2 - 1) * jit, type:f }); });
+  if(k === 'trop'){ const sil = tok.map((t, i) => t === '.' ? i : -1).filter(i => i >= 0); [[1, sil[0] ?? 1], [2, sil[sil.length - 1] ?? 3]].forEach(([y, i]) => ev.push({ t:start + y * P + i * st, type:'grave' })); }
+  if(k === 'retard' || k === 'propre') for(let t = 0; t < start + c.cyc * P + 1; t += spb) ev.push({ t, type:'click', gain:k === 'retard' ? .8 : .5 });
+  const x = SYN.render(start + c.cyc * P + 1, sr, ev, .002, 11);
+  show(x, sr, { bpm:c.bpm, pat:c.pat }, { synth:k });
+});
+// --- affichage
+function show(x, sr, opt, info){
+  LAST.x = x; LAST.sr = sr; LAST.opt = opt; LAST.info = info || {};
+  const a = RY.analyze(x, sr, { ...opt, sens:+$('#sens').value / 100, dynDb:+$('#dyn').value }); LAST.a = a;
+  $('#out').hidden = false;
+  const url = URL.createObjectURL(wav(x, sr)); $('#play').src = url; LAST.url = url;
+  const col = a.pct == null ? '' : a.pct >= 85 ? 'ok' : a.pct >= 65 ? 'mid' : 'low', b = [];
+  if(a.pct != null){ b.push(`✓ ${a.hits} bien placé${a.hits > 1 ? 's' : ''}`); if(a.miss) b.push(`✗ ${a.miss} oublié${a.miss > 1 ? 's' : ''}`); if(a.extra) b.push(`+ ${a.extra} en trop`);
+    if(a.off != null) b.push(Math.abs(a.off) < 20 ? `⏱ pile sur le clic (${a.off > 0 ? '+' : ''}${a.off} ms)` : a.off > 0 ? `🐢 ${a.off} ms en retard` : `🐇 ${-a.off} ms en avance`); else b.push('<span class="muted">décalage non mesuré (pas de repère)</span>');
+    b.push(`〰 ± ${a.reg} ms`); b.push(a.sons == null ? '<span class="muted">sons : pas assez de familles différentes pour comparer</span>' : `🔀 ${a.conf} son${a.conf > 1 ? 's' : ''} confondu${a.conf > 1 ? 's' : ''} (${a.sons} % reconnus)`); }
+  const ext = [`${a.n} sons détectés`, `${a.dur} s`, a.clic ? `clic entendu ✔ (repère exact)` : opt.c0 != null ? 'repère : horloge + latence' : 'pas de clic entendu', `${a.cyc || 0} tour(s)`, `analyse ${a.ms} ms`];
+  if(info && info.T0 != null && a.clic){ const spb = 60 / opt.bpm, exp = ((info.T0 % spb) + spb) % spb; let d = (a._best ? 0 : 0); const ons = RY.onsets(x, sr), cl = RY.findClicks(ons, opt.bpm); if(cl.c0 != null){ let dd = cl.c0 - exp; if(dd < -spb / 2) dd += spb; if(dd > spb / 2) dd -= spb; ext.push(`latence mesurée au passage : ${Math.round(dd * 1000)} ms`); } }
+  $('#res').innerHTML = a.pct == null ? `<div class="res">Rien à comparer : ${a.n} sons détectés.</div>` : `<div class="res ${col}"><b class="pc">🎯 ${a.pct} %</b> ${b.join(' · ')}<div class="small muted">${ext.join(' · ')}</div></div>`;
+  gridHTML(opt.pat, a); draw(); table();
+}
+function gridHTML(pat, a){
+  if(!a.cells){ $('#grid').innerHTML = ''; return; }
+  let i = 0; const H = [];
+  pat.forEach(p => { const toks = p.tok.split(' '), per = 4 * p.div; for(let r = 0; r < toks.length; r += per){ const beats = [];
+    for(let q = r; q < Math.min(toks.length, r + per); q += p.div) beats.push(`<div class="beat">${toks.slice(q, q + p.div).map(t => { const c = a.cells[i++] || {};
+      if(t === '.') return c.x ? `<div class="sil x" title="${c.x} en trop">+${c.x}</div>` : '<div class="sil">·</div>';
+      const n = c.h + c.m, q2 = n ? c.h / n : 0, k = c.f && c.f * 2 >= (c.h || 1) ? 'conf' : q2 >= .8 ? 'ok' : q2 >= .5 ? 'mid' : 'low', f = RY.famOf(t);
+      return `<div class="tk ${k}" style="--c:${FC[f] || '#9ab'}" title="${c.h}/${n} · ${c.r} ms${c.f ? ' · ' + c.f + '× son ' + c.fh : ''}">${t}<small>${c.h}/${n}${c.h ? ' · ' + (c.r > 0 ? '+' : '') + c.r : ''}${c.f ? ' · 🔀' + c.f : ''}${c.x ? ' · +' + c.x : ''}</small></div>`; }).join('')}</div>`);
+    H.push(`<div class="mes">${beats.join('')}</div>`); } });
+  $('#grid').innerHTML = H.join('');
+}
+function famGuess(o){ return o.c < 700 && o.lo > .25 ? 'grave' : o.c > 4500 || o.hi > .45 ? 'aigu' : 'medium'; }
+function draw(){
+  const a = LAST.a, x = LAST.x, sr = LAST.sr, cv = $('#cv'), z = +$('#zoom').value, W = Math.max(cv.parentElement.clientWidth, 300) * z, H = 190, dpr = window.devicePixelRatio || 1;
+  cv.style.width = W + 'px'; cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.scale(dpr, dpr);
+  const dur = x.length / sr, X = t => t / dur * W;
+  g.fillStyle = '#0f2a3d'; g.fillRect(0, 0, W, H);
+  // onde
+  g.fillStyle = '#4d7a99'; const step = Math.max(1, Math.floor(x.length / W));
+  for(let px = 0; px < W; px++){ let mx = 0; const s0 = Math.floor(px / W * x.length); for(let i = s0; i < Math.min(x.length, s0 + step); i++){ const v = Math.abs(x[i]); if(v > mx) mx = v; } const h = Math.min(1, mx) * (H / 2 - 30); g.fillRect(px, H / 2 - h, 1, 2 * h || 1); }
+  const B = a._best, spb = 60 / LAST.opt.bpm;
+  if(B){ // cases attendues
+    const G = RY.grid(LAST.opt.pat), P = G.P;
+    for(let k = -1; (B.phi + k * P * 1) * 1 < dur / spb + P; k++) G.ev.forEach(e => { const t = (B.phi + (k * P + e.b)) * spb, o0 = a._ons[0].t - .12, o1 = a._ons[a._ons.length - 1].t + .12; if(t < o0 || t > o1) return; g.strokeStyle = 'rgba(255,255,255,.28)'; g.beginPath(); g.moveTo(X(t), 14); g.lineTo(X(t), H - 14); g.stroke(); g.fillStyle = 'rgba(255,255,255,.55)'; g.font = '10px Nunito'; g.fillText(e.tok, X(t) + 2, H - 4); });
+    B.miss.forEach(m => { g.strokeStyle = '#ef5b6e'; g.lineWidth = 2; const px = X(m.t); g.beginPath(); g.moveTo(px - 5, 4); g.lineTo(px + 5, 14); g.moveTo(px + 5, 4); g.lineTo(px - 5, 14); g.stroke(); g.lineWidth = 1; });
+  }
+  if(a.clic || LAST.opt.c0 != null){ const c0 = LAST.opt.c0 != null ? LAST.opt.c0 : null; const cl = c0 == null ? RY.findClicks(RY.onsets(x, sr), LAST.opt.bpm) : { c0 }; if(cl.c0 != null){ g.strokeStyle = 'rgba(255,226,122,.5)'; g.setLineDash([3, 4]); for(let t = cl.c0; t < dur; t += spb){ g.beginPath(); g.moveTo(X(t), 0); g.lineTo(X(t), H); g.stroke(); } g.setLineDash([]); } }
+  const hitSet = new Set(B ? B.hits.map(h => h.o) : []), exSet = new Set(B ? B.extra.map(e => e.o) : []);
+  (a._ons || []).forEach(o => { const px = X(o.t), f = famGuess(o); g.fillStyle = FC[f]; g.beginPath(); g.moveTo(px - 5, 18); g.lineTo(px + 5, 18); g.lineTo(px, 28); g.fill();
+    if(exSet.has(o)){ g.fillStyle = '#ef5b6e'; g.beginPath(); g.arc(px, 36, 5, 0, 7); g.fill(); } });
+}
+function table(){
+  const a = LAST.a, B = a._best; if(!a._ons){ $('#tab').innerHTML = ''; return; }
+  const hm = new Map(B ? B.hits.map(h => [h.o, h]) : []), ex = new Set(B ? B.extra.map(e => e.o) : []), bad = new Set();
+  $('#tab').innerHTML = '<tr><th>t (s)</th><th>case</th><th>écart</th><th>verdict</th><th>centre (Hz)</th><th>grave %</th><th>aigu %</th><th>niveau dB</th><th>famille ?</th></tr>' +
+    a._ons.map(o => { const h = hm.get(o), f = famGuess(o); return `<tr><td>${o.t.toFixed(3)}</td><td>${h ? h.e.tok + ' #' + (h.e.i + 1) : ''}</td><td>${h ? (h.d > 0 ? '+' : '') + Math.round(h.d * 1000) + ' ms' : ''}</td><td>${h ? '✓' : ex.has(o) ? '<b style="color:#ef5b6e">en trop</b>' : ''}</td><td>${o.c}</td><td>${Math.round(o.lo * 100)}</td><td>${Math.round(o.hi * 100)}</td><td>${o.db}</td><td><span class="tag fam-${f}">${f}</span></td></tr>`; }).join('');
+}
+$('#zoom').oninput = () => LAST.a && draw();
+$('#again').onclick = () => LAST.x && show(LAST.x, LAST.sr, LAST.opt, LAST.info);
+window.addEventListener('resize', () => LAST.a && draw());
+function wav(x, sr){ const n = x.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = (o, s) => { for(let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for(let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, x[i])) * 32767, true); return new Blob([b], { type:'audio/wav' }); }
+$('#dl').onclick = () => { const c = cfg(), A = document.createElement('a'); A.href = LAST.url; A.download = `labo_${c.bpm}bpm_${c.tok.replace(/\s+/g, '-').replace(/\./g, '_')}.wav`; A.click(); };
+$('#cp').onclick = async () => { const c = cfg(), r = { phrase:c.tok, div:c.div, bpm:c.bpm, mode:c.mode, lat:latGet(), resultat:RY.compact(LAST.a), sons:(LAST.a._ons || []).map(o => ({ t:+o.t.toFixed(3), c:o.c, lo:o.lo, hi:o.hi, db:o.db })) };
+  try{ await navigator.clipboard.writeText(JSON.stringify(r)); $('#cp').textContent = '✅ Copié'; }catch(e){ prompt('Copie ce texte :', JSON.stringify(r)); } setTimeout(() => { $('#cp').textContent = '📋 Copier le résultat'; }, 1500); };
+famInfo(); modeHelp();
+/* ===================== COLLECTE DE DONNÉES (lien à partager) + ESPACE RESPONSABLE ===================== */
+// labo-rythme.html?collecte  → parcours guidé pour profs et élèves (accord signé, sons isolés, phrases avec erreurs « sur commande »)
+// labo-rythme.html?admin     → Marc : voir, écouter, exporter (zip), supprimer
+// labo-rythme.html           → labo technique
+const COL_V = 1, CONSENT_V = '1 (16.10.2026)', ADMIN_EMAIL = 'dagreensayaman@gmail.com';
+const FB_CFG = { apiKey:"AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys", authDomain:"bbx-live.firebaseapp.com", databaseURL:"https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app", projectId:"bbx-live", storageBucket:"bbx-live.firebasestorage.app", messagingSenderId:"559192276580", appId:"1:559192276580:web:7820ed3825b8dc3add6971" };
+const QS = new URLSearchParams(location.search), MODE = QS.has('admin') ? 'admin' : QS.has('collecte') ? 'collecte' : 'labo';
+const ls = { get:(k, d) => { try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set:(k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
+const escH = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+const loadJS = src => new Promise((ok, ko) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => ko(new Error('chargement ' + src)); document.head.appendChild(e); });
+
+/* ---------- langues ---------- */
+let LANG = QS.get('lang') || ls.get('bbx-col-lang', '') || ((navigator.language || 'fr').slice(0, 2) === 'ja' ? 'ja' : (navigator.language || 'fr').slice(0, 2) === 'en' ? 'en' : 'fr');
+if(!['fr', 'en', 'ja'].includes(LANG)) LANG = 'fr';
+const TR = {
+ en:{
+  "Collecte de sons":"Sound collection","Aide-nous à apprendre à l'appli à écouter le beatbox":"Help us teach the app to listen to beatbox",
+  "Environ 15 minutes. Tu enregistres quelques sons et quelques phrases sur un clic. Parfois, on te demandera de te tromper exprès : c'est comme ça que l'appli apprend à repérer les erreurs.":"About 15 minutes. You record a few sounds and phrases on a click. Sometimes we'll ask you to make a mistake on purpose: that's how the app learns to spot errors.",
+  "Ce qu'il te faut":"What you need","L'appareil que tu utilises pour les cours (téléphone, ordinateur ou tablette).":"The device you use for class (phone, computer or tablet).","Un endroit plutôt calme.":"A fairly quiet place.","Pas de casque au début : le clic doit sortir du haut-parleur, volume à moitié.":"No headphones at first: the click must come out of the speaker, volume at half.","Tu peux refaire le parcours sur un autre appareil : chaque appareil aide !":"You can do it again on another device: every device helps!",
+  "Commencer":"Start","Suivant":"Next","Retour":"Back",
+  "Accord de participation":"Participation agreement","Lis, puis signe en bas.":"Read, then sign below.",
+  "Ton âge":"Your age","moins de 13 ans":"under 13","13 à 17 ans":"13 to 17","18 ans ou plus":"18 or older",
+  "Ton prénom et nom (signature)":"Your first and last name (signature)","J'ai lu cet accord et j'accepte de participer.":"I have read this agreement and agree to take part.",
+  "Pour les moins de 18 ans : un parent ou représentant légal signe aussi.":"Under 18: a parent or legal guardian also signs.","Prénom et nom du parent / représentant légal":"Parent / legal guardian first and last name","Je suis le parent ou représentant légal et j'accepte la participation de mon enfant.":"I am the parent or legal guardian and I agree to my child taking part.",
+  "Facultatif : j'autorise l'école à utiliser des extraits anonymes de mes enregistrements dans des tutos ou des démos.":"Optional: I allow the school to use anonymous excerpts of my recordings in tutorials or demos.",
+  "Signer et continuer":"Sign and continue","Signe l'accord pour continuer.":"Sign the agreement to continue.","Un parent doit signer aussi.":"A parent must sign too.",
+  "Ton matériel":"Your setup","Ces infos aident à savoir sur quel matériel l'analyse marche bien.":"This helps us know which equipment the analysis works well on.",
+  "Tu es":"You are","élève":"student","prof":"teacher","Ton niveau en beatbox":"Your beatbox level","débutant":"beginner","intermédiaire":"intermediate","avancé":"advanced",
+  "Appareil":"Device","téléphone":"phone","ordinateur portable":"laptop","ordinateur fixe":"desktop computer","tablette":"tablet",
+  "Micro":"Microphone","micro de l'appareil":"built-in mic","micro-casque filaire":"wired headset mic","écouteurs Bluetooth":"Bluetooth earbuds","micro USB / externe":"USB / external mic",
+  "La pièce":"The room","calme":"quiet","ça résonne un peu":"a bit echoey","un peu de bruit":"some noise",
+  "As-tu un casque ou des écouteurs ?":"Do you have headphones or earbuds?","oui, filaires":"yes, wired","oui, Bluetooth":"yes, Bluetooth","non":"no",
+  "Test du micro":"Mic test","Volume à moitié, pas de casque. Reste silencieux 6 secondes : on mesure le retard de ton micro et le bruit de la pièce.":"Volume at half, no headphones. Stay silent for 6 seconds: we measure your mic delay and the room noise.",
+  "Lancer le test":"Start the test","Écoute…":"Listening…","Clic pas entendu : monte un peu le volume et recommence.":"Click not heard: turn the volume up a bit and try again.","Micro OK":"Mic OK","retard du micro":"mic delay","bruit de la pièce":"room noise","Recommencer":"Try again",
+  "Tes sons":"Your sounds","Choisis les sons que tu sais faire (au moins 3). Pour chacun : 8 fois, un son sur chaque clic.":"Pick the sounds you can do (at least 3). For each one: 8 times, one sound on each click.",
+  "Enregistrer":"Record","Prêt ?":"Ready?","Joue":"Play","sur chaque clic":"on each click","Envoyé":"Sent","Pas envoyé (gardé ici)":"Not sent (kept here)",
+  "Les phrases":"The phrases","Joue la phrase 4 fois de suite après le décompte. Lis bien la consigne : parfois il faut se tromper exprès.":"Play the phrase 4 times in a row after the count-in. Read the instruction carefully: sometimes you must make a mistake on purpose.",
+  "Joue la phrase sans erreur.":"Play the phrase without mistakes.","Au tour {0}, ne joue PAS le son de la case {1}.":"On round {0}, do NOT play the sound in box {1}.","Au tour {0}, ajoute un {1} dans la case {2} (normalement vide).":"On round {0}, add a {1} in box {2} (normally empty).","Aux tours {0}, fais un {1} au lieu du {2} de la case {3}.":"On rounds {0}, play a {1} instead of the {2} in box {3}.","Au tour {0}, fais un {1} au lieu du {2} de la case {3}.":"On round {0}, play a {1} instead of the {2} in box {3}.",
+  "Tour":"Round","tour":"round","case":"box","Décompte":"Count-in","Défi (facultatif) : doubles croches":"Challenge (optional): sixteenth notes","Au casque (facultatif)":"With headphones (optional)","Mets ton casque, puis joue la phrase sans erreur.":"Put your headphones on, then play the phrase without mistakes.",
+  "Tu as fait exactement ce qui était demandé ?":"Did you do exactly what was asked?","Oui":"Yes","Non, je me suis trompé·e":"No, I made a mistake","Pas sûr·e":"Not sure",
+  "L'appli a vu":"The app heard","L'appli a bien repéré ton erreur 👍":"The app spotted your mistake 👍","L'appli n'a pas vu ton erreur : c'est exactement pour ça qu'on récolte des sons 🙏":"The app missed your mistake: that's exactly why we collect sounds 🙏",
+  "Passer":"Skip","Terminer":"Finish","Merci !":"Thank you!","Tes enregistrements aident toute l'école.":"Your recordings help the whole school.",
+  "Ton code de participation":"Your participation code","Garde-le : il permet de retirer tes données à tout moment.":"Keep it: it lets you withdraw your data at any time.",
+  "Refaire avec un autre appareil":"Do it again with another device","Retirer mes données":"Withdraw my data","Données retirées.":"Data withdrawn.","Sûr ? Tout sera supprimé.":"Sure? Everything will be deleted.",
+  "Envoi impossible pour l'instant : tes prises sont gardées ici.":"Can't send right now: your takes are kept here.","Réessayer l'envoi":"Retry sending","Télécharger mes prises (.zip)":"Download my takes (.zip)",
+  "Micro indisponible":"Microphone unavailable","prises envoyées":"takes sent","Étape":"Step","bien placés":"well placed","oubliés":"missed","en trop":"extra","sons confondus":"sounds mixed up",
+  "C'est ton appareil habituel ?":"Is this your usual device?",
+  "Sons proches":"Similar sounds","Ces deux sons se ressemblent trop pour l'appli pour l'instant : ton enregistrement va justement lui apprendre à les distinguer 🙏":"These two sounds are still too similar for the app: your recording will help it learn to tell them apart 🙏"
+ },
+ ja:{
+  "Collecte de sons":"サウンド収集","Aide-nous à apprendre à l'appli à écouter le beatbox":"アプリがビートボックスを聞き取れるように協力してください",
+  "Environ 15 minutes. Tu enregistres quelques sons et quelques phrases sur un clic. Parfois, on te demandera de te tromper exprès : c'est comme ça que l'appli apprend à repérer les erreurs.":"約15分。クリックに合わせていくつかの音とフレーズを録音します。ときどき、わざと間違えてもらいます。そうすることでアプリがミスを見つけられるようになります。",
+  "Ce qu'il te faut":"必要なもの","L'appareil que tu utilises pour les cours (téléphone, ordinateur ou tablette).":"レッスンで使う端末（スマホ、パソコン、タブレット）。","Un endroit plutôt calme.":"なるべく静かな場所。","Pas de casque au début : le clic doit sortir du haut-parleur, volume à moitié.":"最初はヘッドホンなし：クリックはスピーカーから、音量は半分。","Tu peux refaire le parcours sur un autre appareil : chaque appareil aide !":"別の端末でもう一度できます。どの端末も役に立ちます！",
+  "Commencer":"はじめる","Suivant":"次へ","Retour":"戻る",
+  "Accord de participation":"参加同意書","Lis, puis signe en bas.":"読んでから、下で署名してください。",
+  "Ton âge":"年齢","moins de 13 ans":"13歳未満","13 à 17 ans":"13〜17歳","18 ans ou plus":"18歳以上",
+  "Ton prénom et nom (signature)":"氏名（署名）","J'ai lu cet accord et j'accepte de participer.":"この同意書を読み、参加に同意します。",
+  "Pour les moins de 18 ans : un parent ou représentant légal signe aussi.":"18歳未満の場合：保護者（法定代理人）も署名してください。","Prénom et nom du parent / représentant légal":"保護者（法定代理人）の氏名","Je suis le parent ou représentant légal et j'accepte la participation de mon enfant.":"私は保護者（法定代理人）であり、子どもの参加に同意します。",
+  "Facultatif : j'autorise l'école à utiliser des extraits anonymes de mes enregistrements dans des tutos ou des démos.":"任意：録音の匿名の一部をチュートリアルやデモに使うことを許可します。",
+  "Signer et continuer":"署名して次へ","Signe l'accord pour continuer.":"続けるには同意書に署名してください。","Un parent doit signer aussi.":"保護者の署名も必要です。",
+  "Ton matériel":"使用機材","Ces infos aident à savoir sur quel matériel l'analyse marche bien.":"どの機材で分析がうまく動くかを知るための情報です。",
+  "Tu es":"あなたは","élève":"生徒","prof":"先生","Ton niveau en beatbox":"ビートボックスのレベル","débutant":"初級","intermédiaire":"中級","avancé":"上級",
+  "Appareil":"端末","téléphone":"スマホ","ordinateur portable":"ノートパソコン","ordinateur fixe":"デスクトップ","tablette":"タブレット",
+  "Micro":"マイク","micro de l'appareil":"内蔵マイク","micro-casque filaire":"有線ヘッドセット","écouteurs Bluetooth":"Bluetoothイヤホン","micro USB / externe":"USB／外部マイク",
+  "La pièce":"部屋","calme":"静か","ça résonne un peu":"少し響く","un peu de bruit":"少し騒がしい",
+  "As-tu un casque ou des écouteurs ?":"ヘッドホンかイヤホンはありますか？","oui, filaires":"はい（有線）","oui, Bluetooth":"はい（Bluetooth）","non":"いいえ",
+  "Test du micro":"マイクテスト","Volume à moitié, pas de casque. Reste silencieux 6 secondes : on mesure le retard de ton micro et le bruit de la pièce.":"音量は半分、ヘッドホンなし。6秒間静かにしてください。マイクの遅れと部屋の雑音を測ります。",
+  "Lancer le test":"テスト開始","Écoute…":"測定中…","Clic pas entendu : monte un peu le volume et recommence.":"クリックが聞こえませんでした。音量を少し上げてやり直してください。","Micro OK":"マイクOK","retard du micro":"マイクの遅れ","bruit de la pièce":"部屋の雑音","Recommencer":"やり直す",
+  "Tes sons":"あなたの音","Choisis les sons que tu sais faire (au moins 3). Pour chacun : 8 fois, un son sur chaque clic.":"できる音を選んでください（3つ以上）。それぞれクリックごとに1回、8回鳴らします。",
+  "Enregistrer":"録音","Prêt ?":"準備OK？","Joue":"鳴らす","sur chaque clic":"クリックごとに","Envoyé":"送信済み","Pas envoyé (gardé ici)":"未送信（端末に保存）",
+  "Les phrases":"フレーズ","Joue la phrase 4 fois de suite après le décompte. Lis bien la consigne : parfois il faut se tromper exprès.":"カウントのあと、フレーズを4回続けて演奏します。指示をよく読んでください。わざと間違える場合があります。",
+  "Joue la phrase sans erreur.":"ミスなしで演奏してください。","Au tour {0}, ne joue PAS le son de la case {1}.":"{0}回目は、{1}番のマスの音を鳴らさないでください。","Au tour {0}, ajoute un {1} dans la case {2} (normalement vide).":"{0}回目は、{2}番のマス（本来は空）に{1}を足してください。","Aux tours {0}, fais un {1} au lieu du {2} de la case {3}.":"{0}回目は、{3}番のマスの{2}の代わりに{1}を鳴らしてください。","Au tour {0}, fais un {1} au lieu du {2} de la case {3}.":"{0}回目は、{3}番のマスの{2}の代わりに{1}を鳴らしてください。",
+  "Tour":"回目","tour":"回目","case":"マス","Décompte":"カウント","Défi (facultatif) : doubles croches":"チャレンジ（任意）：16分音符","Au casque (facultatif)":"ヘッドホンで（任意）","Mets ton casque, puis joue la phrase sans erreur.":"ヘッドホンをつけて、ミスなしで演奏してください。",
+  "Tu as fait exactement ce qui était demandé ?":"指示どおりにできましたか？","Oui":"はい","Non, je me suis trompé·e":"いいえ、間違えました","Pas sûr·e":"わからない",
+  "L'appli a vu":"アプリの判定","L'appli a bien repéré ton erreur 👍":"アプリがミスを見つけました 👍","L'appli n'a pas vu ton erreur : c'est exactement pour ça qu'on récolte des sons 🙏":"アプリはミスを見逃しました。だからこそ音を集めています 🙏",
+  "Passer":"スキップ","Terminer":"終了","Merci !":"ありがとう！","Tes enregistrements aident toute l'école.":"あなたの録音はスクール全体の役に立ちます。",
+  "Ton code de participation":"参加コード","Garde-le : il permet de retirer tes données à tout moment.":"保管してください。いつでもデータを削除できます。",
+  "Refaire avec un autre appareil":"別の端末でもう一度","Retirer mes données":"データを削除","Données retirées.":"データを削除しました。","Sûr ? Tout sera supprimé.":"本当に？すべて削除されます。",
+  "Envoi impossible pour l'instant : tes prises sont gardées ici.":"今は送信できません。録音は端末に保存されています。","Réessayer l'envoi":"もう一度送信","Télécharger mes prises (.zip)":"録音をダウンロード（.zip）",
+  "Micro indisponible":"マイクが使えません","prises envoyées":"件送信","Étape":"ステップ","bien placés":"正しい位置","oubliés":"抜け","en trop":"余分","sons confondus":"音の取り違え",
+  "C'est ton appareil habituel ?":"いつもの端末ですか？",
+  "Sons proches":"似ている音","Ces deux sons se ressemblent trop pour l'appli pour l'instant : ton enregistrement va justement lui apprendre à les distinguer 🙏":"この2つの音は、今のアプリにはまだ似すぎています。あなたの録音が聞き分けの学習に役立ちます 🙏"
+ }
+};
+const t = (s, ...a) => { let o = (LANG !== 'fr' && TR[LANG] && TR[LANG][s]) || s; a.forEach((v, i) => { o = o.split('{' + i + '}').join(v); }); return o; };
+
+/* ---------- accord à signer (version française de référence + traductions) ---------- */
+const CONSENT = {
+ fr:`<p><b>Qui :</b> Lyrebird Beatbox School (responsable : Marc « KEUMART », contact : ${ADMIN_EMAIL}).</p>
+<p><b>Quoi :</b> des enregistrements audio de ta voix pendant environ 15 minutes (sons de beatbox, phrases jouées sur un clic) ; des infos sur ton matériel (appareil, micro, pièce), ton rôle (élève ou prof), ton niveau et ta tranche d'âge ; ton nom, qui sert de signature pour cet accord.</p>
+<p><b>Pourquoi :</b> uniquement pour développer et tester l'outil qui analyse le rythme et reconnaît les sons dans BBX Classroom (régler l'outil, mesurer sa fiabilité, lui apprendre à reconnaître les sons).</p>
+<p><b>Qui y a accès :</b> le responsable de l'école et les personnes qui développent l'outil. Les enregistrements peuvent être analysés avec un service d'intelligence artificielle utilisé pour le développement (Claude, de la société Anthropic). Ils ne sont ni vendus, ni publiés. Ton nom n'est jamais lié aux enregistrements en dehors de cet accord.</p>
+<p><b>Où :</b> sur les serveurs Google Firebase en Europe (Belgique).</p>
+<p><b>Combien de temps :</b> jusqu'à ce que tu demandes la suppression, et au plus 5 ans.</p>
+<p><b>Tes droits :</b> la participation est volontaire et n'a aucun effet sur tes cours. Tu peux consulter, corriger ou supprimer tes données à tout moment, avec le bouton « Retirer mes données » ou par e-mail avec ton code de participation.</p>
+<p><b>Moins de 18 ans :</b> un parent ou représentant légal doit aussi signer.</p>`,
+ en:`<p><i>Translation: the French version is the reference.</i></p>
+<p><b>Who:</b> Lyrebird Beatbox School (person in charge: Marc "KEUMART", contact: ${ADMIN_EMAIL}).</p>
+<p><b>What:</b> audio recordings of your voice for about 15 minutes (beatbox sounds, phrases played on a click); information about your equipment (device, mic, room), your role (student or teacher), your level and your age group; your name, used as the signature of this agreement.</p>
+<p><b>Why:</b> only to develop and test the tool that analyses rhythm and recognises sounds in BBX Classroom (tuning it, measuring how reliable it is, teaching it to recognise sounds).</p>
+<p><b>Who can access it:</b> the head of the school and the people developing the tool. Recordings may be analysed with an artificial intelligence service used for development (Claude, by Anthropic). They are never sold or published. Your name is never linked to the recordings outside this agreement.</p>
+<p><b>Where:</b> on Google Firebase servers in Europe (Belgium).</p>
+<p><b>How long:</b> until you ask for deletion, and at most 5 years.</p>
+<p><b>Your rights:</b> taking part is voluntary and has no effect on your classes. You can view, correct or delete your data at any time, with the "Withdraw my data" button or by e-mail with your participation code.</p>
+<p><b>Under 18:</b> a parent or legal guardian must also sign.</p>`,
+ ja:`<p><i>翻訳です。正式な文書はフランス語版です。</i></p>
+<p><b>運営者：</b>Lyrebird Beatbox School（責任者：Marc「KEUMART」、連絡先：${ADMIN_EMAIL}）。</p>
+<p><b>集めるもの：</b>約15分間のあなたの声の録音（ビートボックスの音、クリックに合わせたフレーズ）。機材の情報（端末、マイク、部屋）、立場（生徒か先生か）、レベル、年齢層。同意書の署名としての氏名。</p>
+<p><b>目的：</b>BBX Classroom のリズム分析・音の認識ツールの開発とテストのためだけに使います（調整、信頼性の測定、音を認識する学習）。</p>
+<p><b>閲覧できる人：</b>スクールの責任者とツールの開発者。開発のために人工知能サービス（Anthropic社のClaude）で録音を分析することがあります。販売・公開はしません。この同意書以外で、氏名と録音が結びつけられることはありません。</p>
+<p><b>保存場所：</b>ヨーロッパ（ベルギー）の Google Firebase サーバー。</p>
+<p><b>保存期間：</b>削除を求めるまで、最長5年。</p>
+<p><b>あなたの権利：</b>参加は任意で、レッスンには一切影響しません。「データを削除」ボタン、または参加コードを添えたメールで、いつでもデータの確認・訂正・削除ができます。</p>
+<p><b>18歳未満：</b>保護者（法定代理人）の署名も必要です。</p>`
+};
+
+/* ---------- protocole ---------- */
+const SONS_BASE = [['P', 'Kick'], ['K', 'K-snare'], ['K~', 'Inward K-snare'], ['Ts', 'Charley ouvert'], ['T', 'Charley fermé'], ['Ts~', 'Charley ouvert long'], ['Th~', 'Charley ouvert (Th)'], ['L', 'Clic langue'], ['Pch', 'Snare brossée'], ['Pf', 'Snare aiguë'], ['Fsh', 'Fish snare'], ['Spt', 'Spit snare']];
+const PA = 'P . K . P P K .', PB = 'P Ts K Ts P Ts K Ts', PC = 'P . Ts Ts K . Ts . P P Ts . K . Ts Ts';
+// err : { type:'oubli'|'trop'|'swap', tours:[n° de tour, 1…], cell:n° de case 1…, son (ajouté ou joué à la place) }
+const PRISES = [
+  { id:'A-propre', tok:PA, div:2, bpm:90 },
+  { id:'A-oubli', tok:PA, div:2, bpm:90, err:{ type:'oubli', tours:[2], cell:5 } },
+  { id:'A-trop', tok:PA, div:2, bpm:90, err:{ type:'trop', tours:[3], cell:4, son:'P' } },
+  { id:'A-swap', tok:PA, div:2, bpm:90, err:{ type:'swap', tours:[2, 4], cell:1, son:'K' } },
+  { id:'B-propre', tok:PB, div:2, bpm:100 },
+  { id:'B-oubli', tok:PB, div:2, bpm:100, err:{ type:'oubli', tours:[3], cell:4 } },
+  { id:'B-swap', tok:PB, div:2, bpm:100, err:{ type:'swap', tours:[2], cell:3, son:'P' } },
+  { id:'C-defi', tok:PC, div:4, bpm:80, opt:'defi' },
+  // sons proches : seulement si la personne a coché ces sons (le cas le plus dur à reconnaître)
+  { id:'D-propre', tok:'P . Pch . P P Pf .', div:2, bpm:90, need:['Pch', 'Pf'] },
+  { id:'D-swap', tok:'P . Pch . P P Pf .', div:2, bpm:90, need:['Pch', 'Pf'], err:{ type:'swap', tours:[2], cell:3, son:'Pf' } },
+  { id:'E-propre', tok:'P . K . P P K~ .', div:2, bpm:90, need:['K', 'K~'] },
+  { id:'E-swap', tok:'P . K . P P K~ .', div:2, bpm:90, need:['K', 'K~'], err:{ type:'swap', tours:[3], cell:7, son:'K' } },
+  { id:'F-propre', tok:'P T Ts T P T Ts T', div:2, bpm:90, need:['Ts', 'T'] },
+  { id:'F-swap', tok:'P T Ts T P T Ts T', div:2, bpm:90, need:['Ts', 'T'], err:{ type:'swap', tours:[2], cell:3, son:'T' } },
+  { id:'G-propre', tok:'P T Ts~ T K~ T Ts~ T', div:2, bpm:85, need:['K~', 'Ts~', 'T'] },
+  { id:'G-swap', tok:'P T Ts~ T K~ T Ts~ T', div:2, bpm:85, need:['K~', 'Ts~', 'T', 'Ts'], err:{ type:'swap', tours:[3], cell:7, son:'Ts' } },
+  { id:'A-casque', tok:PA, div:2, bpm:90, opt:'casque' }
+];
+const TOURS = 4;
+function consigne(p){
+  if(p.opt === 'casque') return t('Mets ton casque, puis joue la phrase sans erreur.');
+  const e = p.err; if(!e) return t('Joue la phrase sans erreur.');
+  const toks = p.tok.split(' '), tr = e.tours.join(LANG === 'ja' ? '・' : ' & ');
+  if(e.type === 'oubli') return t('Au tour {0}, ne joue PAS le son de la case {1}.', tr, e.cell);
+  if(e.type === 'trop') return t('Au tour {0}, ajoute un {1} dans la case {2} (normalement vide).', tr, `<b>${e.son}</b>`, e.cell);
+  return t(e.tours.length > 1 ? 'Aux tours {0}, fais un {1} au lieu du {2} de la case {3}.' : 'Au tour {0}, fais un {1} au lieu du {2} de la case {3}.', tr, `<b>${e.son}</b>`, `<b>${toks[e.cell - 1]}</b>`, e.cell);
+}
+// Ce que l'élève joue vraiment (vérité terrain), tour par tour
+function joue(p){ const toks = p.tok.split(' '); return Array.from({ length:TOURS }, (_, k) => toks.map((x, i) => { const e = p.err; if(e && e.tours.includes(k + 1) && e.cell === i + 1) return e.type === 'oubli' ? '.' : e.son; return x; })); }
+// L'analyse a-t-elle vu l'erreur demandée ?
+function vu(p, a){ const e = p.err; if(!e || !a || !a.cells) return null; const c = RY.cellOf(a.cells[e.cell - 1]); if(e.type === 'oubli') return c.m > 0; if(e.type === 'trop') return c.x > 0;
+  if(RY.famOf(e.son) === RY.famOf(p.tok.split(' ')[e.cell - 1])) return c.f > 0 ? true : 'dur'; // deux sons de la même famille : l'appli ne sait pas encore les séparer
+  return c.f > 0; }
+
+/* ---------- Firebase (chargé seulement pour la collecte et l'espace responsable) ---------- */
+const FB = { app:null, db:null, auth:null, ok:false };
+async function fbInit(){
+  if(FB.app) return FB.ok;
+  try{ for(const m of ['app', 'auth', 'database']) await loadJS(`https://www.gstatic.com/firebasejs/10.12.2/firebase-${m}-compat.js`);
+    FB.app = firebase.initializeApp(FB_CFG, 'collecte'); FB.db = FB.app.database(); FB.auth = FB.app.auth();
+    await new Promise(ok => { const un = FB.auth.onAuthStateChanged(() => { un(); ok(); }); }); FB.ok = true;
+  }catch(e){ console.warn('firebase', e); FB.ok = false; }
+  return FB.ok;
+}
+const R = p => FB.db.ref('collecte/' + p);
+
+/* ---------- état du parcours (gardé dans le navigateur pour reprendre plus tard) ---------- */
+const CS = Object.assign({ step:'intro', sid:'', pers:ls.get('bbx-col-person', '') || ('p' + Math.random().toString(36).slice(2, 10)), consent:null, setup:{}, lat:null, noise:null, sons:['P', 'K', 'K~', 'Ts', 'T'], done:{}, queue:[] }, ls.get('bbx-col-state', {}));
+ls.set('bbx-col-person', CS.pers);
+const save = () => { const { queue, ...rest } = CS; ls.set('bbx-col-state', rest); };
+const newSid = () => 'c' + Date.now().toString(36).slice(-6) + Math.random().toString(36).slice(2, 6);
+
+/* ---------- enregistrement : micro (analyse) + fichier stéréo (gauche = micro, droite = clic exact) ---------- */
+async function capt2(sec, onStart){
+  ensure(); if(!wkOk){ await ac.audioWorklet.addModule(URL.createObjectURL(new Blob([WK], { type:'application/javascript' }))); wkOk = true; }
+  const st = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+  const src = ac.createMediaStreamSource(st), node = new AudioWorkletNode(ac, 'rec-ry'), mute = ac.createGain(); mute.gain.value = 0;
+  const mono = ac.createGain(); mono.channelCount = 1; mono.channelCountMode = 'explicit'; mono.channelInterpretation = 'speakers';
+  const bus = ac.createGain(); bus.channelCount = 1; bus.channelCountMode = 'explicit';
+  const mg = ac.createChannelMerger(2), dst = ac.createMediaStreamDestination();
+  src.connect(node); node.connect(mute); mute.connect(ac.destination); src.connect(mono); mono.connect(mg, 0, 0); bus.connect(mg, 0, 1); mg.connect(dst);
+  const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+  let mr = null; const parts = [];
+  try{ mr = new MediaRecorder(dst.stream, mime ? { mimeType:mime, audioBitsPerSecond:64000 } : undefined); mr.ondataavailable = e => { if(e.data && e.data.size) parts.push(e.data); }; mr.start(); }catch(e){ mr = null; }
+  const chunks = []; let f0 = null, peak = 0;
+  node.port.onmessage = e => { if(f0 == null) f0 = e.data.f; chunks.push(e.data.d); for(const v of e.data.d){ const a = Math.abs(v); if(a > peak) peak = a; } };
+  const meter = setInterval(() => { const m = document.querySelector('#clvl'); if(m) m.style.width = Math.min(100, peak * 140) + '%'; peak *= .6; }, 80);
+  await new Promise(r => setTimeout(r, 300));
+  const t0 = ac.currentTime + .15; onStart && onStart(t0, bus);
+  await new Promise(r => setTimeout(r, (t0 - ac.currentTime + sec) * 1000));
+  clearInterval(meter);
+  const blob = await new Promise(ok => { if(!mr || mr.state === 'inactive') return ok(null); mr.onstop = () => ok(new Blob(parts, { type:mr.mimeType || mime || 'audio/webm' })); mr.stop(); });
+  src.disconnect(); node.disconnect(); mono.disconnect(); bus.disconnect(); mg.disconnect(); st.getTracks().forEach(x => x.stop());
+  const n = chunks.reduce((s, c) => s + c.length, 0), x = new Float32Array(n); let o = 0; chunks.forEach(c => { x.set(c, o); o += c.length; });
+  return { x, sr:ac.sampleRate, tStart:f0 / ac.sampleRate, blob };
+}
+const toDataURL = b => new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = ko; r.readAsDataURL(b); });
+
+/* ---------- envoi (avec file d'attente si hors ligne) ---------- */
+async function upload(item){
+  if(!FB.ok || !CS.sid) throw new Error('hors ligne');
+  const { pid, meta, blob } = item;
+  if(blob){ const d = await toDataURL(blob); if(d.length < 690000) await R('audio/' + CS.sid + '/' + pid).set(d); else meta.audioTropLong = true; }
+  await R('prises/' + CS.sid + '/' + pid).set(meta);
+}
+async function send(item){
+  try{ await upload(item); CS.done[item.meta.id] = 'ok'; }
+  catch(e){ console.warn('envoi', e); CS.queue.push(item); CS.done[item.meta.id] = 'local'; }
+  save();
+}
+async function retryQueue(){ const q = CS.queue.splice(0); for(const it of q) await send(it); render(); }
+async function zipLocal(){
+  await loadJS('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'); const z = new JSZip();
+  z.file('session.json', JSON.stringify({ sid:CS.sid, pers:CS.pers, setup:CS.setup, lat:CS.lat, noise:CS.noise, consent:CS.consent }, null, 1));
+  CS.queue.forEach(it => { z.file(it.pid + '.json', JSON.stringify(it.meta, null, 1)); if(it.blob) z.file(it.pid + extOf(it.blob.type), it.blob); });
+  const b = await z.generateAsync({ type:'blob' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'collecte_' + (CS.sid || 'local') + '.zip'; a.click();
+}
+const extOf = m => /mp4/.test(m || '') ? '.m4a' : /ogg/.test(m || '') ? '.ogg' : '.webm';
+
+/* ---------- interface du parcours ---------- */
+const STEPS = ['intro', 'accord', 'setup', 'micro', 'sons', 'phrases', 'fin'];
+const C = () => document.querySelector('#collect');
+const opt = (name, vals, cur) => `<div class="chips">${vals.map(([v, l]) => `<label class="chip${cur === v ? ' on' : ''}"><input type="radio" name="${name}" value="${v}"${cur === v ? ' checked' : ''}>${escH(t(l))}</label>`).join('')}</div>`;
+function head(){
+  const i = STEPS.indexOf(CS.step);
+  return `<div class="chead"><h1>🎤 ${t('Collecte de sons')}</h1><span class="sp"></span><div class="langs">${['fr', 'en', 'ja'].map(l => `<button class="mini${l === LANG ? ' b-cyan' : ''}" data-lang="${l}">${l.toUpperCase()}</button>`).join('')}</div></div>
+    <div class="prog">${STEPS.slice(1, -1).map((s, k) => `<i class="${k + 1 < i ? 'ok' : k + 1 === i ? 'on' : ''}"></i>`).join('')}</div>`;
+}
+function render(){
+  const s = CS.step, c = C(); let h = head();
+  if(s === 'intro') h += `<div class="card"><h2>${t('Aide-nous à apprendre à l\'appli à écouter le beatbox')}</h2><p>${t('Environ 15 minutes. Tu enregistres quelques sons et quelques phrases sur un clic. Parfois, on te demandera de te tromper exprès : c\'est comme ça que l\'appli apprend à repérer les erreurs.')}</p>
+      <h2>${t('Ce qu\'il te faut')}</h2><ul class="steps"><li>📱💻 ${t('L\'appareil que tu utilises pour les cours (téléphone, ordinateur ou tablette).')}</li><li>🤫 ${t('Un endroit plutôt calme.')}</li><li>🔊 ${t('Pas de casque au début : le clic doit sortir du haut-parleur, volume à moitié.')}</li><li>🔁 ${t('Tu peux refaire le parcours sur un autre appareil : chaque appareil aide !')}</li></ul>
+      <div class="row"><span class="sp"></span><button class="b-pink big" data-go="accord">${t('Commencer')} →</button></div></div>`;
+  if(s === 'accord'){ const k = CS.consent || {};
+    h += `<div class="card"><h2>📝 ${t('Accord de participation')}</h2><div class="small muted">${t('Lis, puis signe en bas.')} · v${CONSENT_V}</div><div class="consent">${CONSENT[LANG] || CONSENT.fr}</div>
+      <label>${t('Ton âge')}</label>${opt('age', [['moins13', 'moins de 13 ans'], ['13-17', '13 à 17 ans'], ['18+', '18 ans ou plus']], k.age || CS.setup.age)}
+      <label style="display:block;margin-top:8px">${t('Ton prénom et nom (signature)')}<br><input id="cnom" value="${escH(k.nom || '')}" autocomplete="name" style="width:100%;max-width:420px"></label>
+      <label class="chk"><input type="checkbox" id="cok"${k.ok ? ' checked' : ''}> ${t('J\'ai lu cet accord et j\'accepte de participer.')}</label>
+      <div id="cpar" ${(k.age || CS.setup.age) && (k.age || CS.setup.age) !== '18+' ? '' : 'hidden'} class="cpar"><div class="small"><b>👪 ${t('Pour les moins de 18 ans : un parent ou représentant légal signe aussi.')}</b></div>
+        <label>${t('Prénom et nom du parent / représentant légal')}<br><input id="cpnom" value="${escH((k.parent || {}).nom || '')}" style="width:100%;max-width:420px"></label>
+        <label class="chk"><input type="checkbox" id="cpok"${(k.parent || {}).ok ? ' checked' : ''}> ${t('Je suis le parent ou représentant légal et j\'accepte la participation de mon enfant.')}</label></div>
+      <label class="chk muted"><input type="checkbox" id="cext"${k.extraits ? ' checked' : ''}> ${t('Facultatif : j\'autorise l\'école à utiliser des extraits anonymes de mes enregistrements dans des tutos ou des démos.')}</label>
+      <div class="err" id="cerr"></div>
+      <div class="row"><button data-go="intro">← ${t('Retour')}</button><span class="sp"></span><button class="b-pink big" data-act="sign">✍️ ${t('Signer et continuer')}</button></div></div>`; }
+  if(s === 'setup'){ const u = CS.setup;
+    h += `<div class="card"><h2>🎛 ${t('Ton matériel')}</h2><div class="small muted">${t('Ces infos aident à savoir sur quel matériel l\'analyse marche bien.')}</div>
+      <label>${t('Tu es')}</label>${opt('role', [['eleve', 'élève'], ['prof', 'prof']], u.role)}
+      <label>${t('Ton niveau en beatbox')}</label>${opt('niveau', [['1', 'débutant'], ['2', 'intermédiaire'], ['3', 'avancé']], u.niveau)}
+      <label>${t('Appareil')}</label>${opt('appareil', [['tel', 'téléphone'], ['portable', 'ordinateur portable'], ['fixe', 'ordinateur fixe'], ['tablette', 'tablette']], u.appareil)}
+      <label>${t('Micro')}</label>${opt('micro', [['integre', 'micro de l\'appareil'], ['filaire', 'micro-casque filaire'], ['bt', 'écouteurs Bluetooth'], ['usb', 'micro USB / externe']], u.micro)}
+      <label>${t('La pièce')}</label>${opt('piece', [['calme', 'calme'], ['resonne', 'ça résonne un peu'], ['bruit', 'un peu de bruit']], u.piece)}
+      <label>${t('As-tu un casque ou des écouteurs ?')}</label>${opt('casque', [['filaire', 'oui, filaires'], ['bt', 'oui, Bluetooth'], ['non', 'non']], u.casque)}
+      <label>${t('C\'est ton appareil habituel ?')}</label>${opt('habituel', [['oui', 'Oui'], ['non', 'non']], u.habituel)}
+      <div class="err" id="serr"></div>
+      <div class="row"><button data-go="accord">← ${t('Retour')}</button><span class="sp"></span><button class="b-pink big" data-act="setup">${t('Suivant')} →</button></div></div>`; }
+  if(s === 'micro') h += `<div class="card"><h2>🎚 ${t('Test du micro')}</h2><p>${t('Volume à moitié, pas de casque. Reste silencieux 6 secondes : on mesure le retard de ton micro et le bruit de la pièce.')}</p>
+      <div class="row"><button class="b-yel big" data-act="micro">▶ ${t('Lancer le test')}</button><div class="meter"><i id="clvl"></i></div></div><div id="mres" class="res" ${CS.lat != null ? '' : 'hidden'}>${CS.lat != null ? `✅ ${t('Micro OK')} · ${t('retard du micro')} : <b>${CS.lat} ms</b>${CS.noise != null ? ` · ${t('bruit de la pièce')} : ${CS.noise} dB` : ''}` : ''}</div>
+      <div class="row" style="margin-top:10px"><button data-go="setup">← ${t('Retour')}</button><span class="sp"></span><button class="b-pink big" data-go="sons" ${CS.lat != null ? '' : 'disabled'}>${t('Suivant')} →</button><button class="mini" data-go="sons" title="">${t('Passer')}</button></div></div>`;
+  if(s === 'sons') h += `<div class="card"><h2>🌸 ${t('Tes sons')}</h2><p>${t('Choisis les sons que tu sais faire (au moins 3). Pour chacun : 8 fois, un son sur chaque clic.')}</p>
+      <div class="chips">${SONS_BASE.map(([n, l]) => `<label class="chip${CS.sons.includes(n) ? ' on' : ''}"><input type="checkbox" data-son="${escH(n)}"${CS.sons.includes(n) ? ' checked' : ''}><b>${escH(n)}</b>&nbsp;<span class="small">${escH(l)}</span></label>`).join('')}</div>
+      <div class="sonlist">${CS.sons.map(n => sonRow(n)).join('')}</div>
+      <div class="row" style="margin-top:10px"><button data-go="micro">← ${t('Retour')}</button><span class="sp"></span><button class="b-pink big" data-go="phrases">${t('Suivant')} →</button></div></div>`;
+  if(s === 'phrases') h += `<div class="card"><h2>🥁 ${t('Les phrases')}</h2><p>${t('Joue la phrase 4 fois de suite après le décompte. Lis bien la consigne : parfois il faut se tromper exprès.')}</p>
+      ${PRISES.filter(p => (p.opt !== 'casque' || (CS.setup.casque && CS.setup.casque !== 'non')) && (!p.need || p.need.every(n => CS.sons.includes(n)))).map((p, i) => priseHTML(p, i)).join('')}
+      <div class="row" style="margin-top:10px"><button data-go="sons">← ${t('Retour')}</button><span class="sp"></span><button class="b-pink big" data-go="fin">${t('Terminer')} →</button></div></div>`;
+  if(s === 'fin'){ const n = Object.values(CS.done).filter(v => v === 'ok').length;
+    h += `<div class="card"><h2>🎉 ${t('Merci !')}</h2><p>${t('Tes enregistrements aident toute l\'école.')} <b>${n}</b> ${t('prises envoyées')}.</p>
+      ${CS.sid ? `<div class="res"><div class="small">${t('Ton code de participation')}</div><div class="code">${escH(CS.sid)}</div><div class="small muted">${t('Garde-le : il permet de retirer tes données à tout moment.')}</div></div>` : ''}
+      ${CS.queue.length ? `<div class="res low">${t('Envoi impossible pour l\'instant : tes prises sont gardées ici.')}<div class="row" style="margin-top:6px"><button data-act="retry">↻ ${t('Réessayer l\'envoi')}</button><button data-act="zip">💾 ${t('Télécharger mes prises (.zip)')}</button></div></div>` : ''}
+      <div class="row" style="margin-top:12px"><button class="b-cyan" data-act="again">🔁 ${t('Refaire avec un autre appareil')}</button><span class="sp"></span><button class="mini" data-act="retirer">🗑 ${t('Retirer mes données')}</button></div></div>`; }
+  c.innerHTML = h; bindChips();
+}
+function sonRow(n){
+  const id = 'son-' + n, st = CS.done[id];
+  return `<div class="prise${st ? ' fait' : ''}" data-row="${escH(id)}"><div class="row"><b class="bigtok" style="--c:${FC[RY.famOf(n)] || '#9ab'}">${escH(n)}</b><span>${t('Joue')} <b>${escH(n)}</b> ${t('sur chaque clic')} · 80 BPM · 8×</span><span class="sp"></span>${st ? `<span class="small">${st === 'ok' ? '✅ ' + t('Envoyé') : '💾 ' + t('Pas envoyé (gardé ici)')}</span>` : ''}<button class="${st ? '' : 'b-pink'}" data-rec="${escH(id)}">● ${st ? t('Recommencer') : t('Enregistrer')}</button></div><div class="live" hidden></div><div class="after"></div></div>`;
+}
+function gridRows(p, curTour, curCell){
+  const J = joue(p), toks = p.tok.split(' ');
+  return `<div class="tgrid" style="--n:${toks.length}">${J.map((row, k) => `<div class="trow${curTour === k ? ' now' : ''}"><span class="tlab">${t('Tour')} ${k + 1}</span>${row.map((x, i) => { const sp = p.err && p.err.tours.includes(k + 1) && p.err.cell === i + 1, cls = (sp ? ' sp ' + p.err.type : '') + (curTour === k && curCell === i ? ' cur' : '') + ((i % p.div) === 0 ? ' beat' : '');
+    return `<span class="tc${cls}" style="--c:${x === '.' ? 'transparent' : FC[RY.famOf(x)] || '#9ab'}">${sp && p.err.type === 'oubli' ? '🚫' : x === '.' ? '·' : escH(x)}</span>`; }).join('')}</div>`).join('')}</div>`;
+}
+function priseHTML(p, i){
+  const st = CS.done[p.id];
+  return `<div class="prise${st ? ' fait' : ''}" data-row="${p.id}"><div class="row"><b>${i + 1}.</b> ${p.need ? '<span class="pill">🔀 ' + t('Sons proches') + ' : ' + p.need.join(' / ') + '</span>' : ''}${p.opt === 'defi' ? '<span class="pill">⭐ ' + t('Défi (facultatif) : doubles croches') + '</span>' : p.opt === 'casque' ? '<span class="pill">🎧 ' + t('Au casque (facultatif)') + '</span>' : ''}<span class="small muted">${p.bpm} BPM</span><span class="sp"></span>${st ? `<span class="small">${st === 'ok' ? '✅ ' + t('Envoyé') : '💾 ' + t('Pas envoyé (gardé ici)')}</span>` : ''}</div>
+    <div class="cons${p.err ? ' warn' : ''}">${p.err ? '⚠️ ' : '✅ '}${consigne(p)}</div>${gridRows(p)}
+    <div class="row"><button class="${st ? '' : 'b-pink'}" data-rec="${p.id}">● ${st ? t('Recommencer') : t('Enregistrer')}</button>${p.opt ? `<button class="mini" data-skip="${p.id}">${t('Passer')}</button>` : ''}</div><div class="live" hidden></div><div class="after"></div></div>`;
+}
+function bindChips(){ C().querySelectorAll('.chip input').forEach(i => i.addEventListener('change', () => { C().querySelectorAll(`input[name="${i.name}"]`).forEach(j => j.closest('.chip').classList.toggle('on', j.checked));
+  if(i.name === 'age'){ const p = C().querySelector('#cpar'); if(p) p.hidden = i.value === '18+'; } })); }
+const val = n => { const e = C().querySelector(`input[name="${n}"]:checked`); return e ? e.value : ''; };
+
+document.addEventListener('click', async e => {
+  if(MODE !== 'collecte') return;
+  const b = e.target.closest('button,[data-son]'); if(!b) return;
+  if(b.dataset.lang){ LANG = b.dataset.lang; ls.set('bbx-col-lang', LANG); render(); return; }
+  if(b.dataset.go){ CS.step = b.dataset.go; save(); render(); scrollTo(0, 0); return; }
+  const a = b.dataset.act;
+  if(a === 'sign'){ C().querySelector('#cerr').textContent = ''; const age = val('age'), nom = C().querySelector('#cnom').value.trim(), ok = C().querySelector('#cok').checked, er = C().querySelector('#cerr');
+    if(!age || nom.length < 3 || !ok){ er.textContent = t('Signe l\'accord pour continuer.'); return; }
+    let parent = null; if(age !== '18+'){ const pn = C().querySelector('#cpnom').value.trim(), pok = C().querySelector('#cpok').checked; if(pn.length < 3 || !pok){ er.textContent = t('Un parent doit signer aussi.'); return; } parent = { nom:pn, ok:true }; }
+    CS.consent = { ok:true, nom, age, parent, extraits:C().querySelector('#cext').checked, date:new Date().toISOString(), version:CONSENT_V, lang:LANG }; CS.setup.age = age; CS.step = 'setup'; save(); render(); scrollTo(0, 0); return; }
+  if(a === 'setup'){ const u = { ...CS.setup }; ['role', 'niveau', 'appareil', 'micro', 'piece', 'casque', 'habituel'].forEach(k => { u[k] = val(k) || u[k] || ''; });
+    if(!u.role || !u.appareil || !u.micro){ C().querySelector('#serr').textContent = '↑ ' + [t('Tu es'), t('Appareil'), t('Micro')].join(' · '); return; }
+    CS.setup = u; save(); await openSession(); CS.step = 'micro'; save(); render(); scrollTo(0, 0); return; }
+  if(a === 'micro') return microTest(b);
+  if(a === 'retry') return retryQueue();
+  if(a === 'zip') return zipLocal();
+  if(a === 'again'){ Object.assign(CS, { step:'setup', sid:'', lat:null, noise:null, done:{}, queue:[] }); CS.setup = { age:CS.setup.age, role:CS.setup.role, niveau:CS.setup.niveau }; save(); render(); return; }
+  if(a === 'retirer'){ if(!confirm(t('Sûr ? Tout sera supprimé.'))) return; await withdraw(); return; }
+  if(b.dataset.skip){ CS.done[b.dataset.skip] = 'skip'; save(); render(); return; }
+  if(b.dataset.rec) return takeRec(b.dataset.rec, b);
+  if(b.dataset.decl) return declare(b.dataset.id, b.dataset.decl);
+});
+document.addEventListener('change', e => { if(MODE !== 'collecte') return; const i = e.target; if(i.dataset && i.dataset.son != null){ const n = i.dataset.son; CS.sons = i.checked ? [...new Set([...CS.sons, n])] : CS.sons.filter(x => x !== n); save(); render(); } });
+
+async function openSession(){
+  const ok = await fbInit(); if(!ok){ CS.sid = CS.sid || newSid(); return; }
+  try{ if(!FB.auth.currentUser) await FB.auth.signInAnonymously();
+    CS.sid = CS.sid || newSid();
+    await R('sessions/' + CS.sid).set(JSON.parse(JSON.stringify({ uid:FB.auth.currentUser.uid, pers:CS.pers, t:Date.now(), v:COL_V, lang:LANG, ...CS.setup, ua:navigator.userAgent.slice(0, 160), consent:CS.consent })));
+  }catch(e){ console.warn('session', e); }
+}
+async function patchSession(o){ if(!FB.ok || !CS.sid) return; try{ for(const [k, v] of Object.entries(o)) await R('sessions/' + CS.sid + '/' + k).set(v); }catch(e){ console.warn(e); } }
+async function microTest(b){
+  b.disabled = true; const m = C().querySelector('#mres'); m.hidden = false; m.className = 'res'; m.textContent = t('Écoute…');
+  try{ let T0 = 0; const bpm = 100, spb = .6; const r = await capt2(6, (t0, bus) => { T0 = t0; for(let k = 0; k < 9; k++) click(t0 + k * spb, k % 4 === 0, bus); });
+    const ons = RY.onsets(r.x, r.sr), cl = RY.findClicks(ons, bpm);
+    let s = 0, nn = 0; for(let i = 0; i < Math.min(r.x.length, r.sr * .12); i++){ s += r.x[i] * r.x[i]; nn++; } CS.noise = Math.round(10 * Math.log10(s / Math.max(1, nn) + 1e-12));
+    if(cl.c0 == null){ m.className = 'res low'; m.textContent = t('Clic pas entendu : monte un peu le volume et recommence.'); }
+    else { const exp = ((T0 - r.tStart) % spb + spb) % spb; let d = cl.c0 - exp; if(d < -spb / 2) d += spb; if(d > spb / 2) d -= spb; CS.lat = Math.round(d * 1000); latSet({ ms:CS.lat, t:Date.now(), n:cl.n }); patchSession({ lat:CS.lat, noise:CS.noise }); save(); render(); }
+  }catch(e){ m.className = 'res low'; m.textContent = t('Micro indisponible') + ' : ' + e.message; }
+  b.disabled = false;
+}
+// Une prise : décompte 4 clics, puis les tours ; grille qui avance en direct ; analyse ; question « as-tu fait ce qui était demandé ? »
+const PEND = {};
+async function takeRec(id, b){
+  const isSon = id.startsWith('son-'), son = isSon ? id.slice(4) : '', p = isSon ? { id, tok:'X X X X', div:1, bpm:80, tours:2 } : PRISES.find(x => x.id === id);
+  const tours = p.tours || TOURS, spb = 60 / p.bpm, st = spb / p.div, n = p.tok.split(' ').length, P = n * st, dur = 4 * spb + tours * P + .9;
+  const row = C().querySelector(`[data-row="${CSS.escape(id)}"]`), live = row.querySelector('.live'), after = row.querySelector('.after');
+  C().querySelectorAll('[data-rec]').forEach(x => { x.disabled = true; }); after.innerHTML = ''; live.hidden = false;
+  const sg = row.querySelector('.tgrid'); let lastK = -1, lastC = -1;
+  let T0 = 0, raf = 0; const mode = p.opt === 'casque' ? 'casque' : 'hp';
+  const tick = () => { const now = ac.currentTime - T0;
+    if(now < 4 * spb){ live.innerHTML = `<div class="countbig">${t('Décompte')} ${Math.max(1, 4 - Math.floor(now / spb))}</div><div class="meter"><i id="clvl"></i></div>`; }
+    else { const q = now - 4 * spb, k = Math.floor(q / P), c = Math.floor((q - k * P) / st);
+      if(!isSon && sg && k < tours && (k !== lastK || c !== lastC)){ lastK = k; lastC = c; sg.innerHTML = gridRows(p, k, c).replace(/^<div class="tgrid"[^>]*>|<\/div>$/g, ''); }
+      live.innerHTML = isSon ? `<div class="countbig">${escH(son)} · ${Math.min(tours * 4, Math.floor(q / spb) + 1)} / ${tours * 4}</div><div class="meter"><i id="clvl"></i></div>` : (k < tours ? `<div class="countbig">${t('Tour')} ${k + 1} / ${tours}</div><div class="meter"><i id="clvl"></i></div>` : '<div class="countbig">✋</div>'); }
+    raf = requestAnimationFrame(tick); };
+  try{
+    const r = await capt2(dur, (t0, bus) => { T0 = t0; for(let k = 0; k * spb < dur - .7; k++) click(t0 + k * spb, k % 4 === 0, bus); raf = requestAnimationFrame(tick); });
+    cancelAnimationFrame(raf); live.hidden = true; if(sg && !isSon) sg.innerHTML = gridRows(p).replace(/^<div class="tgrid"[^>]*>|<\/div>$/g, '');
+    const pat = isSon ? [{ div:1, tok:[son, son, son, son].join(' ') }] : [{ div:p.div, tok:p.tok }], opt0 = { bpm:p.bpm, pat };
+    if(mode === 'casque'){ opt0.c0 = (T0 - r.tStart) + ((CS.lat || 0) / 1000); opt0.clicks = false; }
+    const a = RY.analyze(r.x, r.sr, opt0), A = RY.compact(a), v = isSon ? null : vu(p, A);
+    const meta = JSON.parse(JSON.stringify({ id, n:Object.keys(CS.done).length + 1, t:Date.now(), kind:isSon ? 'son' : 'phrase', son:son || null, tok:isSon ? pat[0].tok : p.tok, div:p.div, bpm:p.bpm, tours, mode, err:p.err || null, joue:isSon ? null : joue(p).map(x => x.join(' ')),
+      t0:+(T0 - r.tStart).toFixed(4), lat:CS.lat, sr:r.sr, dur:+(r.x.length / r.sr).toFixed(2), mime:r.blob ? r.blob.type : null, auto:A, vu:v, decl:'?' }));
+    PEND[id] = { pid:id.replace(/[.#$\[\]\/~]/g, '_') + '_' + Date.now().toString(36), meta, blob:r.blob };
+    after.innerHTML = resultHTML(p, A, v, isSon) + `<div class="decl"><b>${t('Tu as fait exactement ce qui était demandé ?')}</b><div class="row"><button class="b-cyan" data-decl="ok" data-id="${escH(id)}">✅ ${t('Oui')}</button><button data-decl="rate" data-id="${escH(id)}">❌ ${t('Non, je me suis trompé·e')}</button><button data-decl="?" data-id="${escH(id)}">🤷 ${t('Pas sûr·e')}</button></div></div>`;
+  }catch(e){ cancelAnimationFrame(raf); live.hidden = true; after.innerHTML = `<div class="res low">${t('Micro indisponible')} : ${escH(e.message)}</div>`; }
+  C().querySelectorAll('[data-rec]').forEach(x => { x.disabled = false; });
+}
+function resultHTML(p, A, v, isSon){
+  if(!A || A.pct == null) return `<div class="res">${A ? A.n : 0} ♪</div>`;
+  const col = A.pct >= 85 ? 'ok' : A.pct >= 65 ? 'mid' : 'low';
+  return `<div class="res ${col}"><b>${t('L\'appli a vu')} :</b> ✓ ${A.hits} ${t('bien placés')}${A.miss ? ' · ✗ ' + A.miss + ' ' + t('oubliés') : ''}${A.extra ? ' · + ' + A.extra + ' ' + t('en trop') : ''}${A.conf ? ' · 🔀 ' + A.conf + ' ' + t('sons confondus') : ''}${A.reg ? ' · 〰 ± ' + A.reg + ' ms' : ''}
+    ${v == null ? '' : `<div>${v === 'dur' ? t('Ces deux sons se ressemblent trop pour l\'appli pour l\'instant : ton enregistrement va justement lui apprendre à les distinguer 🙏') : v ? t('L\'appli a bien repéré ton erreur 👍') : t('L\'appli n\'a pas vu ton erreur : c\'est exactement pour ça qu\'on récolte des sons 🙏')}</div>`}</div>`;
+}
+async function declare(id, d){
+  const it = PEND[id]; if(!it) return; delete PEND[id]; it.meta.decl = d;
+  const row = C().querySelector(`[data-row="${CSS.escape(id)}"] .decl`); if(row) row.innerHTML = '⏳';
+  await send(it); render();
+  const nx = C().querySelector('.prise:not(.fait) [data-rec]'); if(nx) nx.closest('.prise').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+async function withdraw(){
+  try{ if(await fbInit() && CS.sid){ if(!FB.auth.currentUser) await FB.auth.signInAnonymously(); await R('audio/' + CS.sid).remove(); await R('prises/' + CS.sid).remove(); await R('sessions/' + CS.sid).remove(); } }catch(e){ alert('Erreur : ' + e.message + ' → ' + ADMIN_EMAIL + ' · ' + CS.sid); return; }
+  const sid = CS.sid; Object.assign(CS, { step:'intro', sid:'', consent:null, done:{}, queue:[], lat:null }); save(); render(); alert(t('Données retirées.') + ' (' + sid + ')');
+}
+
+/* ===================== ESPACE RESPONSABLE (?admin) ===================== */
+const AD = { data:null, open:{} };
+async function adminStart(){
+  const c = document.querySelector('#admin'); c.hidden = false; c.innerHTML = '<div class="card">Chargement…</div>';
+  if(!await fbInit()){ c.innerHTML = '<div class="card">Firebase indisponible.</div>'; return; }
+  const u = FB.auth.currentUser;
+  if(!u || u.isAnonymous || (u.email || '').toLowerCase() !== ADMIN_EMAIL){ c.innerHTML = `<div class="card"><h2>🔒 Espace responsable</h2><p>Réservé au responsable de l'école.</p><button class="b-pink big" id="glog">Se connecter avec Google</button>${u && !u.isAnonymous ? `<div class="small muted">Connecté : ${escH(u.email)} (pas autorisé)</div>` : ''}</div>`;
+    c.querySelector('#glog').onclick = async () => { const p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt:'select_account' }); try{ await FB.auth.signInWithPopup(p); }catch(e){ await FB.auth.signInWithRedirect(p); } adminStart(); }; return; }
+  await adminLoad(); adminRender();
+}
+async function adminLoad(){
+  const [s, p] = await Promise.all([R('sessions').once('value'), R('prises').once('value')]);
+  AD.data = { sessions:s.val() || {}, prises:p.val() || {} };
+  try{ const [ok, dv] = await Promise.all([FB.db.ref('collecteOk').once('value'), FB.db.ref('devoirs').once('value')]); const O = ok.val() || {}, D = dv.val() || {}, codes = Object.keys(O).filter(c => O[c] && O[c].ok);
+    AD.app = { O, D, codes, n:codes.length, d:codes.reduce((s2, c) => s2 + Object.values(D[c] || {}).filter(x => x && x.statut && x.statut !== 'attente').length, 0) }; }catch(e){ console.warn('devoirs', e); AD.app = { n:0, d:0, codes:[], O:{}, D:{} }; }
+}
+// pseudonyme stable (FNV-1a) : le code de l'élève n'apparaît pas dans l'export
+const pseudo = (x, p) => { let h = 2166136261; for(const ch of String(x)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (p || 'e') + (h >>> 0).toString(36); };
+async function exportApp(b){
+  b.disabled = true; b.textContent = '⏳ Préparation…';
+  try{ await loadJS('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'); const z = new JSZip(), A = AD.app, out = [];
+    for(const code of A.codes){ const ps = pseudo(code), jar = (await FB.db.ref('jardin/' + code).once('value')).val() || {}, c = A.O[code] || {};
+      const recs = Object.entries(A.D[code] || {}).filter(([, x]) => x && x.t >= (c.t || 0) - 365 * 864e5);
+      const rows = [];
+      for(const [id, x] of recs){ const { nom, prof, profK, retour, ...keep } = x; rows.push({ id, ...keep, prof:profK ? pseudo(profK, 'p') : null, retourAudio:!!retour });
+        const a = (await FB.db.ref('devoirsAudio/' + id).once('value')).val(); const m = /^data:([^;,]+)[^,]*,(.*)$/.exec(a || ''); if(m) z.file(`audio/${ps}/${id}${extOf(m[1])}`, m[2], { base64:true }); }
+      out.push({ eleve:ps, age:c.age || null, depuis:c.t || null, jardin:Object.fromEntries(Object.entries(jar).map(([n, j]) => [n, { etat:j && j.etat, bpm:j && j.bpm || null }])), devoirs:rows }); }
+    z.file('devoirs.json', JSON.stringify({ export:new Date().toISOString(), note:'Élèves ayant accepté (collecteOk). Noms retirés, codes pseudonymisés.', eleves:out }, null, 1));
+    const blob = await z.generateAsync({ type:'blob' }), L = document.createElement('a'); L.href = URL.createObjectURL(blob); L.download = 'devoirs_annotes_' + new Date().toISOString().slice(0, 10) + '.zip'; L.click();
+  }catch(err){ alert('Export impossible : ' + err.message); }
+  b.disabled = false; b.textContent = '📦 Exporter les devoirs annotés (.zip)';
+}
+const LBL = { tel:'📱 téléphone', portable:'💻 portable', fixe:'🖥 fixe', tablette:'📲 tablette', integre:'micro intégré', filaire:'casque filaire', bt:'Bluetooth', usb:'micro USB', calme:'calme', resonne:'résonne', bruit:'bruit' };
+function adminRender(){
+  const c = document.querySelector('#admin'), S = AD.data.sessions, P = AD.data.prises, ids = Object.keys(S).sort((a, b) => (S[b].t || 0) - (S[a].t || 0));
+  const allP = ids.flatMap(id => Object.entries(P[id] || {}).map(([k, v]) => ({ sid:id, pid:k, ...v })));
+  const pers = new Set(ids.map(id => S[id].pers)).size, cnt = (k) => { const m = {}; ids.forEach(id => { const v = S[id][k] || '?'; m[v] = (m[v] || 0) + 1; }); return Object.entries(m).map(([k2, v]) => `${escH(LBL[k2] || k2)} <b>${v}</b>`).join(' · '); };
+  const ph = allP.filter(x => x.kind === 'phrase' && x.err && x.decl === 'ok'), seen = ph.filter(x => x.vu === true).length;
+  c.innerHTML = `<h1>📊 Données récoltées</h1>
+    <div class="card"><div class="row"><div class="kpi"><b>${ids.length}</b>sessions</div><div class="kpi"><b>${pers}</b>personnes</div><div class="kpi"><b>${allP.length}</b>prises</div><div class="kpi"><b>${allP.filter(x => x.kind === 'son').length}</b>sons isolés</div><div class="kpi"><b>${ph.length ? Math.round(100 * seen / ph.length) + ' %' : '–'}</b>erreurs repérées</div><span class="sp"></span>
+      <button class="b-cyan" id="adzip">📦 Tout exporter (.zip)</button><button id="adre">↻</button></div>
+      <div class="row" style="margin-top:8px"><b>🎧 Devoirs de l'appli</b><span class="small muted">élèves qui ont dit oui : ${AD.app ? AD.app.n : '…'} · devoirs avec retour du prof : ${AD.app ? AD.app.d : '…'}</span><span class="sp"></span><button class="b-yel" id="adzip2">📦 Exporter les devoirs annotés (.zip)</button></div>
+      <div class="small" style="margin-top:8px">Appareils : ${cnt('appareil')}<br>Micros : ${cnt('micro')}<br>Pièces : ${cnt('piece')}<br>Âges : ${cnt('age')} · Rôles : ${cnt('role')}</div>
+      <div class="small muted">« Erreurs repérées » : parmi les prises avec une erreur demandée et faite (l'élève a répondu « oui »), part de celles que l'analyse a vues. C'est le chiffre à faire monter.</div></div>
+    ${ids.map(id => { const s = S[id], pl = Object.entries(P[id] || {}).sort((a, b) => (a[1].t || 0) - (b[1].t || 0)), k = s.consent || {};
+      return `<div class="card adm"><div class="row"><b>${escH(id)}</b><span class="small">${new Date(s.t || 0).toLocaleString()} · ${escH(s.role || '')} · N${escH(s.niveau || '?')} · ${escH(LBL[s.appareil] || s.appareil || '')} · ${escH(LBL[s.micro] || s.micro || '')} · ${escH(LBL[s.piece] || s.piece || '')} · ${escH(s.age || '')} · lat ${s.lat != null ? s.lat + ' ms' : '–'}</span><span class="sp"></span><span class="pill">${pl.length} prises</span><button class="mini" data-adopen="${escH(id)}">${AD.open[id] ? '▲' : '▼'}</button><button class="mini" data-addel="${escH(id)}">🗑</button></div>
+        <div class="small muted">✍️ ${escH(k.nom || '?')}${k.parent ? ' · parent : ' + escH(k.parent.nom) : ''} · accord v${escH(k.version || '?')} ${k.extraits ? '· extraits ✔' : ''} · personne ${escH(s.pers || '')}</div>
+        ${AD.open[id] ? `<table class="adt"><tr><th>prise</th><th>déclaré</th><th>auto</th><th>erreur vue ?</th><th></th></tr>${pl.map(([pid, x]) => `<tr><td>${escH(x.id)}${x.mode === 'casque' ? ' 🎧' : ''}</td><td>${x.decl === 'ok' ? '✅' : x.decl === 'rate' ? '❌' : '🤷'}</td><td>${x.auto && x.auto.pct != null ? x.auto.pct + ' % · ✓' + x.auto.hits + ' ✗' + x.auto.miss + ' +' + x.auto.extra + (x.auto.conf ? ' 🔀' + x.auto.conf : '') : (x.auto ? x.auto.n + ' sons' : '')}</td><td>${x.vu == null ? '' : x.vu === 'dur' ? '👎 (sons proches)' : x.vu ? '👍' : '👎'}</td><td><button class="mini" data-adplay="${escH(id)}|${escH(pid)}">▶</button></td></tr>`).join('')}</table>` : ''}</div>`; }).join('')}`;
+}
+let adAudio = null;
+document.addEventListener('click', async e => {
+  if(MODE !== 'admin') return; const b = e.target.closest('button'); if(!b) return;
+  if(b.id === 'adre'){ await adminLoad(); adminRender(); }
+  if(b.id === 'adzip2') return exportApp(b);
+  if(b.dataset.adopen){ AD.open[b.dataset.adopen] = !AD.open[b.dataset.adopen]; adminRender(); }
+  if(b.dataset.adplay){ const [s, p] = b.dataset.adplay.split('|'); if(adAudio){ adAudio.pause(); adAudio = null; } const d = (await R('audio/' + s + '/' + p).once('value')).val(); if(d){ adAudio = new Audio(d); adAudio.play(); } else alert('Pas d\'audio'); }
+  if(b.dataset.addel){ const s = b.dataset.addel; if(!confirm('Supprimer définitivement la session ' + s + ' (accord, prises, audio) ?')) return; await R('audio/' + s).remove(); await R('prises/' + s).remove(); await R('sessions/' + s).remove(); await adminLoad(); adminRender(); }
+  if(b.id === 'adzip'){ b.disabled = true; b.textContent = '⏳ Préparation…';
+    try{ await loadJS('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'); const z = new JSZip(), S = AD.data.sessions, P = AD.data.prises;
+      // l'export pour l'analyse ne contient PAS les noms (accords gardés à part)
+      const idx = Object.entries(S).map(([id, s]) => { const { consent, uid, ua, ...rest } = s; return { sid:id, ...rest, ua, consentV:(consent || {}).version, extraits:!!(consent || {}).extraits, mineur:!!(consent || {}).parent, prises:P[id] || {} }; });
+      z.file('index.json', JSON.stringify({ export:new Date().toISOString(), v:COL_V, sessions:idx }, null, 1));
+      z.file('accords_A_GARDER_PRIVE.json', JSON.stringify(Object.fromEntries(Object.entries(S).map(([id, s]) => [id, s.consent || null])), null, 1));
+      for(const id of Object.keys(S)){ const a = (await R('audio/' + id).once('value')).val() || {};
+        for(const [pid, d] of Object.entries(a)){ const m = /^data:([^;,]+)[^,]*,(.*)$/.exec(d || ''); if(m) z.file(`audio/${id}/${pid}${extOf(m[1])}`, m[2], { base64:true }); } }
+      const blob = await z.generateAsync({ type:'blob' }), A = document.createElement('a'); A.href = URL.createObjectURL(blob); A.download = 'collecte_bbx_' + new Date().toISOString().slice(0, 10) + '.zip'; A.click();
+    }catch(err){ alert('Export impossible : ' + err.message); }
+    b.disabled = false; b.textContent = '📦 Tout exporter (.zip)'; }
+});
+
+/* ---------- carte « partager » dans le labo + démarrage ---------- */
+function shareCard(){
+  const base = location.href.split('?')[0], link = base + '?collecte', adm = base + '?admin';
+  const msg = { fr:`🎤 Aide-nous à améliorer BBX Classroom ! En 15 min, tu enregistres quelques sons et phrases de beatbox sur un clic (parfois avec des erreurs exprès 😄). Ça apprend à l'appli à écouter ton rythme. Prends l'appareil de tes cours, un endroit calme, sans casque au début. Pour les moins de 18 ans, un parent signe l'accord. 👉 ${link}`,
+    en:`🎤 Help us improve BBX Classroom! In 15 min you record a few beatbox sounds and phrases on a click (sometimes with mistakes on purpose 😄). It teaches the app to listen to your rhythm. Use the device you use for class, a quiet place, no headphones at first. Under 18: a parent signs the agreement. 👉 ${link}&lang=en`,
+    ja:`🎤 BBX Classroom の改善にご協力ください！15分で、クリックに合わせてビートボックスの音とフレーズを録音します（わざと間違えることも 😄）。アプリがリズムを聞き取れるようになります。レッスンで使う端末で、静かな場所で、最初はヘッドホンなしで。18歳未満は保護者が同意書に署名します。👉 ${link}&lang=ja` };
+  const el = document.querySelector('#sharecard'); if(!el) return;
+  el.innerHTML = `<div class="row"><h2 style="margin:0">🔗 Collecte de sons</h2><span class="sp"></span><a href="${escH(adm)}"><button>📊 Données récoltées</button></a></div>
+    <div class="small muted">Le lien à envoyer aux profs et aux élèves : parcours guidé (FR/EN/JA), accord à signer, ~15 min.</div>
+    <div class="row" style="margin-top:6px"><input readonly value="${escH(link)}" style="flex:1;min-width:240px" onclick="this.select()"><a href="${escH(link)}" target="_blank"><button class="b-cyan">Ouvrir</button></a></div>
+    <div class="row" style="margin-top:6px">${['fr', 'en', 'ja'].map(l => `<button class="mini" data-msg="${l}">📋 Message ${l.toUpperCase()}</button>`).join('')}<span class="small muted" id="msgok"></span></div>`;
+  el.querySelectorAll('[data-msg]').forEach(b => b.onclick = async () => { const m = msg[b.dataset.msg]; try{ await navigator.clipboard.writeText(m); document.querySelector('#msgok').textContent = '✅ copié'; }catch(e){ prompt('Copie ce message :', m); } });
+}
+(function colBoot(){
+  if(MODE === 'labo'){ shareCard(); return; }
+  document.querySelector('#labo').hidden = true;
+  if(MODE === 'admin') adminStart();
+  else { const c = C(); c.hidden = false; if(CS.step === 'fin' && !CS.sid) CS.step = 'intro'; render(); if(CS.sid) fbInit().then(ok => { if(ok && !FB.auth.currentUser) FB.auth.signInAnonymously().catch(() => {}); }); }
+})();
+
+</script></body></html>
