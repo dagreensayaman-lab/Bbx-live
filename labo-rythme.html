@@ -766,15 +766,28 @@ async function capt2(sec, onStart){
 const toDataURL = b => new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = ko; r.readAsDataURL(b); });
 
 /* ---------- envoi (avec file d'attente si hors ligne) ---------- */
-async function upload(item){
-  if(!FB.ok || !CS.sid) throw new Error('hors ligne');
+// La session (accord + matériel) doit exister en ligne avant les prises : on la (re)crée si besoin
+const sessObj = uid => JSON.parse(JSON.stringify({ uid, pers:CS.pers, t:Date.now(), v:COL_V, lang:LANG, ...CS.setup, lat:CS.lat, noise:CS.noise, ua:navigator.userAgent.slice(0, 160), consent:CS.consent }));
+async function ensureSession(){
+  if(!await fbInit()) throw new Error('Firebase indisponible (connexion ?)');
+  if(!FB.auth.currentUser) await FB.auth.signInAnonymously();
+  const uid = FB.auth.currentUser.uid; if(!CS.consent || !CS.consent.ok) throw new Error('accord non signé');
+  if(CS.sid && CS.sessUid === uid) return;
+  if(!CS.sid) CS.sid = newSid();
+  try{ await R('sessions/' + CS.sid).set(sessObj(uid)); }
+  catch(e){ if(!/permission/i.test(e.code || e.message)) throw e; CS.sid = newSid(); await R('sessions/' + CS.sid).set(sessObj(uid)); } // session créée depuis un autre navigateur : on en ouvre une nouvelle
+  CS.sessUid = uid; CS.sids = [...new Set([...(CS.sids || []), CS.sid])]; save();
+}
+async function upload(item, again){
+  await ensureSession();
   const { pid, meta, blob } = item;
-  if(blob){ const d = await toDataURL(blob); if(d.length < 690000) await R('audio/' + CS.sid + '/' + pid).set(d); else meta.audioTropLong = true; }
-  await R('prises/' + CS.sid + '/' + pid).set(meta);
+  try{ if(blob){ const d = await toDataURL(blob); if(d.length < 690000) await R('audio/' + CS.sid + '/' + pid).set(d); else meta.audioTropLong = true; }
+    await R('prises/' + CS.sid + '/' + pid).set(meta); }
+  catch(e){ if(again || !/permission/i.test(e.code || e.message)) throw e; CS.sessUid = ''; return upload(item, true); } // la session n'existe plus en ligne : on la recrée une fois
 }
 async function send(item){
-  try{ await upload(item); CS.done[item.meta.id] = 'ok'; }
-  catch(e){ console.warn('envoi', e); CS.queue.push(item); CS.done[item.meta.id] = 'local'; }
+  try{ await upload(item); CS.done[item.meta.id] = 'ok'; CS.lastErr = ''; }
+  catch(e){ console.warn('envoi', e); CS.lastErr = String(e.code || e.message || e); CS.queue.push(item); CS.done[item.meta.id] = 'local'; }
   save();
 }
 async function retryQueue(){ const q = CS.queue.splice(0); for(const it of q) await send(it); render(); }
@@ -835,7 +848,7 @@ function render(){
   if(s === 'fin'){ const n = Object.values(CS.done).filter(v => v === 'ok').length;
     h += `<div class="card"><h2>🎉 ${t('Merci !')}</h2><p>${t('Tes enregistrements aident toute l\'école.')} <b>${n}</b> ${t('prises envoyées')}.</p>
       ${CS.sid ? `<div class="res"><div class="small">${t('Ton code de participation')}</div><div class="code">${escH(CS.sid)}</div><div class="small muted">${t('Garde-le : il permet de retirer tes données à tout moment.')}</div></div>` : ''}
-      ${CS.queue.length ? `<div class="res low">${t('Envoi impossible pour l\'instant : tes prises sont gardées ici.')}<div class="row" style="margin-top:6px"><button data-act="retry">↻ ${t('Réessayer l\'envoi')}</button><button data-act="zip">💾 ${t('Télécharger mes prises (.zip)')}</button></div></div>` : ''}
+      ${CS.queue.length ? `<div class="res low">${t('Envoi impossible pour l\'instant : tes prises sont gardées ici.')}<div class="row" style="margin-top:6px"><button data-act="retry">↻ ${t('Réessayer l\'envoi')}</button><button data-act="zip">💾 ${t('Télécharger mes prises (.zip)')}</button></div>${CS.lastErr ? `<div class="small muted">${escH(CS.lastErr)}</div>` : ''}</div>` : ''}
       <div class="row" style="margin-top:12px"><button class="b-cyan" data-act="again">🔁 ${t('Refaire avec un autre appareil')}</button><span class="sp"></span><button class="mini" data-act="retirer">🗑 ${t('Retirer mes données')}</button></div></div>`; }
   c.innerHTML = h; bindChips();
 }
@@ -874,7 +887,7 @@ document.addEventListener('click', async e => {
   if(a === 'micro') return microTest(b);
   if(a === 'retry') return retryQueue();
   if(a === 'zip') return zipLocal();
-  if(a === 'again'){ Object.assign(CS, { step:'setup', sid:'', lat:null, noise:null, done:{}, queue:[] }); CS.setup = { age:CS.setup.age, role:CS.setup.role, niveau:CS.setup.niveau }; save(); render(); return; }
+  if(a === 'again'){ Object.assign(CS, { step:'setup', sid:'', sessUid:'', lat:null, noise:null, done:{}, queue:[] }); CS.setup = { age:CS.setup.age, role:CS.setup.role, niveau:CS.setup.niveau }; save(); render(); return; }
   if(a === 'retirer'){ if(!confirm(t('Sûr ? Tout sera supprimé.'))) return; await withdraw(); return; }
   if(b.dataset.skip){ CS.done[b.dataset.skip] = 'skip'; save(); render(); return; }
   if(b.dataset.rec) return takeRec(b.dataset.rec, b);
@@ -882,13 +895,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('change', e => { if(MODE !== 'collecte') return; const i = e.target; if(i.dataset && i.dataset.son != null){ const n = i.dataset.son; CS.sons = i.checked ? [...new Set([...CS.sons, n])] : CS.sons.filter(x => x !== n); save(); render(); } });
 
-async function openSession(){
-  const ok = await fbInit(); if(!ok){ CS.sid = CS.sid || newSid(); return; }
-  try{ if(!FB.auth.currentUser) await FB.auth.signInAnonymously();
-    CS.sid = CS.sid || newSid();
-    await R('sessions/' + CS.sid).set(JSON.parse(JSON.stringify({ uid:FB.auth.currentUser.uid, pers:CS.pers, t:Date.now(), v:COL_V, lang:LANG, ...CS.setup, ua:navigator.userAgent.slice(0, 160), consent:CS.consent })));
-  }catch(e){ console.warn('session', e); }
-}
+async function openSession(){ try{ await ensureSession(); }catch(e){ console.warn('session', e); CS.lastErr = String(e.code || e.message || e); CS.sid = CS.sid || newSid(); } }
 async function patchSession(o){ if(!FB.ok || !CS.sid) return; try{ for(const [k, v] of Object.entries(o)) await R('sessions/' + CS.sid + '/' + k).set(v); }catch(e){ console.warn(e); } }
 async function microTest(b){
   b.disabled = true; const m = C().querySelector('#mres'); m.hidden = false; m.className = 'res'; m.textContent = t('Écoute…');
@@ -943,8 +950,9 @@ async function declare(id, d){
   const nx = C().querySelector('.prise:not(.fait) [data-rec]'); if(nx) nx.closest('.prise').scrollIntoView({ behavior:'smooth', block:'center' });
 }
 async function withdraw(){
-  try{ if(await fbInit() && CS.sid){ if(!FB.auth.currentUser) await FB.auth.signInAnonymously(); await R('audio/' + CS.sid).remove(); await R('prises/' + CS.sid).remove(); await R('sessions/' + CS.sid).remove(); } }catch(e){ alert('Erreur : ' + e.message + ' → ' + ADMIN_EMAIL + ' · ' + CS.sid); return; }
-  const sid = CS.sid; Object.assign(CS, { step:'intro', sid:'', consent:null, done:{}, queue:[], lat:null }); save(); render(); alert(t('Données retirées.') + ' (' + sid + ')');
+  try{ if(await fbInit() && CS.sid){ if(!FB.auth.currentUser) await FB.auth.signInAnonymously();
+    for(const sid of [...new Set([...(CS.sids || []), CS.sid])]){ try{ await R('audio/' + sid).remove(); await R('prises/' + sid).remove(); await R('sessions/' + sid).remove(); }catch(e){ if(sid === CS.sid) throw e; } } } }catch(e){ alert('Erreur : ' + e.message + ' → ' + ADMIN_EMAIL + ' · ' + CS.sid); return; }
+  const sid = CS.sid; Object.assign(CS, { step:'intro', sid:'', sids:[], sessUid:'', consent:null, done:{}, queue:[], lat:null }); save(); render(); alert(t('Données retirées.') + ' (' + sid + ')');
 }
 
 /* ===================== ESPACE RESPONSABLE (?admin) ===================== */
@@ -988,6 +996,7 @@ function adminRender(){
   c.innerHTML = `<h1>📊 Données récoltées</h1>
     <div class="card"><div class="row"><div class="kpi"><b>${ids.length}</b>sessions</div><div class="kpi"><b>${pers}</b>personnes</div><div class="kpi"><b>${allP.length}</b>prises</div><div class="kpi"><b>${allP.filter(x => x.kind === 'son').length}</b>sons isolés</div><div class="kpi"><b>${ph.length ? Math.round(100 * seen / ph.length) + ' %' : '–'}</b>erreurs repérées</div><span class="sp"></span>
       <button class="b-cyan" id="adzip">📦 Tout exporter (.zip)</button><button id="adre">↻</button></div>
+      <div class="row" style="margin-top:8px"><b>📥 Prises reçues en .zip</b><span class="small muted">quand quelqu'un n'a pas pu envoyer : il t'envoie son .zip, tu l'importes ici</span><span class="sp"></span><label class="b-cyan" style="padding:8px 14px;border-radius:14px;cursor:pointer;font-weight:800">📥 Importer un .zip<input type="file" id="adimp" accept=".zip,application/zip" multiple hidden></label></div>
       <div class="row" style="margin-top:8px"><b>🎧 Devoirs de l'appli</b><span class="small muted">élèves qui ont dit oui : ${AD.app ? AD.app.n : '…'} · devoirs avec retour du prof : ${AD.app ? AD.app.d : '…'}</span><span class="sp"></span><button class="b-yel" id="adzip2">📦 Exporter les devoirs annotés (.zip)</button></div>
       <div class="small" style="margin-top:8px">Appareils : ${cnt('appareil')}<br>Micros : ${cnt('micro')}<br>Pièces : ${cnt('piece')}<br>Âges : ${cnt('age')} · Rôles : ${cnt('role')}</div>
       <div class="small muted">« Erreurs repérées » : parmi les prises avec une erreur demandée et faite (l'élève a répondu « oui »), part de celles que l'analyse a vues. C'est le chiffre à faire monter.</div></div>
@@ -996,6 +1005,24 @@ function adminRender(){
         <div class="small muted">✍️ ${escH(k.nom || '?')}${k.parent ? ' · parent : ' + escH(k.parent.nom) : ''} · accord v${escH(k.version || '?')} ${k.extraits ? '· extraits ✔' : ''} · personne ${escH(s.pers || '')}</div>
         ${AD.open[id] ? `<table class="adt"><tr><th>prise</th><th>déclaré</th><th>auto</th><th>erreur vue ?</th><th></th></tr>${pl.map(([pid, x]) => `<tr><td>${escH(x.id)}${x.mode === 'casque' ? ' 🎧' : ''}</td><td>${x.decl === 'ok' ? '✅' : x.decl === 'rate' ? '❌' : '🤷'}</td><td>${x.auto && x.auto.pct != null ? x.auto.pct + ' % · ✓' + x.auto.hits + ' ✗' + x.auto.miss + ' +' + x.auto.extra + (x.auto.conf ? ' 🔀' + x.auto.conf : '') : (x.auto ? x.auto.n + ' sons' : '')}</td><td>${x.vu == null ? '' : x.vu === 'dur' ? '👎 (sons proches)' : x.vu ? '👍' : '👎'}</td><td><button class="mini" data-adplay="${escH(id)}|${escH(pid)}">▶</button></td></tr>`).join('')}</table>` : ''}</div>`; }).join('')}`;
 }
+async function adminImport(files){
+  await loadJS('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'); let nS = 0, nP = 0; const errs = [];
+  for(const f of files){
+    try{ const z = await JSZip.loadAsync(f), sj = z.file('session.json'); if(!sj) throw new Error('session.json manquant');
+      const se = JSON.parse(await sj.async('string')); if(!se.consent || !se.consent.ok) throw new Error('pas d\'accord signé dans ce fichier');
+      let sid = se.sid || newSid(); if((await R('sessions/' + sid).once('value')).exists()) sid = sid + 'i';
+      await R('sessions/' + sid).set(JSON.parse(JSON.stringify({ uid:FB.auth.currentUser.uid, pers:se.pers || '', t:Date.now(), v:COL_V, ...(se.setup || {}), lat:se.lat == null ? null : se.lat, noise:se.noise == null ? null : se.noise, consent:se.consent, importe:f.name })));
+      nS++;
+      for(const name of Object.keys(z.files)){ const m = /^([^/]+)\.json$/.exec(name); if(!m || name === 'session.json') continue; const pid = m[1].replace(/[.#$\[\]\/]/g, '_');
+        const meta = JSON.parse(await z.file(name).async('string')), au = Object.keys(z.files).find(n => n.startsWith(m[1] + '.') && !n.endsWith('.json'));
+        if(au){ const b64 = await z.file(au).async('base64'), mime = /m4a$/.test(au) ? 'audio/mp4' : /ogg$/.test(au) ? 'audio/ogg' : 'audio/webm', d = 'data:' + mime + ';base64,' + b64; if(d.length < 700000) await R('audio/' + sid + '/' + pid).set(d); else meta.audioTropLong = true; }
+        await R('prises/' + sid + '/' + pid).set(JSON.parse(JSON.stringify(meta))); nP++; }
+    }catch(e){ errs.push(f.name + ' : ' + (e.code || e.message)); }
+  }
+  alert(`Import : ${nS} session(s), ${nP} prise(s).` + (errs.length ? '\n\nProblèmes :\n' + errs.join('\n') : ''));
+  await adminLoad(); adminRender();
+}
+document.addEventListener('change', e => { if(MODE === 'admin' && e.target.id === 'adimp' && e.target.files.length) adminImport([...e.target.files]); });
 let adAudio = null;
 document.addEventListener('click', async e => {
   if(MODE !== 'admin') return; const b = e.target.closest('button'); if(!b) return;
