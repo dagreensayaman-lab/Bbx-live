@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#29AADC">
+<title>BBX Hero — prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#29AADC;--card:#fff;--ink:#17324a;--mut:#6b8396;--pink:#f58bb0;--cyan:#7fd6f0;--yel:#ffe27a;--vio:#b9a2f0;--ok:#3fbf6f;--mid:#f2b705;--low:#ef5b6e;
+--grave:#e0607e;--medium:#8b6fd6;--aigu:#2fb3d9}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);font-family:Nunito,system-ui,sans-serif;color:var(--ink);touch-action:manipulation}
+.wrap{max-width:720px;margin:0 auto;padding:14px 14px 40px;padding-top:max(14px,env(safe-area-inset-top))}
+h1{color:#fff;font-weight:900;margin:4px 0 0;font-size:1.8rem;text-shadow:0 3px 0 rgba(0,0,0,.12)}
+.sub{color:#eaf8ff;margin:0 0 12px;font-weight:700}
+.card{background:var(--card);border-radius:20px;padding:14px 16px;margin:0 0 12px;box-shadow:0 5px 0 rgba(0,0,0,.08)}
+.card h2{margin:0 0 8px;font-size:1.1rem;font-weight:900}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.sp{flex:1}
+.small{font-size:.85rem}.muted{color:var(--mut)}
+button{font:inherit;font-weight:800;border:0;border-radius:14px;padding:9px 15px;cursor:pointer;background:#eef6fb;color:var(--ink);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+button:active{transform:translateY(2px);box-shadow:none}button:disabled{opacity:.45}
+.b-pink{background:var(--pink);color:#fff}.b-cyan{background:var(--cyan)}.b-yel{background:var(--yel)}.b-vio{background:var(--vio);color:#fff}.big{font-size:1.2rem;padding:13px 24px}
+input,select,textarea{font:inherit;border:2px solid #d5e7f2;border-radius:12px;padding:6px 10px;background:#f7fcff;color:var(--ink)}
+label{font-weight:700;font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:2px solid #d5e7f2;border-radius:14px;padding:6px 12px;background:#f7fcff;font-weight:800;cursor:pointer;box-shadow:none}
+.chip.on{background:#d9f3fc;border-color:var(--bg)}
+.seg{display:flex;gap:0;border-radius:14px;overflow:hidden;border:2px solid #d5e7f2}.seg button{border-radius:0;box-shadow:none;background:#f7fcff;padding:8px 14px;flex:1}.seg button.on{background:var(--bg);color:#fff}
+.st{display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:700}.dot{width:14px;height:14px;border-radius:50%;background:#cbd;flex:none}.dot.ok{background:var(--ok)}.dot.warn{background:var(--mid)}.dot.no{background:var(--low)}
+.tk{display:inline-block;min-width:34px;text-align:center;border-radius:9px;padding:3px 6px;font-weight:900;color:#fff;background:var(--c,#cde);margin:1px}
+.tk.sil{background:#eef6fb;color:#9bb}
+.beat{display:inline-flex;gap:2px;padding:2px 3px;margin:2px;border-radius:10px;background:#f2f8fc}
+.prev{margin:8px 0 2px;line-height:1.1}
+.scr{display:none}.scr.on{display:block}
+.meter{height:12px;border-radius:8px;background:#e6f2f9;overflow:hidden;flex:1;min-width:120px}.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fbf6f,#f2b705,#ef5b6e)}
+.res{border-radius:14px;padding:9px 12px;border-left:6px solid var(--bg);background:#eef8fd;margin:8px 0}.res.ok{border-color:var(--ok);background:#eafaf0}.res.warn{border-color:var(--mid);background:#fff8e1}.res.no{border-color:var(--low);background:#fdecef}
+.bigletter{font-size:5rem;font-weight:900;text-align:center;line-height:1.1;color:#fff;border-radius:24px;padding:10px;margin:8px 0;background:var(--c,#cde)}
+.timebar{height:8px;border-radius:6px;background:#e6f2f9;overflow:hidden}.timebar i{display:block;height:100%;width:0;background:var(--pink)}
+/* jeu */
+#game{position:fixed;inset:0;background:#0f2a3d;z-index:50;display:none}
+#game.on{display:block}
+#cv{width:100%;height:100%;display:block}
+#quit{position:absolute;top:max(10px,env(safe-area-inset-top));left:10px;background:rgba(255,255,255,.14);color:#fff;box-shadow:none;padding:6px 12px;font-size:.9rem}
+#warn{position:absolute;left:10px;right:10px;top:70px;background:#ffe27a;color:#17324a;border-radius:12px;padding:8px 12px;font-weight:800;text-align:center;display:none}
+/* fin */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.kpi{background:#f2f8fc;border-radius:14px;padding:6px;text-align:center;font-size:.78rem;font-weight:700}.kpi b{display:block;font-size:1.3rem}
+.pctbig{font-size:4rem;font-weight:900;line-height:1}.grade{font-size:3rem;font-weight:900;color:var(--pink)}
+.cell{display:inline-block;min-width:38px;text-align:center;border-radius:9px;padding:3px 5px;font-weight:900;color:#fff;background:var(--c,#cde);margin:1px;box-shadow:0 0 0 2px #fff,0 0 0 4px #ccc;position:relative}
+.cell.ok{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--ok)}.cell.mid{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--mid)}.cell.low{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--low);opacity:.75}.cell.conf{box-shadow:0 0 0 2px #fff,0 0 0 4px #9b6bdf}
+.cell small{display:block;font-size:.6rem;font-weight:700}
+.cell.x{background:#fdecef;color:var(--low);box-shadow:none}
+ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
+</style></head><body>
+<div class="wrap">
+
+<!-- ================= ACCUEIL ================= -->
+<div id="home" class="scr on">
+  <h1>🎮 BBX Hero</h1>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !</p>
+
+  <div class="card">
+    <h2>1. Micro &amp; calibration</h2>
+    <div class="st"><span class="dot" id="dMic"></span><span id="tMic">Micro : pas encore testé</span></div>
+    <div class="st"><span class="dot" id="dLat"></span><span id="tLat">Latence : pas encore mesurée</span></div>
+    <div class="st"><span class="dot" id="dCal"></span><span id="tCal">Test de sons : à faire</span></div>
+    <div class="row" style="margin-top:8px"><button class="b-yel" id="bCal">🎚 Calibrer</button><span class="small muted">À refaire à chaque nouvelle séance (ou si tu changes de casque).</span></div>
+  </div>
+
+  <div class="card">
+    <h2>2. Choisir la phrase</h2>
+    <div class="chips" id="styles"></div>
+    <div class="row" style="margin:10px 0 4px"><label>Niveau</label>
+      <div class="seg" id="nivs" style="min-width:210px"><button data-n="1">Niv 1</button><button data-n="2">Niv 2</button><button data-n="3">Niv 3</button></div></div>
+    <div class="prev" id="prev"></div>
+    <div class="small muted" id="prevInfo"></div>
+    <details id="persoBox" style="margin-top:8px"><summary style="font-weight:800;cursor:pointer">✏️ Ma propre phrase</summary>
+      <div class="row" style="margin-top:6px"><input id="pTok" value="P . K . P P K ." style="flex:1;min-width:200px;font-weight:800"><label>Cases/temps <select id="pDiv"><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label></div>
+      <div class="small muted">Format du Workout : un son par case, « . » = silence, 2 = croches, 4 = doubles.</div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>3. Tempo &amp; options</h2>
+    <div class="seg" id="speeds"></div>
+    <div class="row" style="margin-top:8px"><label>BPM <input id="bpm" type="number" min="50" max="150" style="width:76px"></label>
+      <label>Tours <select id="cycles"><option>2</option><option>4</option><option>6</option><option>8</option></select></label></div>
+    <div class="row" style="margin-top:8px"><label><input type="checkbox" id="oDie"> Game over si la vie tombe à 0</label></div>
+    <div class="row" style="margin-top:4px"><label><input type="checkbox" id="oStrict" checked> Vérifier le son (grave / medium / aigu)</label></div>
+  </div>
+
+  <div class="row"><button class="b-pink big" id="bPlay">▶ Jouer</button><span class="small" style="color:#fff;font-weight:800" id="playHint"></span></div>
+  <p class="small" style="color:#eaf8ff;margin-top:16px">Prototype FR uniquement (FR/EN/JA viendront à l'intégration). La précision finale vient de l'analyse complète de la prise (même moteur que le labo) ; le jugement en direct sert au score.</p>
+</div>
+
+<!-- ================= CALIBRATION ================= -->
+<div id="cal" class="scr">
+  <h1>🎚 Calibration</h1>
+  <p class="sub" id="calSub"></p>
+  <div class="card" id="calbody"></div>
+  <button id="calBack">← Retour</button>
+</div>
+
+<!-- ================= FIN ================= -->
+<div id="end" class="scr">
+  <h1 id="endTitle">Terminé !</h1>
+  <div class="card" id="endBody"></div>
+  <div class="row"><button class="b-pink big" id="bAgain">↻ Rejouer</button><button id="bMenu">Menu</button></div>
+</div>
+
+</div>
+
+<!-- ================= JEU ================= -->
+<div id="game"><canvas id="cv"></canvas><button id="quit">✕ Quitter</button><div id="warn"></div></div>
+
+<script>
+/* ===== RYTHME : moteur d'analyse rythmique (partagé app + labo) ===== */
+// Entrée : signal mono (Float32Array), sampleRate, et ce que l'élève devait jouer (pat + bpm).
+// Sortie : sons détectés (onsets), placement sur la grille (ok / oubliés / en trop), décalage, régularité, sons confondus.
+const RY = (() => {
+  const V = 1;
+  // Familles de sons (pour repérer un K à la place d'un P) : grave = lèvres/kick, aigu = hi-hat, medium = snares
+  const FAM = { grave:['B','P','Bf','Bm','Bo','Pu','Bh','Bb'], aigu:['Ts','T','S','Tss','Ch','Tk','St','H','Tch','Sh','Ss'], medium:['K','Pch','Pf','L','Kch','Psh','Ks','Kt','Kh','Ksh','Pff','Cl'] };
+  const FAMOF = {}; Object.entries(FAM).forEach(([f, l]) => l.forEach(n => { FAMOF[n.toLowerCase()] = f; }));
+  const FAM_LAB = { grave:'grave', aigu:'aigu', medium:'medium' };
+  // sons qui durent (inspirés, charleys ouverts, tout son noté avec ~)
+  const LONG = new Set(['k~', 'ts', 'ts~', 'th~', 'tss', 'sh', 's', 'ss', 'pf', 'psh']);
+  const isLong = tok => { const k = String(tok || '').toLowerCase(); return LONG.has(k) || k.endsWith('~'); };
+  function famOf(tok){
+    const t = String(tok || '').trim(); if(!t || t === '.' || t === '-') return null;
+    const k = t.toLowerCase(); if(FAMOF[k]) return FAMOF[k];
+    if(/^[bp]$/i.test(t) || /^b/i.test(t)) return 'grave';
+    if(/^(t|s|ts)/i.test(t)) return 'aigu';
+    if(/^k/i.test(t)) return 'medium';
+    return null;
+  }
+  function fft(re, im){
+    const n = re.length;
+    for(let i = 1, j = 0; i < n; i++){ let b = n >> 1; for(; j & b; b >>= 1) j ^= b; j ^= b; if(i < j){ let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+    for(let len = 2; len <= n; len <<= 1){ const a = -2 * Math.PI / len, wr = Math.cos(a), wi = Math.sin(a), h = len >> 1;
+      for(let i = 0; i < n; i += len){ let cr = 1, ci = 0;
+        for(let k = 0; k < h; k++){ const p = i + k, q = p + h, vr = re[q] * cr - im[q] * ci, vi = re[q] * ci + im[q] * cr; re[q] = re[p] - vr; im[q] = im[p] - vi; re[p] += vr; im[p] += vi; const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t; } } }
+  }
+  const HANN = {}; const hann = n => HANN[n] || (HANN[n] = Float32Array.from({ length:n }, (_, i) => .5 - .5 * Math.cos(2 * Math.PI * i / (n - 1))));
+  const pct = (a, p) => { if(!a.length) return 0; const s = Array.from(a).sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.floor(p * (s.length - 1))))]; };
+  const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+  const std = a => { if(a.length < 2) return 0; const m = mean(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1)); };
+  const median = a => pct(a, .5);
+  // Caractéristiques d'un son à partir de l'instant s (≈ 43 ms)
+  function features(x, sr, s){
+    const N = 2048, w = hann(N), re = new Float32Array(N), im = new Float32Array(N);
+    for(let i = 0; i < N; i++){ const v = x[s + i]; re[i] = v === undefined ? 0 : v * w[i]; }
+    fft(re, im);
+    let tot = 0, cen = 0, low = 0, high = 0, clk = 0; const bf = sr / N;
+    const near = f => { for(const c of [1000, 3000, 5000, 1500, 4500, 7500]) if(Math.abs(f - c) <= 45) return true; return false; };
+    const P = new Float32Array(N / 2);
+    for(let k = 1; k < N / 2; k++){ const f = k * bf, e = re[k] * re[k] + im[k] * im[k]; P[k] = e; tot += e; cen += f * e; if(f < 250) low += e; if(f > 4000) high += e; if(near(f)) clk += e; }
+    // tonalité du clic (pic étroit à 1000 ou 1500 Hz par rapport aux fréquences voisines) : repère le clic même mélangé à un son
+    let ton = 0, tf = 0; for(const fc of [1000, 1500]){ const kc = Math.round(fc / bf); let pk = 0, nb = 0, nn = 0; for(let k = kc - 1; k <= kc + 1; k++) pk = Math.max(pk, P[k]); for(let k = kc - 14; k <= kc + 14; k++){ if(Math.abs(k - kc) < 4) continue; nb += P[k]; nn++; } const tv = pk / (nb / nn + 1e-12); if(tv > ton){ ton = tv; tf = fc; } }
+    let pk = 0; const L = Math.min(x.length, s + Math.round(.03 * sr)); for(let i = s; i < L; i++){ const a = Math.abs(x[i]); if(a > pk) pk = a; }
+    tot = tot || 1e-12;
+    return { c:Math.round(cen / tot), lo:+(low / tot).toFixed(3), hi:+(high / tot).toFixed(3), clk:+(clk / tot).toFixed(3), ton:Math.round(Math.min(999, ton)), tf, db:+(20 * Math.log10(pk || 1e-6)).toFixed(1) };
+  }
+  // Détection des attaques (flux spectral + seuil adaptatif + affinage à l'échantillon près)
+  function onsets(x, sr, o){
+    o = o || {};
+    const N = sr > 32000 ? 1024 : 512, H = N >> 2, w = hann(N), F = Math.max(0, Math.floor((x.length - N) / H) + 1);
+    // Détection en 3 bandes (grave / medium / aigu), chacune à son propre niveau :
+    // un charley doux à côté d'un kick fort reste visible dans les aigus
+    const NB = 3, edges = [30, 250, 3000, sr / 2], bk = edges.map(fr => Math.min(N / 2, Math.max(1, Math.round(fr * N / sr))));
+    const fluxB = Array.from({ length:NB }, () => new Float32Array(F)), engB = Array.from({ length:NB }, () => new Float32Array(F)), rms = new Float32Array(F);
+    let prev = new Float32Array(N / 2); const re = new Float32Array(N), im = new Float32Array(N);
+    for(let f = 0; f < F; f++){ const o0 = f * H; let e = 0;
+      for(let i = 0; i < N; i++){ const v = x[o0 + i]; e += v * v; re[i] = v * w[i]; im[i] = 0; }
+      rms[f] = Math.sqrt(e / N); fft(re, im);
+      const cur = new Float32Array(N / 2);
+      for(let bnd = 0; bnd < NB; bnd++){ let fl = 0, en = 0;
+        for(let k = bk[bnd]; k < bk[bnd + 1]; k++){ const p2 = re[k] * re[k] + im[k] * im[k], m = Math.log(1 + 1000 * Math.sqrt(p2)); cur[k] = m; en += p2; const d = m - prev[k]; if(d > 0) fl += d; }
+        fluxB[bnd][f] = fl; engB[bnd][f] = Math.sqrt(en); }
+      prev = cur; }
+    const flux = new Float32Array(F), who = new Uint8Array(F), gB = [];
+    for(let bnd = 0; bnd < NB; bnd++){ const q = pct(fluxB[bnd], .99) || 1, e = engB[bnd], emax = pct(e, .995) || 1e-9, efl = pct(e, .1);
+      gB.push(Math.max(efl * 3, emax * Math.pow(10, -(o.dynDb || 40) / 20)));
+      for(let f = 0; f < F; f++){ const v = fluxB[bnd][f] / q; if(v > flux[f]){ flux[f] = v; who[f] = bnd; } } }
+    const p99 = pct(flux, .99) || 1, rmax = pct(rms, .995) || 1e-6, floor = pct(rms, .1);
+    const gate = Math.max(floor * 2.5, rmax * Math.pow(10, -(o.dynDb2 || 55) / 20), 0.0004);
+    const W = Math.max(3, Math.round(.15 * sr / H)), delta = (o.sens != null ? o.sens : .07) * p99;
+    const peaks = [];
+    for(let f = 1; f < F - 1; f++){
+      if(flux[f] < flux[f - 1] || flux[f] <= flux[f + 1]) continue;
+      const loc = []; for(let j = Math.max(0, f - W); j <= Math.min(F - 1, f + W); j++) loc.push(flux[j]);
+      const thr = median(loc) * 1.4 + delta, bnd = who[f], eb = engB[bnd];
+      const r2 = Math.max(rms[f], rms[Math.min(F - 1, f + 1)], rms[Math.min(F - 1, f + 2)]), e2 = Math.max(eb[f], eb[Math.min(F - 1, f + 1)], eb[Math.min(F - 1, f + 2)]);
+      if(flux[f] > thr && r2 > gate && e2 > gB[bnd]) peaks.push({ f, v:flux[f] });
+    }
+    // enveloppe fine (1 ms) pour dater l'attaque précisément
+    const m1 = Math.max(1, Math.round(.001 * sr)), cs = new Float64Array(x.length + 1);
+    for(let i = 0; i < x.length; i++) cs[i + 1] = cs[i] + Math.abs(x[i]);
+    const env = i => (cs[Math.min(x.length, i + m1)] - cs[Math.max(0, i)]) / m1, lag = Math.max(1, Math.round(.002 * sr));
+    let all = peaks.map(p => {
+      const s0 = Math.max(lag, p.f * H - H), s1 = Math.min(x.length - m1 - 1, p.f * H + N);
+      let md = 0; const d = []; for(let i = s0; i < s1; i++){ const v = env(i) - env(i - lag); d.push(v); if(v > md) md = v; }
+      let k = 0; while(k < d.length && d[k] < .5 * md) k++;
+      const s = Math.max(0, s0 + k - (lag >> 1));
+      return { t:s / sr, s, v:p.v, str:+(p.v / p99).toFixed(2), ...features(x, sr, s) };
+    });
+    if(o.drop) all = all.filter(z => !o.drop(z));
+    // un seul son par 45 ms : on garde le plus fort
+    const out = [];
+    all.forEach(p => { const l = out[out.length - 1]; if(l && p.t - l.t < .045){ if(p.v > l.v) out[out.length - 1] = p; } else out.push(p); });
+    // fin d'un son fort (souffle, résonance) prise pour une attaque : beaucoup plus faible et juste après → on l'ignore
+    return out.filter((o, i) => !out.slice(Math.max(0, i - 3), i).some(p => o.t - p.t < .16 && o.db < p.db - 22 && o.str < .8));
+  }
+  // Soustraction du clic : le clic du haut-parleur est toujours le même → on en fait un modèle (moyenne des clics seuls) et on l'enlève à chaque temps
+  function unclick(x, sr, ons, clk, spb){
+    const p0 = ons.filter(o => o.ton >= 100 && clk.onGrid(o)), late = o => { let e = 0; for(let i = o.s + Math.round(.02 * sr); i < Math.min(x.length, o.s + Math.round(.08 * sr)); i++) e += x[i] * x[i]; return e; };
+    const el = p0.map(late), alone = p0.filter((o, i) => { const same = p0.map((q, j) => q.tf === o.tf ? el[j] : Infinity), emin = Math.min(...same); return el[i] <= 2.5 * emin + 1e-9; }); // clics sans son juste après (par type de clic : le 1er temps est plus fort)
+    const pure = alone.length >= 2 ? alone : p0; if(pure.length < 2) return null;
+    const ks = pure.map(o => Math.round((o.t - clk.c0) / spb)), n = pure.length;
+    let a = clk.c0, b = spb; const uk = new Set(ks);
+    if(uk.size >= 3){ const mk = mean(ks), mt = mean(pure.map(o => o.t)); let sxy = 0, sxx = 0; ks.forEach((k, i) => { sxy += (k - mk) * (pure[i].t - mt); sxx += (k - mk) * (k - mk); }); b = sxy / sxx; a = mt - b * mk; if(Math.abs(b / spb - 1) > .01){ b = spb; a = clk.c0; } }
+    const pre = Math.round(.004 * sr), L = Math.round(.06 * sr) + pre, at = k => Math.round((a + b * k) * sr) - pre;
+    const corr = (T, s0) => { let c = 0; for(let i = 0; i < L; i += 2) c += T[i] * (x[s0 + i] || 0); return c; };
+    const tpl = {}, acc = {};
+    [1000, 1500].forEach(f => { const g = pure.map((o, i) => ({ o, k:ks[i] })).filter(z => z.o.tf === f); if(!g.length) return;
+      // médiane échantillon par échantillon : un son de l'élève qui tombe juste après un clic ne pollue pas le modèle
+      const ref = Float32Array.from({ length:L }, (_, i) => x[at(g[0].k) + i] || 0), st = g.map(z => { let s0 = at(z.k), bl = 0, bc = -1e9; for(let l = -4; l <= 4; l++){ const c = corr(ref, s0 + l); if(c > bc){ bc = c; bl = l; } } return s0 + bl; });
+      const T = new Float32Array(L), col = new Float32Array(st.length);
+      for(let i = 0; i < L; i++){ st.forEach((s0, j) => { col[j] = x[s0 + i] || 0; }); T[i] = median(col); }
+      const tp = Math.round(.006 * sr); for(let i = 0; i < tp; i++) T[L - 1 - i] *= i / tp; // fondu en fin de modèle
+      tpl[f] = T; g.forEach(z => { const m = ((z.k % 4) + 4) % 4; acc[f] = acc[f] || [0, 0, 0, 0]; acc[f][m]++; }); });
+    // temps forts (1500 Hz tous les 4 temps) : on retrouve leur place
+    const acPh = tpl[1500] && tpl[1000] ? acc[1500].indexOf(Math.max(...acc[1500])) : -1;
+    const y = Float32Array.from(x), k0 = Math.ceil((-a) / b), k1 = Math.floor((x.length / sr - a) / b);
+    for(let k = k0; k <= k1; k++){
+      const f = acPh < 0 ? (tpl[1000] ? 1000 : 1500) : (((k % 4) + 4) % 4 === acPh ? 1500 : 1000), T = tpl[f]; if(!T) continue;
+      let s0 = at(k), bl = 0, bc = -1e9; for(let l = -3; l <= 3; l++){ const c = corr(T, s0 + l); if(c > bc){ bc = c; bl = l; } } s0 += bl;
+      if(bc < .35 * (T.E || (T.E = T.reduce((q, v, i) => i % 2 ? q : q + v * v, 0)))) continue; // pas de clic à cet endroit (avant le début / après la fin du clic)
+      for(let i = 0; i < L; i++){ const j = s0 + i; if(j >= 0 && j < y.length) y[j] -= T[i]; }
+    }
+    return y;
+  }
+  const CLICK_F = [1000, 3000, 5000, 7000, 9000, 11000, 13000, 15000, 1500, 4500, 7500, 10500, 13500];
+  // Filtre coupe-bande (enlève le clic du métronome : 1000/1500 Hz et harmoniques) avant de chercher les sons
+  function notch(x, sr, freqs){
+    let y = Float32Array.from(x);
+    freqs.forEach(f => { if(f >= sr / 2) return; const w = 2 * Math.PI * f / sr, q = 6, al = Math.sin(w) / (2 * q), c = Math.cos(w), a0 = 1 + al, b0 = 1 / a0, b1 = -2 * c / a0, b2 = 1 / a0, a1 = -2 * c / a0, a2 = (1 - al) / a0;
+      let x1 = 0, x2 = 0, y1 = 0, y2 = 0; for(let i = 0; i < y.length; i++){ const v = b0 * y[i] + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = y[i]; y2 = y1; y1 = v; y[i] = v; } });
+    return y;
+  }
+  // Clic du métronome entendu dans l'enregistrement (haut-parleur) : sert de repère exact, puis on l'enlève
+  function findClicks(ons, bpm){
+    if(!bpm) return { c0:null, ons };
+    const spb = 60 / bpm, cd = (a, b) => { const d = Math.abs(a - b) % spb; return Math.min(d, spb - d); };
+    // phase la plus fréquente (± 8 ms), puis moyenne du groupe : d'abord avec les clics seuls (sans son par-dessus), sinon avec tous les sons « tonaux »
+    const tryC = (cand, minN) => {
+      if(cand.length < minN) return null;
+      const ph = cand.map(o => ((o.t % spb) + spb) % spb);
+      let bi = 0, bn = 0; ph.forEach((p, i) => { const n = ph.filter(q => cd(p, q) < .008).length; if(n > bn){ bn = n; bi = i; } });
+      const grp = ph.filter(q => cd(ph[bi], q) < .008); if(grp.length < minN || grp.length / cand.length < .5) return null;
+      const c0 = ph[bi] + mean(grp.map(q => { let d = q - ph[bi]; if(d > spb / 2) d -= spb; if(d < -spb / 2) d += spb; return d; }));
+      return { c0:((c0 % spb) + spb) % spb, R:+(grp.length / cand.length).toFixed(2), n:grp.length };
+    };
+    const first = l => l.filter((o, i) => !l.slice(0, i).some(q => o.t - q.t < .045 && o.t > q.t)); // un clic = sa 1re attaque (pas la suite du même clic)
+    const r = tryC(first(ons.filter(o => o.ton >= 100)), 3) || tryC(first(ons.filter(o => o.ton >= 12)), 4);
+    if(!r) return { c0:null, ons };
+    // position par rapport au clic (s) : négatif = avant, positif = après
+    const rel = o => { let d = ((o.t - r.c0) % spb + spb) % spb; if(d > spb / 2) d -= spb; return d; };
+    return { ...r, rel, onGrid:(o, tol) => Math.abs(rel(o)) < (tol || .015) };
+  }
+  // Grille attendue : phrases (div, tok) mises bout à bout, en temps (beats)
+  function grid(pat){
+    const cells = []; let b = 0;
+    (pat || []).forEach((p, pi) => { const st = 1 / (+p.div || 2); String(p.tok || '').trim().split(/\s+/).filter(Boolean).forEach(t => { cells.push({ i:cells.length, b, tok:t, st, ph:pi, fam:famOf(t), ev:t !== '.' && t !== '-' }); b += st; }); });
+    return { cells, ev:cells.filter(c => c.ev), P:b };
+  }
+  // Placement des sons sur la grille + statistiques
+  function match(ons, bpm, pat, o){
+    o = o || {};
+    const spb = 60 / bpm, G = grid(pat), ev = G.ev, P = G.P;
+    if(!ev.length || !ons.length || !P) return null;
+    const minSt = Math.min(...G.cells.map(c => c.st)), tolS = c => Math.min(.42 * c.st * spb, .11), beats = ons.map(x => x.t / spb);
+    const evb = ev.map(e => e.b), near = pos => { // événement le plus proche (avec bouclage de la phrase)
+      let lo = 0, hi = evb.length; while(lo < hi){ const m = (lo + hi) >> 1; if(evb[m] < pos) lo = m + 1; else hi = m; }
+      const cs = [[lo % ev.length, lo >= ev.length ? P : 0], [(lo - 1 + ev.length) % ev.length, lo - 1 < 0 ? -P : 0]];
+      let best = null; cs.forEach(([j, sh]) => { const d = pos - (evb[j] + sh); if(!best || Math.abs(d) < Math.abs(best.d)) best = { e:ev[j], d }; }); return best;
+    };
+    const c0b = o.c0 != null ? o.c0 / spb : null, dmax = .12 / spb;
+    // un seul son compte par case attendue (le plus proche) ; les autres comptent comme « en trop »
+    const score = phi => { const bestW = new Map(); let s = 0, n0 = 0;
+      for(const b of beats){ const pos = ((b - phi) % P + P) % P, n = near(pos), tb = tolS(n.e) / spb;
+        if(Math.abs(n.d) < tb){ const key = Math.round((b - phi - n.d - n.e.b) / P) + ':' + n.e.i, w = 1 - .5 * (n.d / tb) * (n.d / tb), o = bestW.get(key); if(o == null) bestW.set(key, w); else { bestW.set(key, Math.max(o, w)); n0++; } }
+        else n0++; }
+      bestW.forEach(w => { s += w; }); return s - .3 * n0; };
+    const res = Math.min(.02, minSt / 8), cands = [];
+    for(let phi = 0; phi < P; phi += res){
+      if(c0b != null){ const r = (((phi - c0b) % minSt) + minSt) % minSt; if(Math.min(r, minSt - r) > dmax) continue; }
+      if(o.start != null){ const r = (((phi - o.start / spb) % P) + P) % P; if(Math.min(r, P - r) > dmax) continue; } // début de la phrase connu (exercice guidé)
+      cands.push({ phi, s:score(phi) });
+    }
+    if(!cands.length) return null;
+    const bestS = Math.max(...cands.map(c => c.s));
+    // à égalité de placement (phrases répétitives), on garde celui où les familles de sons se séparent le mieux
+    const tops = cands.filter(c => c.s >= bestS - .6).sort((a, b) => b.s - a.s), pick = [];
+    const sepB = Math.min(minSt / 2, .05 / spb); // deux calages à plus de 50 ms l'un de l'autre sont comparés (attaque / souffle d'un son long)
+    tops.forEach(c => { if(!pick.some(p => Math.abs(p.phi - c.phi) < sepB || Math.abs(Math.abs(p.phi - c.phi) - P) < sepB)) pick.push(c); });
+    let best = null;
+    pick.slice(0, 12).forEach(c => { const r = assign(c.phi); r.sep = famSep(r);
+      // un son long (attaque + souffle) : il faut caler la grille sur l'attaque, pas sur le souffle → pénalité si un « son en trop » précède de peu un son long réussi
+      const pre = r.extra.filter(x => r.hits.some(h => isLong(h.e.tok) && h.o.t > x.o.t && h.o.t - x.o.t < .16)).length;
+      const dSt = o.start != null ? Math.min(Math.abs((((c.phi - o.start / spb) % P) + P) % P), P - Math.abs((((c.phi - o.start / spb) % P) + P) % P)) / dmax : 0;
+      r.key = r.hits.length - .5 * (r.miss.length + r.extra.length) + .8 * r.sep - 1.2 * pre - .5 * dSt; if(!best || r.key > best.key + 1e-9) best = r; });
+    // affinage : on recentre sur les sons réussis
+    if(best.hits.length >= 3 && c0b == null){ const dm = mean(best.hits.map(h => h.d)); best = assign(best.phi + dm / spb); }
+    function assign(phi){
+      // exercice guidé : on ne compte que les tours demandés (pas le décompte, pas après la fin)
+      const b0 = o.start != null ? o.start / spb : beats[0], b1 = o.start != null && o.cycles ? o.start / spb + o.cycles * P - minSt / 2 : beats[beats.length - 1], inst = [];
+      for(let k = Math.floor((b0 - phi) / P) - 1; k <= Math.ceil((b1 - phi) / P); k++)
+        ev.forEach(e => { const tb = phi + k * P + e.b, tl = tolS(e) / spb; if(tb >= b0 - tl && tb <= b1 + tl) inst.push({ e, k, tb }); });
+      const pairs = [];
+      inst.forEach((it, a) => { const tl = tolS(it.e) / spb, cand = []; beats.forEach((b, j) => { const d = b - it.tb; if(Math.abs(d) < tl) cand.push({ a, j, d }); });
+        // dans une même case, le vrai son est le plus fort : un petit bruit juste avant (respiration…) ne doit pas prendre sa place
+        const mx = Math.max(-200, ...cand.map(c => ons[c.j].db)); cand.forEach(c => { c.k = Math.abs(c.d) / tl + Math.max(0, mx - ons[c.j].db) / 8; pairs.push(c); }); });
+      pairs.sort((x, y) => x.k - y.k);
+      const ua = new Set(), uj = new Set(), hits = [];
+      pairs.forEach(p => { if(ua.has(p.a) || uj.has(p.j)) return; ua.add(p.a); uj.add(p.j); hits.push({ e:inst[p.a].e, k:inst[p.a].k, o:ons[p.j], d:p.d * spb }); });
+      const miss = inst.filter((_, a) => !ua.has(a)).map(it => ({ e:it.e, k:it.k, t:it.tb * spb }));
+      const extra = ons.filter((_, j) => !uj.has(j)).map(x => { const pos = ((x.t / spb - phi) % P + P) % P; let c = G.cells[0], bd = 1e9; G.cells.forEach(cc => { const d = Math.min(Math.abs(pos - cc.b), P - Math.abs(pos - cc.b)); if(d < bd){ bd = d; c = cc; } }); return { o:x, cell:c }; });
+      return { phi, hits, miss, extra };
+    }
+    // Sons longs (inward K~, charleys ouverts Ts / Ts~ / Th~…) : le souffle qui suit l'attaque peut ressembler à une 2e attaque.
+    // Un « son en trop » qui arrive juste après un son long, avec le même timbre et pas plus fort, est la queue de ce son.
+    // bruits très faibles (souffle, frottement, reste de clic) : bien plus faibles que les sons joués → pas des sons « en trop »
+    if(best.hits.length >= 4){ const hd = best.hits.map(h => h.o.db).sort((p, q) => p - q), thrX = Math.min(median(hd) - 20, hd[Math.floor(hd.length * .1)] - 8);
+      best.noise = best.extra.filter(x => x.o.db < thrX).length; best.extra = best.extra.filter(x => x.o.db >= thrX); }
+    const tails = [];
+    best.extra = best.extra.filter(x => { const t = x.o.t;
+      const h = best.hits.filter(z => z.o.t < t && t - z.o.t < .4).sort((p, q) => q.o.t - p.o.t)[0]; if(!h || !isLong(h.e.tok)) return true;
+      const same = Math.abs(Math.log2(Math.max(60, x.o.c) / Math.max(60, h.o.c))) < 1 && x.o.db <= h.o.db + 1.5;
+      if(same){ tails.push(x); return false; } return true; });
+    // Queue de n'importe quel son : souffle après un P, « h » après un K, « sss » après un Ts… (peu après, nettement plus faible)
+    best.extra = best.extra.filter(x => { const t = x.o.t, h = best.hits.filter(z => z.o.t < t && t - z.o.t < .3).sort((p, q) => q.o.t - p.o.t)[0]; if(!h) return true;
+      const dt = t - h.o.t, rumble = x.o.lo > .85 && x.o.c < 220 && x.o.db <= h.o.db + 1; // souffle grave d'une plosive (P, B…) dans le micro
+      const part2 = dt < .14 && x.o.db <= h.o.db + 4; // 2e partie d'un son composé : P-ch, F-sh, K-h, P-f… (juste après, à peu près aussi fort)
+      if(x.o.db < h.o.db - (dt < .15 ? 6 : 9) || rumble || part2){ tails.push(x); return false; } return true; });
+    // décalage par rapport au clic (seulement si on a un repère exact)
+    let off = null;
+    if(c0b != null && best.hits.length >= 3){ const r = (((best.phi - c0b) % minSt) + minSt) % minSt, sh = (r > minSt / 2 ? r - minSt : r) * spb; off = Math.round((sh + median(best.hits.map(h => h.d)) - (o.lat || 0)) * 1000); }
+    // sons confondus (relatif à l'enregistrement : chaque famille comparée aux autres)
+    const fam = famCheck(best);
+    const cells = G.cells.map(c => { const h = best.hits.filter(x => x.e === c), m = best.miss.filter(x => x.e === c).length, x = best.extra.filter(z => z.cell === c).length, f = fam.bad.filter(z => z.e === c);
+      return c.ev ? { h:h.length, m, x, r:h.length ? Math.round(mean(h.map(z => z.d)) * 1000) : 0, f:f.length, fh:f.length ? f[0].heard : '' } : { x }; });
+    const nh = best.hits.length, nm = best.miss.length, nx = best.extra.length, ds = best.hits.map(h => h.d * 1000);
+    const cyc = o.cycles || Math.max(1, Math.round((ons[ons.length - 1].t - ons[0].t) / (P * spb)));
+    return { v:V, pct:Math.round(100 * nh / Math.max(1, nh + nm + nx)), hits:nh, miss:nm, extra:nx, reg:Math.round(std(ds)), off, anc:c0b != null, sons:fam.pct, sep:+fam.sep.toFixed(2), conf:fam.bad.length,
+      cells, cyc, queues:tails.length, phi:+(best.phi * spb).toFixed(3), _best:best };
+  }
+  function famVecs(hits){ return hits.filter(h => h.e.fam).map(h => ({ h, f:h.e.fam, v:[Math.log2(Math.max(60, h.o.c)), h.o.lo * 3, h.o.hi * 3] })); }
+  function famStats(V){
+    const by = {}; V.forEach(x => (by[x.f] = by[x.f] || []).push(x)); const fs = Object.keys(by).filter(f => by[f].length >= 3); if(fs.length < 2) return null;
+    const cen = {}; fs.forEach(f => { cen[f] = [0, 1, 2].map(d => median(by[f].map(x => x.v[d]))); });
+    const sd = [0, 1, 2].map(d => Math.max(.08, mean(fs.map(f => std(by[f].map(x => x.v[d])))))) ;
+    const dist = (a, b) => Math.sqrt([0, 1, 2].reduce((s, d) => s + ((a[d] - b[d]) / sd[d]) ** 2, 0));
+    let sep = 1e9; fs.forEach(a => fs.forEach(b => { if(a < b) sep = Math.min(sep, dist(cen[a], cen[b])); }));
+    return { by, fs, cen, sd, dist, sep };
+  }
+  function famSep(r){ const s = famStats(famVecs(r.hits)); return s ? Math.min(s.sep, 6) : 0; }
+  function famCheck(r){
+    const V = famVecs(r.hits), s = famStats(V); if(!s || s.sep < 1.2) return { pct:null, sep:s ? s.sep : 0, bad:[] };
+    const bad = [];
+    V.forEach(x => { if(!s.cen[x.f]) return; let nf = x.f, nd = s.dist(x.v, s.cen[x.f]); s.fs.forEach(f => { const d = s.dist(x.v, s.cen[f]); if(d < nd - .6){ nd = d; nf = f; } }); if(nf !== x.f) bad.push({ e:x.h.e, heard:nf, o:x.h.o }); });
+    const n = V.filter(x => s.cen[x.f]).length;
+    return { pct:Math.round(100 * (n - bad.length) / Math.max(1, n)), sep:s.sep, bad };
+  }
+  // Qualité du son (régularité du volume et du timbre) : indicatif
+  // list : [{ o, k }] (k = son attendu) ; la régularité se mesure son par son, puis on fait la moyenne
+  function quality(list){
+    const l = list.filter(z => z && z.o); if(l.length < 3) return null;
+    const by = {}; l.forEach(z => (by[z.k || '?'] = by[z.k || '?'] || []).push(z.o)); const gs = Object.values(by).filter(g => g.length >= 3); if(!gs.length) return null;
+    const w = gs.reduce((s, g) => s + g.length, 0), avg = f => gs.reduce((s, g) => s + f(g) * g.length, 0) / w;
+    return { niv:Math.round(median(l.map(z => z.o.db))), regDb:+avg(g => std(g.map(o => o.db))).toFixed(1), regSt:+avg(g => std(g.map(o => 12 * Math.log2(Math.max(60, o.c))))).toFixed(1), n:l.length };
+  }
+  // Tout-en-un. opt : { bpm, pat:[{div, tok}], libre:bool (devoir « son » : un son par temps ou demi-temps, sans oubli compté), c0, lat }
+  function analyze(x, sr, opt){
+    opt = opt || {}; const t0 = Date.now();
+    let ons = onsets(x, sr, opt), clk = { c0:null };
+    if(opt.bpm && opt.clicks !== false){ clk = findClicks(ons, opt.bpm);
+      if(clk.c0 != null || opt.c0 != null){ // clic entendu : on le filtre, puis on recherche les sons
+        const y = notch(unclick(x, sr, ons, clk, 60 / opt.bpm) || x, sr, CLICK_F), W = Math.round(.015 * sr), en = (a, i) => { let e = 0; for(let k = i; k < Math.min(a.length, i + W); k++) e += a[k] * a[k]; return e; };
+        const pc = clk.rel ? ons.filter(o => o.ton >= 100 && clk.onGrid(o)).map(o => en(x, o.s)) : [], clickE = pc.length >= 2 ? median(pc) : 0;
+        // un « son » qui n'est presque que du clic (l'énergie disparaît avec le filtre) et tombe sur le clic → ce n'est pas l'élève
+        ons = onsets(y, sr, { ...opt, drop:z => { const e = en(y, z.s), f = features(x, sr, z.s), r = e / (en(x, z.s) + 1e-12); z.nr = +r.toFixed(2); z.ton = f.ton; if(!clk.rel) return false; const d = clk.rel(z);
+          if(d > -.015 && d < .06 && r < .1) return true; // reste du clic
+          if(Math.abs(d) >= .015) return false;
+          const quiet = clickE ? e < .35 * clickE : (r < .35 || (z.c > 7000 && f.ton >= 8 && z.db < -6)); // presque rien en dehors du clic
+          if(!quiet) return false;
+          // un son commence peut-être juste après le clic : on cherche son attaque dans les 60 ms
+          const W2 = Math.round(.06 * sr); let e2 = 0; for(let k = z.s; k < Math.min(y.length, z.s + W2); k++) e2 += y[k] * y[k];
+          if(e2 < (clickE ? (opt.cdelay != null ? .4 : .15) * clickE : 4 * e)) return true;
+          const lag = Math.round(.002 * sr), m1 = Math.round(.001 * sr), env = i => { let v = 0; for(let k = i; k < i + m1; k++) v += Math.abs(y[k] || 0); return v / m1; };
+          let bi = z.s, bv = -1; for(let i = z.s + Math.round(.004 * sr); i < z.s + W2; i += 2){ const v = env(i) - env(i - lag); if(v > bv){ bv = v; bi = i; } }
+          let k = z.s + Math.round(.004 * sr); while(k < bi && env(k) - env(k - lag) < .5 * bv) k += 2;
+          Object.assign(z, features(y, sr, k), { s:k, t:k / sr, re:1 }); return false;
+        } }); } }
+    // clic mélangé numériquement dans le fichier (enregistrement relu plus tard) : ses restes et son pré-écho autour du temps ne sont pas des sons
+    if(opt.cdelay != null && clk.rel) ons = ons.filter(o => { const d = clk.rel(o); return !(d > -.04 && d < .02 && (o.ton >= 8 || o.db < -30)); });
+    const c0 = opt.c0 != null ? opt.c0 : clk.c0 != null ? clk.c0 + (opt.cdelay || 0) : null; // cdelay : clic mélangé numériquement dans le fichier (pas de retard), le micro arrive après
+    let m = null;
+    let start = opt.start != null ? opt.start : null;
+    if(start != null && opt.bpm && opt.pat){ const spb = 60 / opt.bpm, P = grid(opt.pat).P * spb;
+      if(c0 != null && opt.c0 == null) start = c0 + Math.round((start - c0) / spb) * spb; // calé sur le clic entendu
+      const end = start + (opt.cycles || 1) * P; ons = ons.filter(o => o.t > start - .2 && o.t < end + .2); }
+    if(opt.bpm && opt.pat && opt.pat.length) m = match(ons, opt.bpm, opt.pat, { c0, lat:opt.lat, start, cycles:opt.cycles });
+    else if(opt.bpm && opt.libre && ons.length >= 3){ const tok = opt.son || 'X'; m = match(ons, opt.bpm, [{ div:2, tok:tok + ' ' + tok }], { c0, lat:opt.lat }); if(m){ m.libre = true; m.pct = Math.round(100 * m.hits / Math.max(1, m.hits + m.extra)); m.miss = 0; } }
+    const q = quality(m ? m._best.hits.map(h => ({ o:h.o, k:h.e.tok })) : ons.map(o => ({ o, k:'?' })));
+    const out = { v:V, n:ons.length, dur:+(x.length / sr).toFixed(1), clic:c0 != null, ms:Date.now() - t0, q };
+    if(m){ const { _best, ...rest } = m; Object.assign(out, rest); out._best = _best; }
+    out._ons = ons; return out;
+  }
+  // Version légère à stocker (Firebase)
+  function compact(a){
+    if(!a) return null; const r = { v:a.v, n:a.n, dur:a.dur };
+    ['pct', 'hits', 'miss', 'extra', 'reg', 'off', 'sons', 'conf', 'cyc'].forEach(k => { if(a[k] != null) r[k] = a[k]; });
+    if(a.libre) r.libre = true; if(a.clic) r.clic = true; if(a.q) r.q = a.q;
+    if(a.cells) r.cells = a.cells.map(c => c.h == null ? (c.x ? 'x' + c.x : '') : [c.h, c.m, c.x, c.r, c.f, c.fh ? c.fh[0] : ''].join(','));
+    return r;
+  }
+  const cellOf = s => { if(!s || s[0] === 'x') return { x:s ? +s.slice(1) : 0 }; const [h, m, x, r, f, fh] = String(s).split(','); return { h:+h, m:+m, x:+x, r:+r, f:+f, fh:{ g:'grave', a:'aigu', m:'medium' }[fh] || '' }; };
+  // Décodage d'un enregistrement (Blob, ArrayBuffer ou data URL) en signal mono
+  async function decode(src, ctx){
+    let buf = src;
+    if(typeof src === 'string') buf = await (await fetch(src)).arrayBuffer();
+    else if(src && src.arrayBuffer) buf = await src.arrayBuffer();
+    const AC = window.AudioContext || window.webkitAudioContext, c = ctx || new AC();
+    const ab = await new Promise((ok, ko) => { const p = c.decodeAudioData(buf.slice ? buf.slice(0) : buf, ok, ko); if(p && p.then) p.then(ok, ko); });
+    const ch = ab.numberOfChannels, n = ab.length, x = new Float32Array(n), chans = [];
+    for(let k = 0; k < ch; k++){ const d = ab.getChannelData(k); chans.push(Float32Array.from(d)); for(let i = 0; i < n; i++) x[i] += d[i] / ch; }
+    return { x, sr:ab.sampleRate, chans };
+  }
+  return { V, FAM, FAM_LAB, famOf, isLong, onsets, notch, features, findClicks, grid, match, analyze, compact, cellOf, decode, quality, fft };
+})();
+/* ===== fin RYTHME ===== */
+
+</script>
+<script>
+/* ===== HERO CORE : détection temps réel + juge + outils (dépend de RY) ===== */
+const HERO = (() => {
+  const LANES = ['grave', 'medium', 'aigu'];
+  const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;
+  const std = a => { if(a.length < 2) return 0; const m = mean(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / (a.length - 1)); };
+  const pct = (a, p) => { if(!a.length) return 0; const s = Array.from(a).sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.floor(p * (s.length - 1))))]; };
+  const median = a => pct(a, .5);
+  const HANN = {}; const hann = n => HANN[n] || (HANN[n] = Float32Array.from({ length:n }, (_, i) => .5 - .5 * Math.cos(2 * Math.PI * i / (n - 1))));
+
+  // piste d'un son : famille du moteur, + Fsh / Spt (snares) que le moteur ne connaît pas / classe mal
+  function laneOf(tok){
+    const k = String(tok || '').toLowerCase();
+    if(k === 'fsh' || k === 'spt') return 'medium';
+    return RY.famOf(tok) || 'medium';
+  }
+
+  // Notes d'une phrase : pat = [{div, tok}], le décompte (4 temps) est inclus dans rel
+  function buildNotes(pat, bpm, cycles){
+    const spb = 60 / bpm, G = RY.grid(pat), notes = [];
+    for(let c = 0; c < cycles; c++) G.ev.forEach(e => {
+      const beat = 4 + c * G.P + e.b;
+      notes.push({ i:notes.length, cyc:c, cell:e.i, tok:e.tok, lane:laneOf(e.tok), long:RY.isLong(e.tok), beat, rel:beat * spb, W:Math.min(.42 * e.st * spb, .11) });
+    });
+    return { notes, cells:G.cells, P:G.P, spb, endBeat:4 + cycles * G.P };
+  }
+
+  // ---------- Détecteur d'attaques en flux continu (même principe que RY.onsets, mais causal) ----------
+  class LiveDetector {
+    constructor(sr, refs, o){
+      o = o || {}; this.sr = sr; this.refs = refs;
+      this.N = sr > 32000 ? 1024 : 512; this.H = this.N >> 2; this.w = hann(this.N);
+      this.re = new Float32Array(this.N); this.im = new Float32Array(this.N);
+      const edges = [30, 250, 3000, sr / 2]; this.bk = edges.map(fr => Math.min(this.N / 2, Math.max(1, Math.round(fr * this.N / sr))));
+      this.ring = new Float32Array(1 << 17); this.mask = (1 << 17) - 1; this.n = 0; this.f0 = null; this.f = 0;
+      this.prev = new Float32Array(this.N / 2); this.cur = new Float32Array(this.N / 2);
+      this.fl = new Float32Array(64); this.who = new Uint8Array(64); this.rms = new Float32Array(64); this.eng = [0, 1, 2].map(() => new Float32Array(64));
+      this.q0 = refs.q.slice(); this.q = refs.q.slice(); this.decay = Math.pow(.5, this.H / sr / 8); // le niveau de référence suit la voix (demi-vie 8 s)
+      this.W = Math.max(3, Math.round(.15 * sr / this.H)); this.sens = o.sens != null ? o.sens : .07;
+      const dyn = o.dynDb || 38, dyn2 = o.dynDb2 || 55;
+      this.gate = Math.max(refs.floor * 2.5, refs.rmax * Math.pow(10, -dyn2 / 20), 0.0004);
+      this.gB = refs.emax.map((e, b) => Math.max(refs.efl[b] * 3, e * Math.pow(10, -dyn / 20)));
+      this.pend = []; this.recent = []; this.onOnset = o.onOnset || null; this.out = [];
+      this.col = o.collect ? { F:[[], [], []], E:[[], [], []], R:[] } : null;
+      this.peak = 0;
+    }
+    // d : bloc mono ; frame : indice (horloge audio) de son premier échantillon
+    feed(d, frame){
+      if(this.f0 == null) this.f0 = frame;
+      const exp = this.f0 + this.n;
+      if(frame > exp && frame - exp < 48000){ for(let i = 0; i < frame - exp; i++) this.ring[(this.n + i) & this.mask] = 0; this.n += frame - exp; } // bloc perdu : on comble
+      for(let i = 0; i < d.length; i++){ const v = d[i]; this.ring[(this.n + i) & this.mask] = v; const a = v < 0 ? -v : v; if(a > this.peak) this.peak = a; }
+      this.n += d.length;
+      while(this.f * this.H + this.N <= this.n){ this._frame(this.f); this.f++; }
+      while(this.pend.length && this.pend[0].s + 2048 <= this.n) this._final(this.pend.shift());
+    }
+    // tout ce qui est plus ancien est définitivement décidé (secondes, horloge audio)
+    settled(){ return this.f0 == null ? 0 : (this.f0 + this.n - 2048) / this.sr; }
+    frontier(){ return this.f0 == null ? 0 : (this.f0 + this.n) / this.sr; }
+    _frame(f){
+      const N = this.N, H = this.H, o0 = f * H, re = this.re, im = this.im, w = this.w, ring = this.ring, mask = this.mask; let e = 0;
+      for(let i = 0; i < N; i++){ const v = ring[(o0 + i) & mask]; e += v * v; re[i] = v * w[i]; im[i] = 0; }
+      const rms = Math.sqrt(e / N); RY.fft(re, im);
+      const cur = this.cur, prev = this.prev, fb = [0, 0, 0], eb = [0, 0, 0];
+      for(let b = 0; b < 3; b++){ let fl = 0, en = 0;
+        for(let k = this.bk[b]; k < this.bk[b + 1]; k++){ const p2 = re[k] * re[k] + im[k] * im[k], m = Math.log(1 + 1000 * Math.sqrt(p2)); cur[k] = m; en += p2; if(f > 0){ const d = m - prev[k]; if(d > 0) fl += d; } }
+        fb[b] = fl; eb[b] = Math.sqrt(en); }
+      this.cur = prev; this.prev = cur;
+      if(this.col){ for(let b = 0; b < 3; b++){ this.col.F[b].push(fb[b]); this.col.E[b].push(eb[b]); } this.col.R.push(rms); }
+      let best = 0, wb = 0;
+      for(let b = 0; b < 3; b++){ const v = fb[b] / this.q[b]; if(v > best){ best = v; wb = b; }
+        let q = Math.max(this.q0[b] * .4, this.q[b] * this.decay); if(fb[b] > q) q += .3 * (fb[b] - q); this.q[b] = q; }
+      const ix = f & 63; this.fl[ix] = best; this.who[ix] = wb; this.rms[ix] = rms; for(let b = 0; b < 3; b++) this.eng[b][ix] = eb[b];
+      // pic au cadre précédent (il faut voir le cadre suivant pour savoir que c'était un pic)
+      const p = f - 1; if(p < 2) return;
+      const ip = p & 63, i0 = (p - 1) & 63, i2 = f & 63;
+      if(this.fl[ip] < this.fl[i0] || this.fl[ip] <= this.fl[i2]) return;
+      const loc = []; for(let j = Math.max(0, p - this.W); j <= f; j++) loc.push(this.fl[j & 63]);
+      const thr = median(loc) * 1.4 + this.sens, bnd = this.who[ip];
+      const r2 = Math.max(this.rms[ip], this.rms[i2]), e2 = Math.max(this.eng[bnd][ip], this.eng[bnd][i2]);
+      if(this.fl[ip] > thr && r2 > this.gate && e2 > this.gB[bnd]) this._peak(p, this.fl[ip], bnd);
+    }
+    _peak(p, v, bnd){
+      const sr = this.sr, H = this.H, N = this.N, m1 = Math.max(1, Math.round(.001 * sr)), lag = Math.max(1, Math.round(.002 * sr));
+      const s0 = Math.max(lag, p * H - H), s1 = Math.min(this.n - m1 - 1, p * H + N); if(s1 <= s0) return;
+      const base = s0 - lag, len = s1 + m1 - base + 1, cs = new Float64Array(len + 1);
+      for(let i = 0; i < len; i++) cs[i + 1] = cs[i] + Math.abs(this.ring[(base + i) & this.mask]);
+      const env = i => (cs[i - base + m1] - cs[i - base]) / m1, d = []; let md = 0;
+      for(let i = s0; i < s1; i++){ const x = env(i) - env(i - lag); d.push(x); if(x > md) md = x; }
+      let k = 0; while(k < d.length && d[k] < .5 * md) k++;
+      const s = Math.max(0, s0 + k - (lag >> 1));
+      this.pend.push({ s, str:v, band:bnd });
+    }
+    _final(p){
+      const x = new Float32Array(2048); for(let i = 0; i < 2048; i++) x[i] = this.ring[(p.s + i) & this.mask];
+      const ft = RY.features(x, this.sr, 0), z = { t:(this.f0 + p.s) / this.sr, s:p.s, str:+p.str.toFixed(2), band:p.band, ...ft };
+      const l = this.recent[this.recent.length - 1];
+      if(l && z.t - l.t < .045) return; // un seul son par 45 ms (le premier : c'est l'attaque)
+      if(this.recent.slice(-3).some(q => z.t - q.t < .16 && z.db < q.db - 22 && z.str < .8)) return; // fin d'un son fort
+      this.recent.push(z); if(this.recent.length > 6) this.recent.shift();
+      this.out.push(z); if(this.onOnset) this.onOnset(z);
+    }
+    // niveaux de référence à partir d'un enregistrement de test (silence + quelques sons)
+    static calibrate(x, sr){
+      const D = new LiveDetector(sr, { q:[1, 1, 1], emax:[1, 1, 1], efl:[0, 0, 0], floor:0, rmax:1 }, { collect:true });
+      for(let i = 0; i < x.length; i += 128) D.feed(x.subarray(i, Math.min(x.length, i + 128)), i);
+      const C = D.col;
+      return { q:C.F.map(a => pct(a, .99) || 1), emax:C.E.map(a => pct(a, .995) || 1e-9), efl:C.E.map(a => pct(a, .1)), floor:pct(C.R, .1), rmax:pct(C.R, .995) || 1e-6, sr };
+    }
+    // rejoue un enregistrement comme si c'était un flux (tests, bilan de calibration)
+    static run(x, sr, refs, o){
+      const D = new LiveDetector(sr, refs, o); for(let i = 0; i < x.length; i += 128) D.feed(x.subarray(i, Math.min(x.length, i + 128)), i);
+      D.feed(new Float32Array(2400), x.length); return D.out;
+    }
+  }
+
+  // ---------- Juge : place chaque attaque sur une note, score, combo, vie ----------
+  class Judge {
+    // notes : de buildNotes ; T0 : heure (horloge audio) du 1er clic ; lat : latence totale (s)
+    constructor(notes, T0, lat, o){
+      o = o || {}; this.notes = notes; this.T0 = T0; this.lat = lat;
+      notes.forEach(n => { n.tc = T0 + n.rel; n.t = n.tc + lat; n.state = 0; n.res = null; });
+      this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0;
+      this.score = 0; this.combo = 0; this.maxCombo = 0; this.life = 100; this.dead = false; this.ip = 0;
+      this.cnt = { perfect:0, good:0, miss:0, wrong:0, extra:0 }; this.log = []; this.lastHit = null; this.hitDb = []; this.by = {};
+      if(o.fp) Object.keys(o.fp).forEach(f => { this.by[f] = o.fp[f].slice(); });
+    }
+    mult(){ const c = this.combo; return c >= 50 ? 4 : c >= 25 ? 3 : c >= 10 ? 2 : 1; }
+    vec(z){ return [Math.log2(Math.max(60, z.c)), z.lo * 3, z.hi * 3]; }
+    stats(){
+      const fs = Object.keys(this.by).filter(f => this.by[f].length >= 3); if(fs.length < 2) return null;
+      const cen = {}; fs.forEach(f => { cen[f] = [0, 1, 2].map(d => median(this.by[f].map(v => v[d]))); });
+      const sd = [0, 1, 2].map(d => Math.max(.08, mean(fs.map(f => std(this.by[f].map(v => v[d]))))));
+      const dist = (a, b) => Math.sqrt([0, 1, 2].reduce((s, d) => s + ((a[d] - b[d]) / sd[d]) ** 2, 0));
+      let sep = 1e9; fs.forEach(a => fs.forEach(b => { if(a < b) sep = Math.min(sep, dist(cen[a], cen[b])); }));
+      return { fs, cen, dist, sep };
+    }
+    _life(dv){ this.life = Math.max(0, Math.min(100, this.life + dv)); if(this.lifeDie && this.life <= 0) this.dead = true; }
+    // queue d'un son déjà compté (souffle d'un P, « h » d'un K, fin d'un Ts…) : à ignorer, comme dans RY.match
+    _tail(z){
+      const h = this.lastHit; if(!h || z.t - h.z.t > .4) return false; const dt = z.t - h.z.t;
+      if(h.note.long && Math.abs(Math.log2(Math.max(60, z.c) / Math.max(60, h.z.c))) < 1 && z.db <= h.z.db + 1.5) return true;
+      if(dt > .3) return false;
+      const rumble = z.lo > .85 && z.c < 220 && z.db <= h.z.db + 1, part2 = dt < .14 && z.db <= h.z.db + 4;
+      return z.db < h.z.db - (dt < .15 ? 6 : 9) || rumble || part2;
+    }
+    _noise(z){ if(this.hitDb.length < 4) return false; const s = this.hitDb.slice().sort((a, b) => a - b); return z.db < Math.min(median(s) - 20, s[Math.floor(s.length * .1)] - 8); }
+    onset(z){
+      const ev = []; if(this.dead) return ev;
+      if(z.t < this.first - .25){ z.verdict = 'pre'; this.log.push(z); return ev; }
+      let best = null, bk = 1e9;
+      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t - n.W > z.t) break; if(n.state !== 0) continue; const d = z.t - n.t; if(Math.abs(d) < n.W && Math.abs(d) / n.W < bk){ bk = Math.abs(d) / n.W; best = n; } }
+      if(best){
+        const d = z.t - best.t; let heard = null;
+        if(this.strict){ const S = this.stats(), v = this.vec(z); if(S && S.sep >= 1.2 && S.cen[best.lane]){ let nd = S.dist(v, S.cen[best.lane]), nf = best.lane; S.fs.forEach(f => { const dd = S.dist(v, S.cen[f]); if(dd < nd - 1){ nd = dd; nf = f; } }); if(nf !== best.lane) heard = nf; } }
+        best.res = { d, z, heard }; this.lastHit = { note:best, z }; this.hitDb.push(z.db); z.verdict = heard ? 'wrong' : 'hit'; z.note = best.i;
+        if(heard){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-8); ev.push({ type:'wrong', note:best, d, z, heard }); }
+        else {
+          best.state = 1; (this.by[best.lane] = this.by[best.lane] || []).push(this.vec(z)); if(this.by[best.lane].length > 30) this.by[best.lane].shift();
+          const perfect = Math.abs(d) <= .5 * best.W, m = this.mult(); this.combo++; if(this.combo > this.maxCombo) this.maxCombo = this.combo;
+          this.score += (perfect ? 100 : 60) * m; this.cnt[perfect ? 'perfect' : 'good']++; this._life(perfect ? 2 : 1);
+          best.grade = perfect ? 'perfect' : 'good'; ev.push({ type:best.grade, note:best, d, z });
+        }
+      } else if(this._tail(z)) z.verdict = 'tail';
+      else if(this._noise(z)) z.verdict = 'noise';
+      else { z.verdict = 'extra'; this.cnt.extra++; this._life(-3); ev.push({ type:'extra', z }); }
+      this.log.push(z); return ev;
+    }
+    // appelé régulièrement avec detector.settled() : les cases dont la fenêtre est passée sont ratées
+    advance(settled){
+      const ev = [];
+      while(this.ip < this.notes.length && this.notes[this.ip].state !== 0) this.ip++;
+      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t + n.W >= settled) break; if(n.state !== 0) continue;
+        n.state = 2; this.cnt.miss++; this.combo = 0; this._life(-8); ev.push({ type:'miss', note:n }); }
+      return ev;
+    }
+    accuracy(){ const h = this.cnt.perfect + this.cnt.good, t = h + this.cnt.miss + this.cnt.wrong + this.cnt.extra; return t ? Math.round(100 * h / t) : 0; }
+  }
+
+  // ---------- divers ----------
+  function toWav(x, sr){
+    const n = x.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), W = (o, s) => { for(let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    W(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); W(8, 'WAVE'); W(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); W(36, 'data'); v.setUint32(40, n * 2, true);
+    for(let i = 0; i < n; i++){ const s = Math.max(-1, Math.min(1, x[i])); v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true); }
+    return b;
+  }
+  // empreintes d'un test de sons : { grave:[vec…], medium:[…], aigu:[…] } à partir des attaques qui tombent dans chaque fenêtre
+  function fingerprints(ons, wins){
+    const fp = {}, cnt = {};
+    wins.forEach(w => { let l = ons.filter(o => o.t >= w.t0 && o.t < w.t1); if(!l.length){ cnt[w.lane] = 0; return; }
+      const mx = Math.max(...l.map(o => o.db)); l = l.filter(o => o.db >= mx - 20).slice(0, 6); cnt[w.lane] = l.length;
+      fp[w.lane] = l.map(o => [Math.log2(Math.max(60, o.c)), o.lo * 3, o.hi * 3]); });
+    return { fp, cnt };
+  }
+  return { LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
+})();
+
+</script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const LS = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
+const LC = { grave:'#e0607e', medium:'#8b6fd6', aigu:'#2fb3d9' }, LNAME = { grave:'grave', medium:'medium', aigu:'aigu' };
+
+/* ---------- phrases : styles × 3 niveaux (même format que le Workout : [{div, tok}]) ---------- */
+const STYLES = [
+  { id:'decouverte', n:'🌱 Découverte', bpm:[60, 75, 90], niv:{ 1:[{ div:1, tok:'P K P K' }], 2:[{ div:2, tok:'P . K . P . K .' }], 3:[{ div:2, tok:'P K Ts K P K Ts K' }] } },
+  { id:'rock', n:'🎸 Rock', bpm:[70, 85, 100], niv:{ 1:[{ div:2, tok:'P . K . P . K .' }], 2:[{ div:2, tok:'P T K T P P K T' }], 3:[{ div:4, tok:'P . T . K . T . P . P T K . T .' }] } },
+  { id:'boombap', n:'🎤 Boom bap', bpm:[70, 80, 90], niv:{ 1:[{ div:2, tok:'P . K . . P K .' }], 2:[{ div:2, tok:'P T K . . P K T' }], 3:[{ div:4, tok:'P . T . K . P T . . P T K . T .' }] } },
+  { id:'reggae', n:'🌴 Reggae', bpm:[65, 75, 85], niv:{ 1:[{ div:2, tok:'. T . T P . . T' }], 2:[{ div:2, tok:'. T . T P K . T' }], 3:[{ div:4, tok:'. . T . . . T . P . K . . . T T' }] } },
+  { id:'dnb', n:'⚡ Drum & bass', bpm:[75, 85, 95], niv:{ 1:[{ div:4, tok:'P . . . K . . . . . P . K . . .' }], 2:[{ div:4, tok:'P . T . K . T . . T P . K . T T' }], 3:[{ div:4, tok:'P . T P K . T . . P P T K . T T' }] } },
+  { id:'electro', n:'🎛 Électro', bpm:[80, 100, 120], niv:{ 1:[{ div:2, tok:'P . P . P . P T' }], 2:[{ div:2, tok:'P T P Ts P T P Ts' }], 3:[{ div:4, tok:'P . T . P . T . P . T K P . Ts T' }] } },
+  { id:'perso', n:'✏️ Ma phrase', bpm:[70, 85, 100], niv:{} }
+];
+const CFG = Object.assign({ style:'rock', niv:1, speed:1, bpm:null, cycles:4, die:false, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
+const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
+const styleOf = () => STYLES.find(s => s.id === CFG.style) || STYLES[1];
+function patOf(){
+  if(CFG.style === 'perso'){ const tok = String(CFG.ptok).trim().split(/\s+/).filter(Boolean).join(' '); return tok ? [{ div:+CFG.pdiv || 2, tok }] : []; }
+  return styleOf().niv[CFG.niv];
+}
+const bpmOf = () => CFG.speed === 3 ? (+CFG.bpm || 85) : styleOf().bpm[CFG.speed];
+
+/* ---------- audio ---------- */
+const AC = window.AudioContext || window.webkitAudioContext; let ac = null, wkOk = false;
+const ensure = () => { if(!ac) ac = new AC({ latencyHint:'interactive' }); if(ac.state !== 'running') ac.resume(); return ac; };
+const WK = `class R extends AudioWorkletProcessor{process(i){const c=i[0];if(c&&c[0]){const m=new Float32Array(c[0].length);for(let k=0;k<c.length;k++){const d=c[k];for(let j=0;j<d.length;j++)m[j]+=d[j]/c.length;}this.port.postMessage({f:currentFrame,d:m},[m.buffer]);}return true;}}registerProcessor('rec-ry',R);`;
+async function micOpen(onBlock){
+  ensure();
+  if(!wkOk){
+    try{ await ac.audioWorklet.addModule(URL.createObjectURL(new Blob([WK], { type:'application/javascript' }))); }
+    catch(e){ await ac.audioWorklet.addModule('data:application/javascript;base64,' + btoa(WK)); } // repli (page ouverte en file://)
+    wkOk = true; }
+  const st = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
+  const src = ac.createMediaStreamSource(st), node = new AudioWorkletNode(ac, 'rec-ry'), mute = ac.createGain(); mute.gain.value = 0;
+  src.connect(node); node.connect(mute); mute.connect(ac.destination);
+  node.port.onmessage = e => onBlock(e.data.d, e.data.f);
+  return { close(){ try{ src.disconnect(); node.disconnect(); }catch(e){} st.getTracks().forEach(t => t.stop()); } };
+}
+// enregistre jusqu'à stop() ; renvoie { x, sr, tStart } (tStart : heure audio du 1er échantillon)
+async function recStart(onBlock){
+  const chunks = []; let f0 = null, peak = 0;
+  const mic = await micOpen((d, f) => { if(f0 == null) f0 = f; chunks.push(d); let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > peak) peak = p; if(onBlock) onBlock(d, f); });
+  const t = Date.now(); while(f0 == null && Date.now() - t < 2500) await sleep(20);
+  if(f0 == null){ mic.close(); throw new Error('le micro ne donne aucun son (autorisation ? autre appli ?)'); }
+  return { peak:() => peak, stop(){ mic.close(); const n = chunks.reduce((s, c) => s + c.length, 0), x = new Float32Array(n); let o = 0; chunks.forEach(c => { x.set(c, o); o += c.length; }); return { x, sr:ac.sampleRate, tStart:f0 / ac.sampleRate, peak }; } };
+}
+function clickAt(t, acc, bus){ const o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.setValueAtTime(acc ? 1500 : 1000, t);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(acc ? .45 : .28, t + .002); g.gain.exponentialRampToValueAtTime(.0001, t + .05); o.connect(g); g.connect(bus || ac.destination); o.start(t); o.stop(t + .07); }
+
+/* ---------- état de calibration ---------- */
+const getLat = () => LS.get('bbx-rylat', null);       // { ms, t, n } : partagé avec le labo et l'appli
+const getCal = () => { const c = LS.get('bbx-hero-cal', null); return c && c.refs ? c : null; };
+const getAdj = () => +LS.get('bbx-hero-adj', 0) || 0;  // décalage fin (ms), ajouté à la latence
+const latEffMs = () => (getLat() ? getLat().ms : 0) + getAdj();
+const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'à l\'instant' : m < 60 ? 'il y a ' + m + ' min' : m < 1440 ? 'il y a ' + Math.round(m / 60) + ' h' : 'il y a ' + Math.round(m / 1440) + ' j'; };
+function calOk(){ const c = getCal(); return !!c && Date.now() - c.t < 1000 * 3600 * 12; }
+function refreshStatus(){
+  const L = getLat(), C = getCal(), adj = getAdj(), set = (d, t, k, txt) => { $('#' + d).className = 'dot ' + k; $('#' + t).textContent = txt; };
+  set('dMic', 'tMic', C ? 'ok' : '', C ? 'Micro : OK' : 'Micro : pas encore testé');
+  set('dLat', 'tLat', L ? 'ok' : 'warn', L ? 'Latence : ' + L.ms + ' ms' + (adj ? ' (' + (adj > 0 ? '+' : '') + adj + ' ms de réglage fin)' : '') + ' · ' + ago(L.t) : 'Latence : pas mesurée (je prendrai 0 ms — la précision sera moyenne)');
+  set('dCal', 'tCal', C ? (calOk() ? 'ok' : 'warn') : 'no', C ? 'Test de sons : ' + ago(C.t) + (C.sep != null ? ' · séparation des sons ' + (C.sep >= 1.2 ? 'bonne' : 'faible') : '') : 'Test de sons : à faire');
+  $('#bPlay').disabled = !C; $('#playHint').textContent = C ? '' : 'Fais d\'abord la calibration ↑';
+}
+
+/* ---------- accueil ---------- */
+function toks(pat){ const G = RY.grid(pat); const by = []; G.cells.forEach(c => { const k = Math.floor(c.b + 1e-6); (by[k] = by[k] || []).push(c); }); return by; }
+function renderPrev(){
+  const pat = patOf(), by = toks(pat);
+  $('#prev').innerHTML = by.map(b => '<span class="beat">' + (b || []).map(c => c.ev ? `<span class="tk" style="--c:${LC[HERO.laneOf(c.tok)]}">${c.tok}</span>` : '<span class="tk sil">·</span>').join('') + '</span>').join('');
+  const G = RY.grid(pat); $('#prevInfo').textContent = G.cells.length ? G.P + ' temps par tour · ' + G.ev.length + ' sons' + (G.ev.length ? '' : '') : 'Phrase vide';
+}
+function renderHome(){
+  $('#styles').innerHTML = STYLES.map(s => `<button class="chip ${s.id === CFG.style ? 'on' : ''}" data-s="${s.id}">${s.n}</button>`).join('');
+  $$('#nivs button').forEach(b => b.classList.toggle('on', +b.dataset.n === CFG.niv)); $('#nivs').style.display = CFG.style === 'perso' ? 'none' : '';
+  $('#persoBox').open = CFG.style === 'perso'; $('#pTok').value = CFG.ptok; $('#pDiv').value = CFG.pdiv;
+  const S = styleOf(); $('#speeds').innerHTML = ['Lent', 'Moyen', 'Rapide'].map((n, i) => `<button data-sp="${i}" class="${CFG.speed === i ? 'on' : ''}">${n} · ${S.bpm[i]}</button>`).join('') + `<button data-sp="3" class="${CFG.speed === 3 ? 'on' : ''}">Perso</button>`;
+  $('#bpm').value = CFG.speed === 3 ? (CFG.bpm || 85) : S.bpm[CFG.speed]; $('#cycles').value = CFG.cycles; $('#oDie').checked = CFG.die; $('#oStrict').checked = CFG.strict;
+  renderPrev(); refreshStatus();
+}
+$('#styles').onclick = e => { const b = e.target.closest('[data-s]'); if(!b) return; CFG.style = b.dataset.s; if(CFG.speed !== 3) CFG.speed = Math.min(CFG.speed, 2); saveCfg(); renderHome(); };
+$('#nivs').onclick = e => { const b = e.target.closest('[data-n]'); if(!b) return; CFG.niv = +b.dataset.n; saveCfg(); renderHome(); };
+$('#speeds').onclick = e => { const b = e.target.closest('[data-sp]'); if(!b) return; CFG.speed = +b.dataset.sp; if(CFG.speed === 3 && !CFG.bpm) CFG.bpm = bpmOf(); saveCfg(); renderHome(); };
+$('#bpm').oninput = e => { CFG.speed = 3; CFG.bpm = Math.max(50, Math.min(150, +e.target.value || 85)); saveCfg(); $$('#speeds button').forEach(b => b.classList.toggle('on', b.dataset.sp === '3')); };
+$('#cycles').onchange = e => { CFG.cycles = +e.target.value; saveCfg(); };
+$('#oDie').onchange = e => { CFG.die = e.target.checked; saveCfg(); };
+$('#oStrict').onchange = e => { CFG.strict = e.target.checked; saveCfg(); };
+$('#pTok').oninput = e => { CFG.ptok = e.target.value; saveCfg(); renderPrev(); };
+$('#pDiv').onchange = e => { CFG.pdiv = +e.target.value; saveCfg(); renderPrev(); };
+const show = id => { $$('.scr').forEach(s => s.classList.toggle('on', s.id === id)); window.scrollTo(0, 0); };
+
+/* ---------- calibration (micro → latence → sons → synchro casque) ---------- */
+let calStep = 0, calBusy = false;
+const calSteps = ['Micro', 'Latence', 'Test de sons', 'Synchro casque'];
+function calHead(){ $('#calSub').textContent = 'Étape ' + (calStep + 1) + '/4 · ' + calSteps[calStep]; }
+function lvlLoop(rec, id){ const iv = setInterval(() => { const m = $('#' + id); if(!m){ clearInterval(iv); return; } m.style.width = Math.min(100, rec.cur * 160) + '%'; rec.cur *= .7; }, 60); return () => clearInterval(iv); }
+function renderCal(){
+  calHead(); const B = $('#calbody'); calBusy = false;
+  if(calStep === 0){
+    B.innerHTML = `<h2>🎤 Micro</h2><p>Branche ton casque, puis autorise le micro. Fais « pff » ou joue un P : la barre doit bouger.</p>
+      <div class="row"><button class="b-yel" id="cGo">Autoriser / tester le micro</button><div class="meter"><i id="cLvl"></i></div></div><div id="cMsg"></div>
+      <div class="row" style="margin-top:10px"><span class="sp"></span><button class="b-pink" id="cNext" disabled>Suivant →</button></div>`;
+    $('#cGo').onclick = async () => {
+      $('#cGo').disabled = true; const st = { cur:0 }; let stop = lvlLoop(st, 'cLvl'), mic = null, got = 0;
+      try{ mic = await micOpen(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; if(p > .04) got++; });
+        $('#cMsg').innerHTML = '<div class="res">J\'écoute… fais quelques sons (4 s).</div>'; await sleep(4000); mic.close(); stop();
+        if(got > 3){ $('#cMsg').innerHTML = '<div class="res ok">✅ Micro OK.</div>'; $('#cNext').disabled = false; }
+        else $('#cMsg').innerHTML = '<div class="res no">Je n\'entends presque rien : rapproche le micro, vérifie l\'autorisation, ou essaie un autre navigateur.</div>';
+      }catch(e){ if(mic) mic.close(); stop(); $('#cMsg').innerHTML = '<div class="res no">Micro indisponible : ' + (e.message || e) + '</div>'; }
+      $('#cGo').disabled = false; $('#cGo').textContent = 'Retester';
+    };
+    $('#cNext').onclick = () => { calStep = 1; renderCal(); };
+  }
+  else if(calStep === 1){
+    const L = getLat();
+    B.innerHTML = `<h2>⏱ Latence du téléphone</h2>
+      <p>Le téléphone met 70 à 200 ms entre « jouer un clic » et « l'entendre dans le micro ». Je la mesure pour décaler le jugement.</p>
+      <div class="res warn"><b>Pour cette mesure seulement : enlève le casque</b> (haut-parleur à moitié volume), reste silencieux 6 s.</div>
+      <div class="res" id="cLat">${L ? 'Déjà mesurée : <b>' + L.ms + ' ms</b> (' + ago(L.t) + ') — mesurée dans l\'appli ou le labo.' : 'Pas encore mesurée.'}</div>
+      <div class="row"><button class="b-yel" id="cGo">${L ? 'Refaire la mesure' : 'Mesurer'}</button><span class="sp"></span><button id="cSkip">${L ? 'Garder →' : 'Passer (0 ms) →'}</button></div>`;
+    $('#cSkip').onclick = () => { calStep = 2; renderCal(); };
+    $('#cGo').onclick = async () => {
+      $('#cGo').disabled = true; $('#cSkip').disabled = true; $('#cLat').textContent = 'J\'écoute… (6 s)';
+      try{ const bpm = 100, spb = .6, rec = await recStart(); const T0 = ac.currentTime + .25; for(let b = 0; b < 9; b++) clickAt(T0 + b * spb, b % 4 === 0);
+        await sleep((T0 - ac.currentTime + 5.9) * 1000); const r = rec.stop();
+        const ons = RY.onsets(r.x, r.sr), cl = RY.findClicks(ons, bpm);
+        if(cl.c0 == null) $('#cLat').innerHTML = '❌ Je n\'entends pas le clic : monte le volume, rapproche le micro, et recommence.';
+        else { const exp = ((T0 - r.tStart) % spb + spb) % spb; let d = cl.c0 - exp; if(d < -spb / 2) d += spb; if(d > spb / 2) d -= spb; const ms = Math.round(d * 1000);
+          LS.set('bbx-rylat', { ms, t:Date.now(), n:cl.n }); LS.set('bbx-hero-adj', 0); $('#cLat').innerHTML = '✅ Latence : <b>' + ms + ' ms</b> (' + cl.n + ' clics entendus)'; }
+      }catch(e){ $('#cLat').textContent = 'Micro indisponible : ' + (e.message || e); }
+      $('#cGo').disabled = false; $('#cSkip').disabled = false; $('#cSkip').textContent = 'Suivant →'; $('#cSkip').className = 'b-pink';
+    };
+  }
+  else if(calStep === 2){
+    B.innerHTML = `<h2>🗣 Test de sons</h2>
+      <p><b>Casque sur.</b> Je t'écoute en silence, puis je te demande 4 sons de chaque famille, à ton rythme. Ça règle la sensibilité et apprend la différence entre <i>tes</i> sons.</p>
+      <div class="row"><button class="b-yel" id="cGo">Lancer le test (12 s)</button><div class="meter"><i id="cLvl"></i></div></div>
+      <div id="scBig"></div><div class="timebar" id="scBar" style="display:none"><i></i></div><div id="cMsg"></div>
+      <div class="row" style="margin-top:10px"><button id="cPrev">← Précédent</button><span class="sp"></span><button class="b-pink" id="cNext" ${getCal() ? '' : 'disabled'}>Suivant →</button></div>`;
+    $('#cPrev').onclick = () => { calStep = 1; renderCal(); }; $('#cNext').onclick = () => { calStep = 3; renderCal(); };
+    $('#cGo').onclick = soundCheck;
+  }
+  else {
+    const adj = getAdj();
+    B.innerHTML = `<h2>🎧 Synchro casque <span class="small muted">(facultatif)</span></h2>
+      <p>La latence a été mesurée sans casque ; avec un casque (surtout Bluetooth), elle peut changer. Ici : <b>4 clics pour écouter, puis joue un P sur chacun des 8 clics suivants</b>. Je règle le décalage fin.</p>
+      <div class="res" id="cMsg">Décalage fin actuel : <b>${adj} ms</b></div><div id="scBig"></div>
+      <div class="row"><button class="b-yel" id="cGo">Lancer (8 s)</button><div class="meter"><i id="cLvl"></i></div></div>
+      <div class="small muted" style="margin-top:6px">Un décalage trop instable (±35 ms) = refais-le. Le réglage est aussi ajustable après chaque partie.</div>
+      <div class="row" style="margin-top:10px"><button id="cPrev">← Précédent</button><span class="sp"></span><button id="cReset">Remettre à 0</button><button class="b-pink" id="cDone">Terminé ✓</button></div>`;
+    $('#cPrev').onclick = () => { calStep = 2; renderCal(); };
+    $('#cReset').onclick = () => { LS.set('bbx-hero-adj', 0); renderCal(); };
+    $('#cDone').onclick = () => { renderHome(); show('home'); };
+    $('#cGo').onclick = syncTest;
+  }
+}
+async function soundCheck(){
+  if(calBusy) return; calBusy = true; $('#cGo').disabled = true; $('#cNext').disabled = true; $('#cPrev').disabled = true;
+  const big = $('#scBig'), bar = $('#scBar'), msg = $('#cMsg'); msg.innerHTML = ''; const st = { cur:0 }; let stop = lvlLoop(st, 'cLvl');
+  try{ const rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; });
+    big.innerHTML = '<div class="bigletter" style="--c:#9ab">🤫</div><div class="small muted" style="text-align:center">Silence…</div>'; await sleep(1700);
+    const plan = [['grave', 'P'], ['medium', 'K'], ['aigu', 'Ts']], wins = [];
+    for(const [lane, nm] of plan){ const t0 = ac.currentTime; big.innerHTML = `<div class="bigletter" style="--c:${LC[lane]}">${nm}</div><div class="small muted" style="text-align:center">4 fois « ${nm} », à ton rythme</div>`;
+      bar.style.display = ''; bar.firstElementChild.style.transition = 'none'; bar.firstElementChild.style.width = '0'; void bar.offsetWidth; bar.firstElementChild.style.transition = 'width 3s linear'; bar.firstElementChild.style.width = '100%';
+      await sleep(3000); wins.push({ lane, t0, t1:ac.currentTime + .4 }); }
+    big.innerHTML = '<div class="bigletter" style="--c:#9ab">…</div>'; bar.style.display = 'none'; await sleep(400);
+    const r = rec.stop(); stop();
+    const refs = HERO.LiveDetector.calibrate(r.x, r.sr), ons = HERO.LiveDetector.run(r.x, r.sr, refs);
+    const wn = wins.map(w => ({ lane:w.lane, t0:w.t0, t1:w.t1 })); // heure audio ≈ heure de l'enregistrement (+ latence d'entrée, absorbée par la marge)
+    const { fp, cnt } = HERO.fingerprints(ons, wn);
+    const J = new HERO.Judge([], 0, 0, { fp }), S = J.stats(), sep = S ? +S.sep.toFixed(2) : null;
+    const noiseDb = Math.round(20 * Math.log10(refs.floor + 1e-9));
+    const rows = plan.map(([lane, nm]) => { const n = cnt[lane] || 0; return `<div class="st"><span class="dot ${n >= 4 ? 'ok' : n >= 3 ? 'warn' : 'no'}"></span><span class="tk" style="--c:${LC[lane]}">${nm}</span> entendu ${n}/4</div>`; }).join('');
+    const good = plan.every(([lane]) => (cnt[lane] || 0) >= 3), clip = r.peak > .97;
+    let verdict = good ? '<div class="res ok">✅ Test réussi.</div>' : '<div class="res no">Je n\'ai pas bien entendu tous les sons. Rapproche le micro (≈ 5–10 cm, sur le côté de la bouche pour éviter les « pops »), joue plus franchement et refais le test.</div>';
+    if(good && sep != null && sep < 1.2) verdict += '<div class="res warn">Tes sons des 3 familles se ressemblent trop pour que je les distingue : le jeu jugera seulement le rythme (vérification du son désactivée).</div>';
+    if(clip) verdict += '<div class="res warn">Ça sature : éloigne un peu le micro.</div>';
+    msg.innerHTML = rows + verdict + `<div class="small muted">Bruit de fond : ${noiseDb} dB · séparation des familles : ${sep == null ? '?' : sep}</div>`;
+    if(good){ LS.set('bbx-hero-cal', { refs, fp, t:Date.now(), sr:r.sr, sep }); $('#cNext').disabled = false; }
+    big.innerHTML = '';
+  }catch(e){ stop(); msg.innerHTML = '<div class="res no">Micro indisponible : ' + (e.message || e) + '</div>'; big.innerHTML = ''; }
+  $('#cGo').disabled = false; $('#cGo').textContent = 'Refaire le test'; $('#cPrev').disabled = false; if(getCal()) $('#cNext').disabled = false; calBusy = false;
+}
+async function syncTest(){
+  if(calBusy) return; calBusy = true; $('#cGo').disabled = true; const msg = $('#cMsg'), st = { cur:0 }; let stop = lvlLoop(st, 'cLvl'); msg.textContent = 'Écoute les 4 clics, puis joue P sur les 8 suivants…';
+  try{ const C = getCal(); if(!C) throw new Error('fais d\'abord le test de sons'); const bpm = 90, spb = 60 / bpm, rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; });
+    const T0 = ac.currentTime + .3; for(let b = 0; b < 12; b++) clickAt(T0 + b * spb, b % 4 === 0);
+    await sleep((T0 - ac.currentTime + 12 * spb + .4) * 1000); const r = rec.stop(); stop();
+    const ons = HERO.LiveDetector.run(r.x, r.sr, C.refs), ds = [];
+    ons.forEach(o => { const k = Math.round((o.t - T0) / spb); if(k >= 4 && k < 12){ let d = o.t - (T0 + k * spb); if(Math.abs(d) < .25) ds.push({ k, d }); } });
+    const byK = {}; ds.forEach(z => { if(!byK[z.k] || Math.abs(z.d) < Math.abs(byK[z.k])) byK[z.k] = z.d; });
+    const v = Object.values(byK).map(d => d * 1000);
+    if(v.length < 5) msg.innerHTML = '<div class="res no">Je n\'ai entendu que ' + v.length + ' sons sur 8. Refais-le en jouant plus fort/franc.</div>';
+    else { const med = Math.round(HERO.median(v)), sd = Math.round(HERO.std(v)), L = getLat(), adj = Math.max(-250, Math.min(250, med - (L ? L.ms : 0)));
+      LS.set('bbx-hero-adj', adj);
+      msg.innerHTML = `<div class="res ${sd <= 35 ? 'ok' : 'warn'}">Tu joues en moyenne <b>${med} ms</b> après le clic (écart ±${sd} ms, ${v.length}/8 sons). Latence labo : ${L ? L.ms : 0} ms → réglage fin : <b>${adj > 0 ? '+' : ''}${adj} ms</b>.${sd > 35 ? '<br>Écart élevé : refais-le pour confirmer.' : ''}</div>`; }
+  }catch(e){ stop(); msg.innerHTML = '<div class="res no">' + (e.message || e) + '</div>'; }
+  $('#cGo').disabled = false; calBusy = false;
+}
+$('#bCal').onclick = () => { calStep = 0; renderCal(); show('cal'); };
+$('#calBack').onclick = () => { renderHome(); show('home'); };
+
+/* ---------- jeu ---------- */
+const cv = $('#cv'), ctx = cv.getContext('2d'); let VW = 0, VH = 0;
+function fit(){ const dpr = Math.min(2, window.devicePixelRatio || 1); VW = window.innerWidth; VH = window.innerHeight; cv.width = VW * dpr; cv.height = VH * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+window.addEventListener('resize', () => { if($('#game').classList.contains('on')) fit(); });
+let G = null; // partie en cours
+const heardNow = lat => {
+  if(ac.getOutputTimestamp){ const ts = ac.getOutputTimestamp(); if(ts && ts.contextTime > 0 && ts.performanceTime > 0) return ts.contextTime + (performance.now() - ts.performanceTime) / 1000; }
+  return ac.currentTime - (ac.outputLatency || lat / 2);
+};
+async function startGame(){
+  const cal = getCal(); if(!cal) return;
+  const pat = patOf(), bpm = bpmOf(), cycles = CFG.cycles, B = HERO.buildNotes(pat, bpm, cycles);
+  if(!B.notes.length){ alert('Phrase vide.'); return; }
+  ensure(); if(cal.sr && cal.sr !== ac.sampleRate){ alert('La fréquence audio a changé (' + cal.sr + ' → ' + ac.sampleRate + ' Hz) : refais le test de sons.'); return; }
+  $('#game').classList.add('on'); fit(); $('#warn').style.display = 'none';
+  const lat = latEffMs() / 1000, spb = B.spb;
+  const g = G = { B, pat, bpm, cycles, lat, spb, fx:[], leak:0, over:false, done:false, chunks:[], f0:null, mic:null, bus:null, T0:0, J:null, D:null, raf:0, lvl:0, why:'' };
+  try{
+    g.D = new HERO.LiveDetector(ac.sampleRate, cal.refs, { onOnset:z => onOnset(z) });
+    g.mic = await micOpen((d, f) => { if(g.f0 == null) g.f0 = f; g.chunks.push(d); g.D.feed(d, f); });
+    const t = Date.now(); while(g.f0 == null && Date.now() - t < 2500) await sleep(20);
+    if(g.f0 == null) throw new Error('le micro ne donne aucun son');
+  }catch(e){ alert('Micro indisponible : ' + (e.message || e)); quitGame(true); return; }
+  g.bus = ac.createGain(); g.bus.connect(ac.destination);
+  g.T0 = ac.currentTime + .9;
+  for(let b = 0; b < B.endBeat + 3; b++) clickAt(g.T0 + b * spb, b % 4 === 0, g.bus);
+  g.J = new HERO.Judge(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:CFG.die, fp:cal.fp });
+  g.endAt = g.T0 + B.endBeat * spb + lat + .5; g.last = null;
+  try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { g.wl = w; }).catch(() => {}); }catch(e){}
+  g.raf = requestAnimationFrame(frame);
+}
+function onOnset(z){
+  const g = G; if(!g || !g.J) return;
+  if(z.t < g.T0 + 4 * g.spb + g.lat - .25){ // pendant le décompte : un son collé au clic = le micro entend le casque/haut-parleur
+    const k = Math.round((z.t - g.lat - g.T0) / g.spb), dd = Math.abs(z.t - g.lat - g.T0 - k * g.spb); if(k >= 0 && k < 4 && dd < .03){ g.leak++; if(g.leak >= 2){ const w = $('#warn'); w.textContent = '⚠ Le micro entend le clic : baisse le volume ou mets le casque (sinon les résultats seront faux).'; w.style.display = 'block'; } } }
+  g.J.onset(z).forEach(fx);
+}
+function fx(e){
+  const g = G; if(!g) return; const now = performance.now();
+  if(e.type === 'extra'){ const lane = ['grave', 'medium', 'aigu'][e.z.band] || 'medium'; g.fx.push({ k:'extra', lane, t0:now, txt:'✕', col:'#ff8aa0' }); return; }
+  const lane = e.note.lane, ms = e.d != null ? Math.round(e.d * 1000) : 0;
+  const m = { perfect:['PARFAIT', '#ffe27a'], good:['BIEN', '#7fd6f0'], miss:['RATÉ', '#ef5b6e'], wrong:['MAUVAIS SON', '#b9a2f0'] }[e.type];
+  g.fx.push({ k:e.type, lane, t0:now, txt:m[0], col:m[1], sub:e.type === 'perfect' || e.type === 'good' ? (ms > 0 ? '+' : '') + ms + ' ms' : (e.type === 'wrong' ? '(entendu : ' + LNAME[e.heard] + ')' : '') });
+}
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function frame(){
+  const g = G; if(!g || g.done) return;
+  const J = g.J, now = heardNow(g.lat);
+  J.advance(g.D.settled()).forEach(fx);
+  draw(g, now);
+  if(J.dead){ endGame('dead'); return; }
+  if(now > g.endAt){ endGame('ok'); return; }
+  g.raf = requestAnimationFrame(frame);
+}
+function draw(g, now){
+  const J = g.J, B = g.B, spb = g.spb, W = VW, H = VH, PW = Math.min(W, 520), X0 = (W - PW) / 2, LW = PW / 3, topY = 116, lineY = H * .8, LA = Math.max(1.3, Math.min(2.4, spb * 3.2)), py = t => lineY - (t - now) / LA * (lineY - topY);
+  ctx.fillStyle = '#0f2a3d'; ctx.fillRect(0, 0, W, H);
+  ['grave', 'medium', 'aigu'].forEach((l, i) => { ctx.fillStyle = LC[l] + '22'; ctx.fillRect(X0 + i * LW, topY - 10, LW, H); ctx.fillStyle = LC[l]; ctx.globalAlpha = .9; ctx.fillRect(X0 + i * LW + 2, topY - 10, LW - 4, 3); ctx.globalAlpha = 1; });
+  // temps (traits horizontaux ; plus marqué sur le 1er temps de chaque groupe de 4)
+  const k0 = Math.floor((now - g.T0) / spb) - 1, k1 = Math.ceil((now + LA - g.T0) / spb);
+  for(let k = Math.max(0, k0); k <= k1; k++){ const y = py(g.T0 + k * spb); if(y < topY - 10 || y > H) continue; ctx.strokeStyle = k % 4 === 0 ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.12)'; ctx.lineWidth = k % 4 === 0 ? 2 : 1; ctx.beginPath(); ctx.moveTo(X0, y); ctx.lineTo(X0 + PW, y); ctx.stroke(); }
+  // ligne de frappe
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X0, lineY); ctx.lineTo(X0 + PW, lineY); ctx.stroke();
+  ['grave', 'medium', 'aigu'].forEach((l, i) => { const cx = X0 + i * LW + LW / 2; ctx.beginPath(); ctx.arc(cx, lineY, 22, 0, 7); ctx.strokeStyle = LC[l]; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '800 12px Nunito,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(LNAME[l], cx, lineY + 44); });
+  // notes
+  const nh = 36; ctx.font = '900 17px Nunito,sans-serif'; ctx.textBaseline = 'middle';
+  for(let j = B.notes.length - 1; j >= 0; j--){ const n = B.notes[j], y = py(n.tc); if(y < topY - 30 || y > H + 40) continue; if(n.state === 1) continue;
+    const li = ['grave', 'medium', 'aigu'].indexOf(n.lane), cx = X0 + li * LW + LW / 2, w = LW * .72;
+    const dead = n.state === 2, wr = n.state === 3;
+    ctx.globalAlpha = dead ? .35 : 1; ctx.fillStyle = wr ? '#9b6bdf' : dead ? '#777' : LC[n.lane]; rr(cx - w / 2, y - nh / 2, w, nh, 12); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(n.tok, cx, y + 1); ctx.globalAlpha = 1; }
+  // effets
+  const t = performance.now(); g.fx = g.fx.filter(f => t - f.t0 < 700);
+  g.fx.forEach(f => { const li = ['grave', 'medium', 'aigu'].indexOf(f.lane), cx = X0 + li * LW + LW / 2, a = 1 - (t - f.t0) / 700;
+    if(f.k === 'perfect' || f.k === 'good'){ ctx.globalAlpha = a * .8; ctx.strokeStyle = f.col; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(cx, lineY, 22 + (1 - a) * 40, 0, 7); ctx.stroke(); }
+    if(f.k === 'miss' || f.k === 'wrong'){ ctx.globalAlpha = a * .35; ctx.fillStyle = f.col; ctx.fillRect(X0 + li * LW, topY - 10, LW, lineY - topY + 40); }
+    ctx.globalAlpha = a; ctx.fillStyle = f.col; ctx.textAlign = 'center'; ctx.font = '900 ' + (f.k === 'extra' ? 26 : 16) + 'px Nunito,sans-serif'; const yy = lineY - 50 - (1 - a) * 26; ctx.fillText(f.txt, cx, yy);
+    if(f.sub){ ctx.font = '800 11px Nunito,sans-serif'; ctx.fillText(f.sub, cx, yy + 16); } ctx.globalAlpha = 1; });
+  // décompte
+  const cd = (now - g.T0) / spb;
+  if(cd < 4.2){ const k = Math.floor(cd); const txt = cd < 0 ? '' : k < 4 ? String(4 - k) : 'GO !'; if(txt){ ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.font = '900 96px Nunito,sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = Math.max(0, 1 - (cd - k) * .9); ctx.fillText(txt, W / 2, H * .42); ctx.globalAlpha = 1; } }
+  // HUD
+  ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'right'; ctx.fillStyle = '#fff'; ctx.font = '900 30px Nunito,sans-serif'; ctx.fillText(String(J.score), X0 + PW - 12, 50);
+  ctx.textAlign = 'center'; if(J.combo >= 2){ ctx.font = '900 20px Nunito,sans-serif'; ctx.fillStyle = J.mult() > 1 ? '#ffe27a' : '#fff'; ctx.fillText(J.combo + ' combo' + (J.mult() > 1 ? '  ×' + J.mult() : ''), W / 2, 50); }
+  const bx = X0 + 12, bw = PW - 24; ctx.fillStyle = 'rgba(255,255,255,.15)'; rr(bx, 66, bw, 10, 5); ctx.fill(); const lf = J.life / 100; ctx.fillStyle = lf > .5 ? '#3fbf6f' : lf > .25 ? '#f2b705' : '#ef5b6e'; rr(bx, 66, Math.max(10, bw * lf), 10, 5); ctx.fill();
+  const pr = Math.max(0, Math.min(1, (now - g.T0 - 4 * spb) / ((B.endBeat - 4) * spb))); ctx.fillStyle = '#7fd6f0'; ctx.fillRect(0, 0, W * pr, 4);
+  ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = '800 12px Nunito,sans-serif'; ctx.fillText('♥ ' + Math.round(J.life) + '%  ·  ' + g.bpm + ' BPM', X0 + 12, 94 - 2);
+  // niveau du micro
+  g.lvl = Math.max(g.lvl * .9, g.D.peak); g.D.peak = 0; ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(12, H - 18, 80, 6); ctx.fillStyle = g.lvl > .9 ? '#ef5b6e' : '#7fd6f0'; ctx.fillRect(12, H - 18, Math.min(80, g.lvl * 160), 6);
+}
+function quitGame(silent){
+  const g = G; if(!g) return; g.done = true; cancelAnimationFrame(g.raf);
+  try{ if(g.bus){ g.bus.gain.value = 0; g.bus.disconnect(); } }catch(e){} try{ if(g.mic) g.mic.close(); }catch(e){} try{ if(g.wl) g.wl.release(); }catch(e){}
+  $('#game').classList.remove('on'); if(silent !== false){ renderHome(); show('home'); } G = null;
+}
+$('#quit').onclick = () => quitGame();
+
+/* ---------- fin de partie : analyse complète de la prise ---------- */
+let LASTRES = null;
+async function endGame(why){
+  const g = G; if(!g || g.done) return; g.done = true; cancelAnimationFrame(g.raf);
+  await sleep(250); // dernières attaques en cours de traitement
+  g.J.advance(g.D.settled() + 5).forEach(() => {});
+  try{ g.bus.gain.value = 0; g.bus.disconnect(); }catch(e){} try{ g.mic.close(); }catch(e){} try{ if(g.wl) g.wl.release(); }catch(e){}
+  $('#game').classList.remove('on'); show('end'); $('#endTitle').textContent = why === 'dead' ? '💀 Game over' : '🎉 Terminé !'; $('#endBody').innerHTML = '<div class="res">Analyse de ta prise…</div>';
+  await sleep(60);
+  const n = g.chunks.reduce((s, c) => s + c.length, 0), x = new Float32Array(n); let o = 0; g.chunks.forEach(c => { x.set(c, o); o += c.length; });
+  const sr = ac.sampleRate, tStart = g.f0 / sr, first = g.T0 - tStart;
+  let a = null, err = '';
+  if(why !== 'dead'){ try{ a = RY.analyze(x, sr, { bpm:g.bpm, pat:g.pat, start:first + 4 * g.spb + g.lat, cycles:g.cycles, c0:first + g.lat, clicks:false }); }catch(e){ err = String(e.message || e); } }
+  LASTRES = { g, a, x, sr, why, err }; renderEnd();
+}
+function cellClass(c){ if(c.f > 0) return 'conf'; const t = c.h + c.m; if(!t) return ''; const r = c.h / t; return r >= .85 ? 'ok' : r >= .5 ? 'mid' : 'low'; }
+function renderEnd(){
+  const { g, a, why, err } = LASTRES, J = g.J, cn = J.cnt, hasA = a && a.pct != null;
+  const pct = hasA ? a.pct : J.accuracy(), grade = pct >= 95 ? 'S' : pct >= 85 ? 'A' : pct >= 70 ? 'B' : pct >= 50 ? 'C' : 'D';
+  let h = `<div class="row" style="align-items:flex-end"><div><div class="pctbig">${pct}%</div><div class="small muted">${hasA ? 'précision (analyse complète)' : 'précision (jugement en direct)'}</div></div><span class="sp"></span><div class="grade">${grade}</div></div>`;
+  if(hasA) h += `<div class="small muted">Pendant le jeu : ${J.accuracy()}%</div>`;
+  if(!hasA && why !== 'dead') h += `<div class="res warn">L'analyse complète n'a pas pu placer ta prise (${err || 'trop peu de sons détectés'}). Je montre le jugement en direct.</div>`;
+  h += `<div class="kpis"><div class="kpi"><b>${J.score}</b>score</div><div class="kpi"><b>${J.maxCombo}</b>combo max</div><div class="kpi"><b>${cn.perfect}</b>parfait</div><div class="kpi"><b>${cn.good}</b>bien</div></div>
+    <div class="kpis"><div class="kpi"><b>${hasA ? a.miss : cn.miss}</b>ratés</div><div class="kpi"><b>${hasA ? a.extra : cn.extra}</b>en trop</div><div class="kpi"><b>${hasA ? a.conf : cn.wrong}</b>sons confondus</div><div class="kpi"><b>${hasA ? '±' + a.reg : '–'}</b>régularité ms</div></div>`;
+  if(g.leak >= 2) h += '<div class="res warn">⚠ Le micro entendait le clic pendant le décompte : mets le casque / baisse le volume, sinon les résultats sont faussés.</div>';
+  if(hasA && a.off != null){ const off = a.off, lateTxt = Math.abs(off) < 12 ? 'pile dans le temps 👌' : off > 0 ? 'en retard' : 'en avance';
+    h += `<div class="res ${Math.abs(off) < 25 ? 'ok' : 'warn'}">Tu joues en moyenne <b>${off > 0 ? '+' : ''}${off} ms</b> (${lateTxt}).${Math.abs(off) >= 25 ? ` <br><span class="small">Si tu as l'impression de jouer juste, c'est la latence qui est mal réglée : <button id="bRecent" class="b-cyan" style="padding:4px 10px">Recentrer (${off > 0 ? '+' : ''}${off} ms)</button></span>` : ''}</div>`; }
+  if(hasA && a.cells){ const cells = g.B.cells;
+    h += '<h2 style="margin:12px 0 4px">Ta grille</h2><div class="small muted" style="margin-bottom:4px">🟢 réussi · 🟡 parfois · 🔴 souvent raté · 🟣 son confondu · chiffre = décalage (ms)</div><div>';
+    cells.forEach((c, i) => { const r = a.cells[i], mg = (c.b % 1 < .001 && c.b > 0) ? 'margin-left:8px;' : '';
+      if(!c.ev) h += `<span class="cell x" style="${mg}">${r && r.x ? '+' + r.x : '·'}</span>`;
+      else h += `<span class="cell ${cellClass(r)}" style="${mg}--c:${LC[HERO.laneOf(c.tok)]}">${c.tok}<small>${r.h ? (r.r > 0 ? '+' : '') + r.r : '✕'}${r.x ? ' +' + r.x : ''}</small></span>`; });
+    h += '</div>';
+    const bad = cells.map((c, i) => ({ c, r:a.cells[i], i })).filter(z => z.c.ev && z.r.m > 0), conf = cells.map((c, i) => ({ c, r:a.cells[i] })).filter(z => z.c.ev && z.r.f > 0);
+    if(bad.length) h += '<h2 style="margin:12px 0 2px">Notes à travailler</h2><ul class="l">' + bad.sort((p, q) => q.r.m - p.r.m).slice(0, 5).map(z => `<li>Case ${z.i + 1} (<b>${z.c.tok}</b>) : ratée ${z.r.m} fois sur ${z.r.h + z.r.m}</li>`).join('') + '</ul>';
+    if(conf.length) h += '<h2 style="margin:12px 0 2px">Sons confondus</h2><ul class="l">' + conf.map(z => `<li>Case ${z.c.i + 1} (<b>${z.c.tok}</b>, ${LNAME[HERO.laneOf(z.c.tok)]}) : entendu plutôt « ${LNAME[z.r.fh] || '?'} » ${z.r.f} fois</li>`).join('') + '</ul><div class="small muted">Fiable entre familles différentes (P / K / Ts), pas entre sons proches (Pch / Pf, K / K~).</div>'; }
+  h += `<div class="row" style="margin-top:12px"><button id="bCopy">📋 Copier le résultat</button><button id="bWav">💾 Prise (.wav)</button></div><div class="small muted" style="margin-top:4px">Pour m'aider à régler : envoie-moi le .wav + le résultat copié.</div>`;
+  $('#endBody').innerHTML = h;
+  const rc = $('#bRecent'); if(rc) rc.onclick = () => { LS.set('bbx-hero-adj', getAdj() + a.off); rc.textContent = 'Fait ✓'; rc.disabled = true; };
+  $('#bWav').onclick = () => { const bl = new Blob([HERO.toWav(LASTRES.x, LASTRES.sr)], { type:'audio/wav' }), u = URL.createObjectURL(bl), l = document.createElement('a'); l.href = u; l.download = 'bbx-hero-' + CFG.style + '-niv' + CFG.niv + '-' + g.bpm + 'bpm.wav'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
+  $('#bCopy').onclick = async () => { const r = { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:LASTRES.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
+      onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) };
+    const s = JSON.stringify(r); try{ await navigator.clipboard.writeText(s); $('#bCopy').textContent = 'Copié ✓'; }catch(e){ prompt('Copie ce texte :', s); } };
+}
+$('#bPlay').onclick = startGame;
+$('#bAgain').onclick = () => { show('home'); startGame(); };
+$('#bMenu').onclick = () => { renderHome(); show('home'); };
+renderHome();
+</script>
+</body></html>
