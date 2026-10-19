@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
+<script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#29AADC">
 <title>BBX Hero — prototype</title>
@@ -55,7 +56,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <!-- ================= ACCUEIL ================= -->
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 5 · 19 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 9 · 19 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -87,6 +88,14 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
     <div class="row" style="margin-top:4px"><label><input type="checkbox" id="oStrict" checked> Vérifier le son (grave / medium / aigu)</label></div>
   </div>
 
+  <div class="card">
+    <h2>4. Aider à régler le jeu</h2>
+    <div class="row"><label><input type="checkbox" id="oSend"> Envoyer automatiquement mes parties pour analyse</label></div>
+    <div class="row" style="margin-top:6px"><label>Ton prénom <input id="oName" maxlength="30" style="width:160px"></label></div>
+    <div class="row" style="margin-top:6px"><label>Code d'analyse <input id="oCode" style="width:250px;font-size:.8rem" spellcheck="false" autocapitalize="off"></label><button id="bCode" style="padding:4px 10px">📋</button><button id="bSeeAdm" style="padding:4px 10px">📂 Mes parties</button></div>
+    <div class="small muted">Envoie le résultat et l'enregistrement de ton micro à la fin de chaque partie. Le code est secret : sur un autre appareil, colle le même pour tout retrouver au même endroit. Tu peux décocher à tout moment.</div>
+  </div>
+
   <div class="row"><button class="b-pink big" id="bPlay">▶ Jouer</button><span class="small" style="color:#fff;font-weight:800" id="playHint"></span></div>
   <p class="small" style="color:#eaf8ff;margin-top:16px">Prototype FR uniquement (FR/EN/JA viendront à l'intégration). La précision finale vient de l'analyse complète de la prise (même moteur que le labo) ; le jugement en direct sert au score.</p>
 </div>
@@ -106,6 +115,13 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
   <div class="row"><button class="b-pink big" id="bAgain">↻ Rejouer</button><button id="bMenu">Menu</button></div>
 </div>
 
+</div>
+
+<!-- ================= ADMIN (?admin) ================= -->
+<div id="admin" class="scr">
+  <h1>📂 Mes parties</h1>
+  <div class="card" id="admBody"></div>
+  <button id="admMenu">← Menu</button>
 </div>
 
 <!-- ================= JEU ================= -->
@@ -597,6 +613,8 @@ const HERO = (() => {
       if(best){
         const d = z.t - best.t; let heard = null;
         if(this.strict){ const S = this.stats(), v = this.vec(z); if(S && S.sep >= 1.2 && S.cen[best.lane]){ let nd = S.dist(v, S.cen[best.lane]), nf = best.lane; S.fs.forEach(f => { const dd = S.dist(v, S.cen[f]); if(dd < nd - 1){ nd = dd; nf = f; } }); if(nf !== best.lane) heard = nf; } }
+        // son très faible (souffle, bruit de bouche, queue d'un autre son) tombé dans la fenêtre d'une note : on ne le juge pas « mauvais son »
+        if(heard && this.hitDb.length >= 4 && z.db < median(this.hitDb.slice(-16)) - 12){ z.verdict = 'noise'; this.log.push(z); return ev; }
         best.res = { d, z, heard }; this.lastHit = { note:best, z }; this.hitDb.push(z.db); z.verdict = heard ? 'wrong' : 'hit'; z.note = best.i;
         if(heard){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-8); this._err(); ev.push({ type:'wrong', note:best, d, z, heard }); }
         else {
@@ -753,6 +771,13 @@ $('#bpm').oninput = e => { CFG.speed = 3; CFG.bpm = Math.max(50, Math.min(150, +
 $('#cycles').onchange = e => { CFG.cycles = +e.target.value; saveCfg(); };
 $('#oDie').onchange = e => { CFG.die = e.target.checked; saveCfg(); };
 $('#oStrict').onchange = e => { CFG.strict = e.target.checked; saveCfg(); };
+$('#oSend').checked = !!LS.get('bbx-hero-send', false); $('#oSend').onchange = e => LS.set('bbx-hero-send', e.target.checked);
+const newCode = () => { const a = new Uint8Array(20); crypto.getRandomValues(a); return Array.from(a, v => (v % 36).toString(36)).join(''); };
+const getCode = () => { let c = LS.get('bbx-hero-code', ''); if(!/^[a-z0-9]{24,60}$/.test(c)){ c = newCode() + newCode().slice(0, 6); LS.set('bbx-hero-code', c); } return c; };
+$('#oCode').value = getCode(); $('#oCode').onchange = e => { const c = e.target.value.trim().toLowerCase(); if(/^[a-z0-9]{24,60}$/.test(c)) LS.set('bbx-hero-code', c); else e.target.value = getCode(); };
+$('#bCode').onclick = async () => { try{ await navigator.clipboard.writeText(getCode()); $('#bCode').textContent = '✓'; }catch(e){ prompt('Copie ton code :', getCode()); } };
+$('#bSeeAdm').onclick = () => admInit();
+$('#oName').value = LS.get('bbx-hero-name', ''); $('#oName').oninput = e => LS.set('bbx-hero-name', e.target.value.slice(0, 30));
 $('#pTok').oninput = e => { CFG.ptok = e.target.value; saveCfg(); renderPrev(); };
 $('#pDiv').onchange = e => { CFG.pdiv = +e.target.value; saveCfg(); renderPrev(); };
 const show = id => { $$('.scr').forEach(s => s.classList.toggle('on', s.id === id)); window.scrollTo(0, 0); };
@@ -1013,6 +1038,27 @@ async function endGame(why){
   LASTRES = { g, a, x, sr, why, err }; renderEnd();
 }
 function cellClass(c){ if(c.f > 0) return 'conf'; const t = c.h + c.m; if(!t) return ''; const r = c.h / t; return r >= .85 ? 'ok' : r >= .5 ? 'mid' : 'low'; }
+function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
+  return { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:R.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
+    onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) }; }
+/* ---------- envoi automatique vers Firebase (bbx-live) : hero/takes/{uid}/{id} + hero/audio/{uid}/{id}/{k} ---------- */
+const VERSION = 'v9', CH = 600000;
+const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
+async function fbApp(anon){ if(!window.firebase) throw new Error('Firebase non chargé (hors ligne ?)');
+  const app = (firebase.apps || []).find(a => a.name === 'hero') || firebase.initializeApp(FB_CFG, 'hero'), au = app.auth();
+  if(anon && !au.currentUser) await au.signInAnonymously(); return app; }
+function b64(buf){ const u = new Uint8Array(buf); let s = ''; for(let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+const escH = t => String(t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
+function sendMsg(R, html, cls){ R.stHtml = html; R.stCls = cls; const st = $('#sendSt'); if(st){ st.innerHTML = html; st.className = 'res ' + cls; } }
+async function sendTake(){ const R = LASTRES; if(!R || R.sending) return; R.sending = true; sendMsg(R, '📤 Envoi pour analyse…', '');
+  try{ const app = await fbApp(true), db = app.database(), id = R.id || (R.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5));
+    const w = b64(HERO.toWav(R.x, R.sr)), n = Math.ceil(w.length / CH), withAudio = n <= 14;
+    const code = getCode(), take = Object.assign(takeObj(), { t:Date.now(), v:VERSION, source:'hero', who:String(LS.get('bbx-hero-name', '')).slice(0, 30), audioChunks:withAudio ? n : 0 });
+    if(withAudio) for(let k = 0; k < n; k++) await db.ref('analyse/' + code + '/audio/' + id + '/' + k).set(w.slice(k * CH, (k + 1) * CH)); // audio d'abord : une prise visible = prise complète
+    await db.ref('analyse/' + code + '/takes/' + id).set(take);
+    sendMsg(R, '✅ Envoyé pour analyse' + (withAudio ? '' : ' (résultat seulement : prise trop longue pour l\'audio)'), 'ok');
+  }catch(e){ sendMsg(R, '⚠ Non envoyé : ' + escH(e && e.message || e) + ' <button id="bRetry" class="b-cyan" style="padding:4px 10px">Réessayer</button>', 'warn'); const b = $('#bRetry'); if(b) b.onclick = () => { R.sending = false; sendTake(); }; }
+  R.sending = false; }
 function renderEnd(){
   const { g, a, why, err } = LASTRES, J = g.J, cn = J.cnt, hasA = a && a.pct != null;
   if(hasA && !a._x){ a._x = 1; // sons confondus : référence = tes sons du test de calibration (l'analyse seule ne voit rien si tout est joué pareil)
@@ -1038,17 +1084,41 @@ function renderEnd(){
     const bad = cells.map((c, i) => ({ c, r:a.cells[i], i })).filter(z => z.c.ev && z.r.m > 0), conf = cells.map((c, i) => ({ c, r:a.cells[i] })).filter(z => z.c.ev && z.r.f > 0);
     if(bad.length) h += '<h2 style="margin:12px 0 2px">Notes à travailler</h2><ul class="l">' + bad.sort((p, q) => q.r.m - p.r.m).slice(0, 5).map(z => `<li>Case ${z.i + 1} (<b>${z.c.tok}</b>) : ratée ${z.r.m} fois sur ${z.r.h + z.r.m}</li>`).join('') + '</ul>';
     if(conf.length) h += '<h2 style="margin:12px 0 2px">Sons confondus</h2><ul class="l">' + conf.map(z => `<li>Case ${z.c.i + 1} (<b>${z.c.tok}</b>, ${LNAME[HERO.laneOf(z.c.tok)]}) : entendu plutôt « ${LNAME[z.r.fh] || '?'} » ${z.r.f} fois</li>`).join('') + '</ul><div class="small muted">Fiable entre familles différentes (P / K / Ts), pas entre sons proches (Pch / Pf, K / K~).</div>'; }
-  h += `<div class="row" style="margin-top:12px"><button id="bCopy">📋 Copier le résultat</button><button id="bWav">💾 Prise (.wav)</button></div><div class="small muted" style="margin-top:4px">Pour m'aider à régler : envoie-moi le .wav + le résultat copié.</div>`;
+  h += `<div class="row" style="margin-top:12px"><button id="bCopy">📋 Copier le résultat</button><button id="bWav">💾 Prise (.wav)</button></div><div id="sendSt" class="res" style="margin-top:8px;display:none"></div><div class="row" id="sendRow" style="display:none;margin-top:6px"><button id="bSend" class="b-cyan">📤 Envoyer cette partie pour analyse</button></div>`;
   $('#endBody').innerHTML = h;
+  { const R = LASTRES, auto = !!LS.get('bbx-hero-send', false);
+    if(R.stHtml){ $('#sendSt').style.display = ''; sendMsg(R, R.stHtml, R.stCls); }
+    else if(auto && !R.sentOnce){ R.sentOnce = 1; $('#sendSt').style.display = ''; sendTake(); }
+    else if(!auto){ $('#sendRow').style.display = ''; $('#bSend').onclick = () => { $('#sendRow').style.display = 'none'; $('#sendSt').style.display = ''; sendTake(); }; } }
   const rc = $('#bRecent'); if(rc) rc.onclick = () => { LS.set('bbx-hero-adj', getAdj() + a.off); rc.textContent = 'Fait ✓'; rc.disabled = true; };
   $('#bWav').onclick = () => { const bl = new Blob([HERO.toWav(LASTRES.x, LASTRES.sr)], { type:'audio/wav' }), u = URL.createObjectURL(bl), l = document.createElement('a'); l.href = u; l.download = 'bbx-hero-' + CFG.style + '-niv' + CFG.niv + '-' + g.bpm + 'bpm.wav'; l.click(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
-  $('#bCopy').onclick = async () => { const r = { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:LASTRES.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
-      onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) };
+  $('#bCopy').onclick = async () => { const r = takeObj();
     const s = JSON.stringify(r); try{ await navigator.clipboard.writeText(s); $('#bCopy').textContent = 'Copié ✓'; }catch(e){ prompt('Copie ce texte :', s); } };
 }
+/* ---------- « Mes parties » : relire / télécharger les parties envoyées avec ton code d'analyse ---------- */
+let ADM = { db:null, rows:[] };
+const admDl = (name, blob) => { const u = URL.createObjectURL(blob), l = document.createElement('a'); l.href = u; l.download = name; l.click(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
+async function admWav(r){ let w = ''; for(let k = 0; k < (r.audioChunks || 0); k++) w += (await ADM.db.ref('analyse/' + getCode() + '/audio/' + r.id + '/' + k).once('value')).val() || ''; return w; }
+const admB64Blob = (w, type) => { const bin = atob(w), u = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type }); };
+async function admInit(){ show('admin'); try{ ADM.db = (await fbApp(true)).database(); await admLoad(); }catch(e){ $('#admBody').innerHTML = '<div class="res warn">⚠ ' + escH(e.message || e) + '</div>'; } }
+async function admLoad(){ const B = $('#admBody'); B.innerHTML = '<p class="small muted">Chargement…</p>'; const code = getCode();
+  try{ const v = (await ADM.db.ref('analyse/' + code + '/takes').once('value')).val() || {}, rows = Object.keys(v).map(id => Object.assign({}, v[id], { id })).sort((a, b) => b.t - a.t); ADM.rows = rows;
+    const done = LS.get('bbx-hero-dl', []);
+    B.innerHTML = `<div class="small muted">${rows.length} partie(s) avec ton code · cochées = pas encore téléchargées</div><div class="row" style="margin:8px 0"><button class="b-pink" id="admAll">⬇ Télécharger les cochées (1 fichier)</button><button id="admRef">↻</button></div><div id="admList"></div><div id="admMsg" class="small"></div>`;
+    $('#admList').innerHTML = rows.map((r, i) => { const f = r.final && r.final.pct != null ? r.final.pct + '%' : '–', d = new Date(r.t).toLocaleString('fr-CH', { dateStyle:'short', timeStyle:'short' });
+      return `<div class="res" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="checkbox" data-i="${i}" ${done.includes(r.id) ? '' : 'checked'}><div style="flex:1;min-width:180px"><b>${escH(r.who || '?')}</b> · ${d}<br><span class="small">${escH(r.style)} niv${r.niv} · ${r.bpm} BPM · direct ${r.live ? r.live.acc : '–'}% · final ${f} · ${r.v || ''}</span></div><button data-w="${i}" style="padding:4px 10px">💾 .wav</button><button data-x="${i}" style="padding:4px 10px">🗑</button></div>`; }).join('') || '<p class="small muted">Aucune partie reçue pour l\'instant.</p>';
+    $('#admRef').onclick = admLoad;
+    $$('#admList [data-w]').forEach(b => b.onclick = async () => { const r = rows[+b.dataset.w]; b.textContent = '…'; try{ admDl('bbx-hero-' + r.id + '.wav', admB64Blob(await admWav(r), 'audio/wav')); }catch(e){ $('#admMsg').textContent = '⚠ ' + e.message; } b.textContent = '💾 .wav'; });
+    $$('#admList [data-x]').forEach(b => b.onclick = async () => { const r = rows[+b.dataset.x]; if(!confirm('Supprimer cette partie ?')) return; await ADM.db.ref('analyse/' + code + '/takes/' + r.id).remove(); await ADM.db.ref('analyse/' + code + '/audio/' + r.id).remove(); admLoad(); });
+    $('#admAll').onclick = async () => { const sel = $$('#admList [data-i]').filter(c => c.checked).map(c => rows[+c.dataset.i]); if(!sel.length){ $('#admMsg').textContent = 'Rien de coché.'; return; }
+      $('#admMsg').textContent = 'Téléchargement de ' + sel.length + ' partie(s)…'; try{ const out = []; for(const r of sel) out.push(Object.assign({}, r, { wav_b64:await admWav(r) }));
+        admDl('bbx-hero-parties-' + new Date().toISOString().slice(0, 10) + '.json', new Blob([JSON.stringify({ takes:out })], { type:'application/json' })); LS.set('bbx-hero-dl', done.concat(sel.map(r => r.id))); $('#admMsg').textContent = '✅ Fichier téléchargé.'; }catch(e){ $('#admMsg').textContent = '⚠ ' + (e.message || e); } };
+  }catch(e){ B.innerHTML = '<div class="res warn">⚠ ' + escH(e.message || e) + '<br><span class="small">Les règles Firebase du nœud « analyse » sont-elles publiées ?</span></div><button id="admBack" class="b-yel">Réessayer</button>'; $('#admBack').onclick = admInit; } }
+$('#admMenu').onclick = () => { renderHome(); show('home'); };
 $('#bPlay').onclick = startGame;
 $('#bAgain').onclick = () => { show('home'); startGame(); };
 $('#bMenu').onclick = () => { renderHome(); show('home'); };
 renderHome();
+if(/[?&]admin\b/.test(location.search)) admInit();
 </script>
 </body></html>
