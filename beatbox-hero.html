@@ -56,7 +56,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <!-- ================= ACCUEIL ================= -->
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 9 · 19 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 11 · 19 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -474,11 +474,13 @@ const HERO = (() => {
   }
 
   // Notes d'une phrase : pat = [{div, tok}], le décompte (4 temps) est inclus dans rel
-  function buildNotes(pat, bpm, cycles){
-    const spb = 60 / bpm, G = RY.grid(pat), notes = [];
+  // fenêtres [Parfait, Bien] en secondes selon le niveau : plus on monte, plus c'est exigeant
+  const LEVELS = { 1:[.055, .11], 2:[.04, .09], 3:[.03, .07] };
+  function buildNotes(pat, bpm, cycles, niv){
+    const spb = 60 / bpm, G = RY.grid(pat), notes = [], L = LEVELS[niv] || LEVELS[1];
     for(let c = 0; c < cycles; c++) G.ev.forEach(e => {
       const beat = 4 + c * G.P + e.b;
-      notes.push({ i:notes.length, cyc:c, cell:e.i, tok:e.tok, lane:laneOf(e.tok), long:RY.isLong(e.tok), beat, rel:beat * spb, W:Math.min(.42 * e.st * spb, .11) });
+      notes.push({ i:notes.length, cyc:c, cell:e.i, tok:e.tok, lane:laneOf(e.tok), long:RY.isLong(e.tok), beat, rel:beat * spb, W:Math.min(.42 * e.st * spb, L[1]), P:Math.min(L[0], .5 * Math.min(.42 * e.st * spb, L[1])) });
     });
     return { notes, cells:G.cells, P:G.P, spb, endBeat:4 + cycles * G.P };
   }
@@ -578,11 +580,17 @@ const HERO = (() => {
     constructor(notes, T0, lat, o){
       o = o || {}; this.notes = notes; this.T0 = T0; this.lat = lat;
       notes.forEach(n => { n.tc = T0 + n.rel; n.t = n.tc + lat; n.state = 0; n.res = null; });
-      this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0;
+      this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0; this.last = notes.length ? notes[notes.length - 1].t : 0;
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.life = 100; this.dead = false; this.ip = 0; this.charge = 0; this.zaps = 0; this.maxCharged = 0;
       this.cnt = { perfect:0, good:0, miss:0, wrong:0, extra:0 }; this.log = []; this.lastHit = null; this.hitDb = []; this.by = {};
       if(o.fp) Object.keys(o.fp).forEach(f => { this.by[f] = o.fp[f].slice(); });
+      this.lvl = typeof o.lvl === 'number' ? o.lvl : null; // niveau (dB) de tes vrais sons au test de calibration
+      this.gLog = this.by.grave && this.by.grave.length ? median(this.by.grave.map(v => v[0])) : Math.log2(300); // centre (log2 Hz) de ton kick
     }
+    // niveau de référence des vrais sons : calibration + sons joués jusque-là
+    ref(){ const h = this.hitDb.slice(-16); if(this.lvl == null) return h.length >= 4 ? median(h) : -20; return median(Array(6).fill(this.lvl).concat(h)); }
+    // bruit de fond / grondement : bien plus faible que tes vrais sons, ou très grave (sous ton kick) et faible. Ne doit jamais prendre la place d'une case.
+    _weak(z){ const r = this.ref(); if(z.db < r - 14) return true; return Math.log2(Math.max(60, z.c)) < this.gLog - 1 && z.lo > .85 && z.db < r - 8; }
     mult(){ const c = this.combo; return (c >= 50 ? 4 : c >= 25 ? 3 : c >= 10 ? 2 : 1) + (this.charge >= 100 ? 1 : 0); } // barre pleine (électrique) : +1 au multiplicateur
     // barre électrique : +10 par Parfait, « Bien » = neutre, toute erreur (raté, mauvais son, son en trop) la remet à zéro
     _err(){ if(this.charge >= 100) this.zaps++; this.charge = 0; }
@@ -608,6 +616,8 @@ const HERO = (() => {
     onset(z){
       const ev = []; if(this.dead) return ev;
       if(z.t < this.first - .25){ z.verdict = 'pre'; this.log.push(z); return ev; }
+      if(this._weak(z)){ z.verdict = 'noise'; this.log.push(z); return ev; }
+      if(this.notes.length && z.t > this.last + .3){ z.verdict = 'post'; this.log.push(z); return ev; } // après la dernière note : fin de partie, rien n'est jugé
       let best = null, bk = 1e9;
       for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t - n.W > z.t) break; if(n.state !== 0) continue; const d = z.t - n.t; if(Math.abs(d) < n.W && Math.abs(d) / n.W < bk){ bk = Math.abs(d) / n.W; best = n; } }
       if(best){
@@ -619,7 +629,7 @@ const HERO = (() => {
         if(heard){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-8); this._err(); ev.push({ type:'wrong', note:best, d, z, heard }); }
         else {
           best.state = 1; (this.by[best.lane] = this.by[best.lane] || []).push(this.vec(z)); if(this.by[best.lane].length > 30) this.by[best.lane].shift();
-          const perfect = Math.abs(d) <= .5 * best.W, m = this.mult(); this.combo++; if(this.combo > this.maxCombo) this.maxCombo = this.combo;
+          const perfect = Math.abs(d) <= (best.P != null ? best.P : .5 * best.W), m = this.mult(); this.combo++; if(this.combo > this.maxCombo) this.maxCombo = this.combo;
           this.score += (perfect ? 100 : 60) * m; this.cnt[perfect ? 'perfect' : 'good']++; this._life(perfect ? 2 : 1);
           if(perfect){ this.charge = Math.min(100, this.charge + 10); if(this.charge >= 100) this.maxCharged++; } best.grade = perfect ? 'perfect' : 'good'; ev.push({ type:best.grade, note:best, d, z });
         }
@@ -648,11 +658,11 @@ const HERO = (() => {
   }
   // empreintes d'un test de sons : { grave:[vec…], medium:[…], aigu:[…] } à partir des attaques qui tombent dans chaque fenêtre
   function fingerprints(ons, wins){
-    const fp = {}, cnt = {};
+    const fp = {}, cnt = {}, dbs = [];
     wins.forEach(w => { let l = ons.filter(o => o.t >= w.t0 && o.t < w.t1); if(!l.length){ cnt[w.lane] = 0; return; }
-      const mx = Math.max(...l.map(o => o.db)); l = l.filter(o => o.db >= mx - 20).slice(0, 6); cnt[w.lane] = l.length;
-      fp[w.lane] = l.map(o => [Math.log2(Math.max(60, o.c)), o.lo * 3, o.hi * 3]); });
-    return { fp, cnt };
+      const mx = Math.max(...l.map(o => o.db)); l = l.filter(o => o.db >= mx - 14).slice(0, 6); cnt[w.lane] = l.length;
+      fp[w.lane] = l.map(o => [Math.log2(Math.max(60, o.c)), o.lo * 3, o.hi * 3]); dbs.push(...l.map(o => o.db)); });
+    return { fp, cnt, lvl:dbs.length ? median(dbs) : null };
   }
   // essaie 3 réglages de sensibilité sur le test de sons et garde le premier qui entend ~4 sons par famille
   const TUNES = [{ sens:.07, dynDb:38 }, { sens:.04, dynDb:44 }, { sens:.025, dynDb:50 }];
@@ -675,7 +685,7 @@ const HERO = (() => {
       S.fs.forEach(f => { const d = S.dist(v, S.cen[f]); if(d < nd - 1){ nd = d; nf = f; } }); if(nf !== lane) bad.push({ cell:h.e.i, heard:nf }); });
     return bad;
   }
-  return { crossCheck, tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
+  return { LEVELS, crossCheck, tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
 })();
 
 </script>
@@ -754,7 +764,7 @@ function toks(pat){ const G = RY.grid(pat); const by = []; G.cells.forEach(c => 
 function renderPrev(){
   const pat = patOf(), by = toks(pat);
   $('#prev').innerHTML = by.map(b => '<span class="beat">' + (b || []).map(c => c.ev ? `<span class="tk" style="--c:${LC[HERO.laneOf(c.tok)]}">${c.tok}</span>` : '<span class="tk sil">·</span>').join('') + '</span>').join('');
-  const G = RY.grid(pat); $('#prevInfo').textContent = G.cells.length ? G.P + ' temps par tour · ' + G.ev.length + ' sons' + (G.ev.length ? '' : '') : 'Phrase vide';
+  const G = RY.grid(pat); $('#prevInfo').textContent = G.cells.length ? G.P + ' temps par tour · ' + G.ev.length + ' sons · Parfait ±' + Math.round(1000 * (HERO.LEVELS[CFG.niv] || HERO.LEVELS[1])[0]) + ' ms' : 'Phrase vide';
 }
 function renderHome(){
   $('#styles').innerHTML = STYLES.map(s => `<button class="chip ${s.id === CFG.style ? 'on' : ''}" data-s="${s.id}">${s.n}</button>`).join('');
@@ -873,12 +883,12 @@ async function soundCheck(){
     }
     const r = rec.stop(); stop();
     const rw = wins.map(w => ({ lane:w.lane, t0:w.t0 - r.tStart, t1:w.t1 - r.tStart })); // même horloge que les attaques détectées (début de la prise = 0)
-    const T = HERO.tune(r.x, r.sr, rw), { fp, cnt } = HERO.fingerprints(T.ons, rw);
+    const T = HERO.tune(r.x, r.sr, rw), { fp, cnt, lvl } = HERO.fingerprints(T.ons, rw);
     const J = new HERO.Judge([], 0, 0, { fp }), S = J.stats(), sep = S ? +S.sep.toFixed(2) : null;
     const noiseDb = Math.round(20 * Math.log10(T.refs.floor + 1e-9)), peakDb = Math.round(20 * Math.log10(r.peak + 1e-9));
     const rows = plan.map(([lane, nm]) => { const n = cnt[lane] || 0, w = wins.find(z => z.lane === lane); return `<div class="st"><span class="dot ${n >= 4 ? 'ok' : n >= 3 ? 'warn' : 'no'}"></span><span class="tk" style="--c:${LC[lane]}">${nm}</span> entendu ${Math.min(n, 4)}/4 <span class="small muted">(${T.raw[lane]} attaques détectées)</span></div>`; }).join('');
     const good = plan.every(([lane]) => (cnt[lane] || 0) >= 3), weak = plan.every(([lane]) => (cnt[lane] || 0) >= 2), clip = r.peak > .97;
-    const cal = { refs:T.refs, det:T.o, fp, t:Date.now(), sr:r.sr, sep };
+    const cal = { refs:T.refs, det:T.o, fp, lvl, t:Date.now(), sr:r.sr, sep };
     let verdict = good ? '<div class="res ok">✅ Test réussi.</div>' : '<div class="res no">Je n\'ai pas bien repéré tous les sons. Rapproche le micro (≈ 5–10 cm, sur le côté de la bouche pour éviter les « pops »), joue franchement et refais le test.' + (weak ? '<br><button id="cForce" class="b-cyan" style="margin-top:6px">Continuer quand même</button>' : '') + '</div>';
     if(good && sep != null && sep < 1.2) verdict += '<div class="res warn">Tes sons des 3 familles se ressemblent trop pour que je les distingue : le jeu jugera seulement le rythme (vérification du son désactivée).</div>';
     if(clip) verdict += '<div class="res warn">Ça sature : éloigne un peu le micro.</div>';
@@ -918,7 +928,7 @@ const heardNow = lat => {
 };
 async function startGame(){
   const cal = getCal(); if(!cal) return;
-  const pat = patOf(), bpm = bpmOf(), cycles = CFG.cycles, B = HERO.buildNotes(pat, bpm, cycles);
+  const pat = patOf(), bpm = bpmOf(), cycles = CFG.cycles, B = HERO.buildNotes(pat, bpm, cycles, CFG.niv);
   if(!B.notes.length){ alert('Phrase vide.'); return; }
   ensure(); if(cal.sr && cal.sr !== ac.sampleRate){ alert('La fréquence audio a changé (' + cal.sr + ' → ' + ac.sampleRate + ' Hz) : refais le test de sons.'); return; }
   $('#game').classList.add('on'); fit(); $('#warn').style.display = 'none';
@@ -933,7 +943,7 @@ async function startGame(){
   g.bus = ac.createGain(); g.bus.connect(ac.destination);
   g.T0 = ac.currentTime + .9;
   for(let b = 0; b < B.endBeat + 3; b++) clickAt(g.T0 + b * spb, b % 4 === 0, g.bus);
-  g.J = new HERO.Judge(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:CFG.die, fp:cal.fp });
+  g.J = new HERO.Judge(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:CFG.die, fp:cal.fp, lvl:cal.lvl });
   g.endAt = g.T0 + B.endBeat * spb + lat + .5; g.last = null;
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { g.wl = w; }).catch(() => {}); }catch(e){}
   g.raf = requestAnimationFrame(frame);
@@ -1042,7 +1052,7 @@ function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
   return { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:R.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
     onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) }; }
 /* ---------- envoi automatique vers Firebase (bbx-live) : hero/takes/{uid}/{id} + hero/audio/{uid}/{id}/{k} ---------- */
-const VERSION = 'v9', CH = 600000;
+const VERSION = 'v11', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 async function fbApp(anon){ if(!window.firebase) throw new Error('Firebase non chargé (hors ligne ?)');
   const app = (firebase.apps || []).find(a => a.name === 'hero') || firebase.initializeApp(FB_CFG, 'hero'), au = app.auth();
@@ -1065,7 +1075,7 @@ function renderEnd(){
     const C = getCal(), bad = (J.strict && C) ? HERO.crossCheck(a, C.fp) : null;
     if(bad && bad.length){ const per = {}; bad.forEach(b => { (per[b.cell] = per[b.cell] || { n:0, h:b.heard }).n++; });
       Object.keys(per).forEach(i => { const c = a.cells[i]; if(c && c.f < per[i].n){ c.f = per[i].n; c.fh = per[i].h; } });
-      a.conf = a.cells.reduce((t, c) => t + (c.f || 0), 0); const tot = a.hits + a.miss + a.extra; a.pct = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, tot)); } }
+      a.conf = a.cells.reduce((t, c) => t + (c.f || 0), 0); const tot = a.hits + a.miss + a.extra; a.pct = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, tot)); a.sons = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, a.hits)); } }
   const pct = hasA ? a.pct : J.accuracy(), grade = pct >= 95 ? 'S' : pct >= 85 ? 'A' : pct >= 70 ? 'B' : pct >= 50 ? 'C' : 'D';
   let h = `<div class="row" style="align-items:flex-end"><div><div class="pctbig">${pct}%</div><div class="small muted">${hasA ? 'précision (analyse complète)' : 'précision (jugement en direct)'}</div></div><span class="sp"></span><div class="grade">${grade}</div></div>`;
   if(hasA) h += `<div class="small muted">Pendant le jeu : ${J.accuracy()}%</div>`;
