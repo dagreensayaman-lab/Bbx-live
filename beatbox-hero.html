@@ -634,7 +634,18 @@ const HERO = (() => {
       fp[w.lane] = l.map(o => [Math.log2(Math.max(60, o.c)), o.lo * 3, o.hi * 3]); });
     return { fp, cnt };
   }
-  return { LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
+  // essaie 3 réglages de sensibilité sur le test de sons et garde le premier qui entend ~4 sons par famille
+  const TUNES = [{ sens:.07, dynDb:38 }, { sens:.04, dynDb:44 }, { sens:.025, dynDb:50 }];
+  function tune(x, sr, wins){
+    const refs = LiveDetector.calibrate(x, sr); let best = null;
+    TUNES.forEach((t, i) => { if(best && best.dev === 0) return;
+      const o = { sens:t.sens, dynDb:t.dynDb, dynDb2:t.dynDb + 17 }, ons = LiveDetector.run(x, sr, refs, o), raw = {};
+      wins.forEach(w => { raw[w.lane] = ons.filter(z => z.t >= w.t0 && z.t < w.t1).length; });
+      const dev = wins.reduce((a, w) => a + (raw[w.lane] < 4 ? (4 - raw[w.lane]) * 2 : Math.max(0, raw[w.lane] - 6)), 0);
+      if(!best || dev < best.dev) best = { o, refs, ons, raw, dev, idx:i }; });
+    return best;
+  }
+  return { tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
 })();
 
 </script>
@@ -744,11 +755,13 @@ function renderCal(){
       <div class="row"><button class="b-yel" id="cGo">Autoriser / tester le micro</button><div class="meter"><i id="cLvl"></i></div></div><div id="cMsg"></div>
       <div class="row" style="margin-top:10px"><span class="sp"></span><button class="b-pink" id="cNext" disabled>Suivant →</button></div>`;
     $('#cGo').onclick = async () => {
-      $('#cGo').disabled = true; const st = { cur:0 }; let stop = lvlLoop(st, 'cLvl'), mic = null, got = 0;
-      try{ mic = await micOpen(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; if(p > .04) got++; });
+      $('#cGo').disabled = true; const st = { cur:0 }; let stop = lvlLoop(st, 'cLvl'), mic = null, mx = 0;
+      try{ mic = await micOpen(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; if(p > mx) mx = p; });
         $('#cMsg').innerHTML = '<div class="res">J\'écoute… fais quelques sons (4 s).</div>'; await sleep(4000); mic.close(); stop();
-        if(got > 3){ $('#cMsg').innerHTML = '<div class="res ok">✅ Micro OK.</div>'; $('#cNext').disabled = false; }
-        else $('#cMsg').innerHTML = '<div class="res no">Je n\'entends presque rien : rapproche le micro, vérifie l\'autorisation, ou essaie un autre navigateur.</div>';
+        const db = mx > 0 ? Math.round(20 * Math.log10(mx)) : -99;
+        if(mx > .02) $('#cMsg').innerHTML = '<div class="res ok">✅ Micro OK (niveau max ' + db + ' dB).</div>';
+        else $('#cMsg').innerHTML = '<div class="res warn">Je t\'entends très peu (niveau max ' + db + ' dB). Rapproche le micro de la bouche ou joue plus fort. Tu peux quand même continuer : le test de sons règle la sensibilité.</div>';
+        $('#cNext').disabled = false;
       }catch(e){ if(mic) mic.close(); stop(); $('#cMsg').innerHTML = '<div class="res no">Micro indisponible : ' + (e.message || e) + '</div>'; }
       $('#cGo').disabled = false; $('#cGo').textContent = 'Retester';
     };
@@ -766,8 +779,9 @@ function renderCal(){
       $('#cGo').disabled = true; $('#cSkip').disabled = true; $('#cLat').textContent = 'J\'écoute… (6 s)';
       try{ const bpm = 100, spb = .6, rec = await recStart(); const T0 = ac.currentTime + .25; for(let b = 0; b < 9; b++) clickAt(T0 + b * spb, b % 4 === 0);
         await sleep((T0 - ac.currentTime + 5.9) * 1000); const r = rec.stop();
-        const ons = RY.onsets(r.x, r.sr), cl = RY.findClicks(ons, bpm);
-        if(cl.c0 == null) $('#cLat').innerHTML = '❌ Je n\'entends pas le clic : monte le volume, rapproche le micro, et recommence.';
+        let ons = RY.onsets(r.x, r.sr), cl = RY.findClicks(ons, bpm);
+        if(cl.c0 == null){ ons = RY.onsets(r.x, r.sr, { sens:.03, dynDb:50, dynDb2:65 }); cl = RY.findClicks(ons, bpm); } // 2e essai, plus sensible
+        if(cl.c0 == null) $('#cLat').innerHTML = '❌ Je n\'entends pas bien le clic (niveau max ' + Math.round(20 * Math.log10(r.peak + 1e-9)) + ' dB, ' + ons.length + ' sons repérés). Monte le volume du téléphone, rapproche le micro du haut-parleur, ou passe cette étape (tu régleras ensuite avec « Synchro casque »).';
         else { const exp = ((T0 - r.tStart) % spb + spb) % spb; let d = cl.c0 - exp; if(d < -spb / 2) d += spb; if(d > spb / 2) d -= spb; const ms = Math.round(d * 1000);
           LS.set('bbx-rylat', { ms, t:Date.now(), n:cl.n }); LS.set('bbx-hero-adj', 0); $('#cLat').innerHTML = '✅ Latence : <b>' + ms + ' ms</b> (' + cl.n + ' clics entendus)'; }
       }catch(e){ $('#cLat').textContent = 'Micro indisponible : ' + (e.message || e); }
@@ -776,8 +790,8 @@ function renderCal(){
   }
   else if(calStep === 2){
     B.innerHTML = `<h2>🗣 Test de sons</h2>
-      <p><b>Casque sur.</b> Je t'écoute en silence, puis je te demande 4 sons de chaque famille, à ton rythme. Ça règle la sensibilité et apprend la différence entre <i>tes</i> sons.</p>
-      <div class="row"><button class="b-yel" id="cGo">Lancer le test (12 s)</button><div class="meter"><i id="cLvl"></i></div></div>
+      <p><b>Casque sur.</b> Je t'écoute en silence, puis je te demande 4 sons de chaque famille, à ton rythme (les points se remplissent quand je t'entends). Ça règle la sensibilité et apprend la différence entre <i>tes</i> sons.</p>
+      <div class="row"><button class="b-yel" id="cGo">Lancer le test</button><div class="meter"><i id="cLvl"></i></div></div>
       <div id="scBig"></div><div class="timebar" id="scBar" style="display:none"><i></i></div><div id="cMsg"></div>
       <div class="row" style="margin-top:10px"><button id="cPrev">← Précédent</button><span class="sp"></span><button class="b-pink" id="cNext" ${getCal() ? '' : 'disabled'}>Suivant →</button></div>`;
     $('#cPrev').onclick = () => { calStep = 1; renderCal(); }; $('#cNext').onclick = () => { calStep = 3; renderCal(); };
@@ -797,39 +811,49 @@ function renderCal(){
     $('#cGo').onclick = syncTest;
   }
 }
+let PENDCAL = null;
 async function soundCheck(){
-  if(calBusy) return; calBusy = true; $('#cGo').disabled = true; $('#cNext').disabled = true; $('#cPrev').disabled = true;
-  const big = $('#scBig'), bar = $('#scBar'), msg = $('#cMsg'); msg.innerHTML = ''; const st = { cur:0 }; let stop = lvlLoop(st, 'cLvl');
-  try{ const rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; });
+  if(calBusy) return; calBusy = true; PENDCAL = null; $('#cGo').disabled = true; $('#cNext').disabled = true; $('#cPrev').disabled = true;
+  const big = $('#scBig'), msg = $('#cMsg'); msg.innerHTML = ''; const st = { cur:0 }; let stop = lvlLoop(st, 'cLvl');
+  const C = { th:.012, sp:0, phase:'sil', n:0, armed:true };
+  const dots = n => { const e = $('#scDots'); if(e) e.innerHTML = '●'.repeat(Math.min(4, n)) + '<span style="opacity:.35">' + '●'.repeat(Math.max(0, 4 - n)) + '</span>'; };
+  try{
+    const rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p;
+      if(C.phase === 'sil'){ if(p > C.sp) C.sp = p; }
+      else if(C.phase === 'count'){ if(C.armed && p > C.th){ C.n++; C.armed = false; dots(C.n); } else if(!C.armed && p < C.th * .5) C.armed = true; } });
     big.innerHTML = '<div class="bigletter" style="--c:#9ab">🤫</div><div class="small muted" style="text-align:center">Silence…</div>'; await sleep(1700);
+    C.th = Math.max(C.sp * 4, .012);
     const plan = [['grave', 'P'], ['medium', 'K'], ['aigu', 'Ts']], wins = [];
-    for(const [lane, nm] of plan){ const t0 = ac.currentTime; big.innerHTML = `<div class="bigletter" style="--c:${LC[lane]}">${nm}</div><div class="small muted" style="text-align:center">4 fois « ${nm} », à ton rythme</div>`;
-      bar.style.display = ''; bar.firstElementChild.style.transition = 'none'; bar.firstElementChild.style.width = '0'; void bar.offsetWidth; bar.firstElementChild.style.transition = 'width 3s linear'; bar.firstElementChild.style.width = '100%';
-      await sleep(3000); wins.push({ lane, t0, t1:ac.currentTime + .4 }); }
-    big.innerHTML = '<div class="bigletter" style="--c:#9ab">…</div>'; bar.style.display = 'none'; await sleep(400);
+    for(const [lane, nm] of plan){
+      C.n = 0; C.armed = true; const t0 = ac.currentTime;
+      big.innerHTML = `<div class="bigletter" style="--c:${LC[lane]}">${nm}</div><div id="scDots" class="small" style="text-align:center;font-size:1.6rem;color:${LC[lane]}"></div><div class="small muted" style="text-align:center">Joue 4 fois « ${nm} », à ton rythme</div>`; dots(0); C.phase = 'count';
+      const t = Date.now(); while(C.n < 4 && Date.now() - t < 9000) await sleep(40);
+      if(C.n >= 4) await sleep(700);
+      C.phase = 'pause'; wins.push({ lane, t0:t0 - .1, t1:ac.currentTime + .5, heard:C.n });
+      big.innerHTML = '<div class="bigletter" style="--c:#9ab">…</div>'; await sleep(600);
+    }
     const r = rec.stop(); stop();
-    const refs = HERO.LiveDetector.calibrate(r.x, r.sr), ons = HERO.LiveDetector.run(r.x, r.sr, refs);
-    const wn = wins.map(w => ({ lane:w.lane, t0:w.t0, t1:w.t1 })); // heure audio ≈ heure de l'enregistrement (+ latence d'entrée, absorbée par la marge)
-    const { fp, cnt } = HERO.fingerprints(ons, wn);
+    const T = HERO.tune(r.x, r.sr, wins), { fp, cnt } = HERO.fingerprints(T.ons, wins);
     const J = new HERO.Judge([], 0, 0, { fp }), S = J.stats(), sep = S ? +S.sep.toFixed(2) : null;
-    const noiseDb = Math.round(20 * Math.log10(refs.floor + 1e-9));
-    const rows = plan.map(([lane, nm]) => { const n = cnt[lane] || 0; return `<div class="st"><span class="dot ${n >= 4 ? 'ok' : n >= 3 ? 'warn' : 'no'}"></span><span class="tk" style="--c:${LC[lane]}">${nm}</span> entendu ${n}/4</div>`; }).join('');
-    const good = plan.every(([lane]) => (cnt[lane] || 0) >= 3), clip = r.peak > .97;
-    let verdict = good ? '<div class="res ok">✅ Test réussi.</div>' : '<div class="res no">Je n\'ai pas bien entendu tous les sons. Rapproche le micro (≈ 5–10 cm, sur le côté de la bouche pour éviter les « pops »), joue plus franchement et refais le test.</div>';
+    const noiseDb = Math.round(20 * Math.log10(T.refs.floor + 1e-9)), peakDb = Math.round(20 * Math.log10(r.peak + 1e-9));
+    const rows = plan.map(([lane, nm]) => { const n = cnt[lane] || 0, w = wins.find(z => z.lane === lane); return `<div class="st"><span class="dot ${n >= 4 ? 'ok' : n >= 3 ? 'warn' : 'no'}"></span><span class="tk" style="--c:${LC[lane]}">${nm}</span> entendu ${Math.min(n, 4)}/4 <span class="small muted">(${T.raw[lane]} attaques détectées)</span></div>`; }).join('');
+    const good = plan.every(([lane]) => (cnt[lane] || 0) >= 3), weak = plan.every(([lane]) => (cnt[lane] || 0) >= 2), clip = r.peak > .97;
+    const cal = { refs:T.refs, det:T.o, fp, t:Date.now(), sr:r.sr, sep };
+    let verdict = good ? '<div class="res ok">✅ Test réussi.</div>' : '<div class="res no">Je n\'ai pas bien repéré tous les sons. Rapproche le micro (≈ 5–10 cm, sur le côté de la bouche pour éviter les « pops »), joue franchement et refais le test.' + (weak ? '<br><button id="cForce" class="b-cyan" style="margin-top:6px">Continuer quand même</button>' : '') + '</div>';
     if(good && sep != null && sep < 1.2) verdict += '<div class="res warn">Tes sons des 3 familles se ressemblent trop pour que je les distingue : le jeu jugera seulement le rythme (vérification du son désactivée).</div>';
     if(clip) verdict += '<div class="res warn">Ça sature : éloigne un peu le micro.</div>';
-    msg.innerHTML = rows + verdict + `<div class="small muted">Bruit de fond : ${noiseDb} dB · séparation des familles : ${sep == null ? '?' : sep}</div>`;
-    if(good){ LS.set('bbx-hero-cal', { refs, fp, t:Date.now(), sr:r.sr, sep }); $('#cNext').disabled = false; }
+    msg.innerHTML = rows + verdict + `<div class="small muted">Niveau max ${peakDb} dB · bruit de fond ${noiseDb} dB · sensibilité ${T.idx + 1}/3 · séparation des familles ${sep == null ? '?' : sep}</div>`;
+    if(good){ LS.set('bbx-hero-cal', cal); $('#cNext').disabled = false; } else { PENDCAL = cal; const f = $('#cForce'); if(f) f.onclick = () => { LS.set('bbx-hero-cal', PENDCAL); f.textContent = 'Enregistré ✓'; f.disabled = true; $('#cNext').disabled = false; }; }
     big.innerHTML = '';
   }catch(e){ stop(); msg.innerHTML = '<div class="res no">Micro indisponible : ' + (e.message || e) + '</div>'; big.innerHTML = ''; }
-  $('#cGo').disabled = false; $('#cGo').textContent = 'Refaire le test'; $('#cPrev').disabled = false; if(getCal()) $('#cNext').disabled = false; calBusy = false;
+  $('#cGo').disabled = false; $('#cGo').textContent = 'Refaire le test'; $('#cPrev').disabled = false; if(getCal() && calOk()) $('#cNext').disabled = false; calBusy = false;
 }
 async function syncTest(){
   if(calBusy) return; calBusy = true; $('#cGo').disabled = true; const msg = $('#cMsg'), st = { cur:0 }; let stop = lvlLoop(st, 'cLvl'); msg.textContent = 'Écoute les 4 clics, puis joue P sur les 8 suivants…';
   try{ const C = getCal(); if(!C) throw new Error('fais d\'abord le test de sons'); const bpm = 90, spb = 60 / bpm, rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; });
     const T0 = ac.currentTime + .3; for(let b = 0; b < 12; b++) clickAt(T0 + b * spb, b % 4 === 0);
     await sleep((T0 - ac.currentTime + 12 * spb + .4) * 1000); const r = rec.stop(); stop();
-    const ons = HERO.LiveDetector.run(r.x, r.sr, C.refs), ds = [];
+    const ons = HERO.LiveDetector.run(r.x, r.sr, C.refs, C.det), ds = [];
     ons.forEach(o => { const k = Math.round((o.t - T0) / spb); if(k >= 4 && k < 12){ let d = o.t - (T0 + k * spb); if(Math.abs(d) < .25) ds.push({ k, d }); } });
     const byK = {}; ds.forEach(z => { if(!byK[z.k] || Math.abs(z.d) < Math.abs(byK[z.k])) byK[z.k] = z.d; });
     const v = Object.values(byK).map(d => d * 1000);
@@ -861,7 +885,7 @@ async function startGame(){
   const lat = latEffMs() / 1000, spb = B.spb;
   const g = G = { B, pat, bpm, cycles, lat, spb, fx:[], leak:0, over:false, done:false, chunks:[], f0:null, mic:null, bus:null, T0:0, J:null, D:null, raf:0, lvl:0, why:'' };
   try{
-    g.D = new HERO.LiveDetector(ac.sampleRate, cal.refs, { onOnset:z => onOnset(z) });
+    g.D = new HERO.LiveDetector(ac.sampleRate, cal.refs, Object.assign({}, cal.det || {}, { onOnset:z => onOnset(z) }));
     g.mic = await micOpen((d, f) => { if(g.f0 == null) g.f0 = f; g.chunks.push(d); g.D.feed(d, f); });
     const t = Date.now(); while(g.f0 == null && Date.now() - t < 2500) await sleep(20);
     if(g.f0 == null) throw new Error('le micro ne donne aucun son');

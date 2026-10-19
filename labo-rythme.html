@@ -174,24 +174,33 @@ const RY = (() => {
   function onsets(x, sr, o){
     o = o || {};
     const N = sr > 32000 ? 1024 : 512, H = N >> 2, w = hann(N), F = Math.max(0, Math.floor((x.length - N) / H) + 1);
-    const flux = new Float32Array(F), rms = new Float32Array(F);
+    // Détection en 3 bandes (grave / medium / aigu), chacune à son propre niveau :
+    // un charley doux à côté d'un kick fort reste visible dans les aigus
+    const NB = 3, edges = [30, 250, 3000, sr / 2], bk = edges.map(fr => Math.min(N / 2, Math.max(1, Math.round(fr * N / sr))));
+    const fluxB = Array.from({ length:NB }, () => new Float32Array(F)), engB = Array.from({ length:NB }, () => new Float32Array(F)), rms = new Float32Array(F);
     let prev = new Float32Array(N / 2); const re = new Float32Array(N), im = new Float32Array(N);
     for(let f = 0; f < F; f++){ const o0 = f * H; let e = 0;
       for(let i = 0; i < N; i++){ const v = x[o0 + i]; e += v * v; re[i] = v * w[i]; im[i] = 0; }
       rms[f] = Math.sqrt(e / N); fft(re, im);
-      const cur = new Float32Array(N / 2); let fl = 0;
-      for(let k = 1; k < N / 2; k++){ const m = Math.log(1 + 1000 * Math.sqrt(re[k] * re[k] + im[k] * im[k])); cur[k] = m; const d = m - prev[k]; if(d > 0) fl += d; }
-      flux[f] = fl; prev = cur; }
+      const cur = new Float32Array(N / 2);
+      for(let bnd = 0; bnd < NB; bnd++){ let fl = 0, en = 0;
+        for(let k = bk[bnd]; k < bk[bnd + 1]; k++){ const p2 = re[k] * re[k] + im[k] * im[k], m = Math.log(1 + 1000 * Math.sqrt(p2)); cur[k] = m; en += p2; const d = m - prev[k]; if(d > 0) fl += d; }
+        fluxB[bnd][f] = fl; engB[bnd][f] = Math.sqrt(en); }
+      prev = cur; }
+    const flux = new Float32Array(F), who = new Uint8Array(F), gB = [];
+    for(let bnd = 0; bnd < NB; bnd++){ const q = pct(fluxB[bnd], .99) || 1, e = engB[bnd], emax = pct(e, .995) || 1e-9, efl = pct(e, .1);
+      gB.push(Math.max(efl * 3, emax * Math.pow(10, -(o.dynDb || 40) / 20)));
+      for(let f = 0; f < F; f++){ const v = fluxB[bnd][f] / q; if(v > flux[f]){ flux[f] = v; who[f] = bnd; } } }
     const p99 = pct(flux, .99) || 1, rmax = pct(rms, .995) || 1e-6, floor = pct(rms, .1);
-    const gate = Math.max(floor * 4, rmax * Math.pow(10, -(o.dynDb || 38) / 20), 0.002);
+    const gate = Math.max(floor * 2.5, rmax * Math.pow(10, -(o.dynDb2 || 55) / 20), 0.0004);
     const W = Math.max(3, Math.round(.15 * sr / H)), delta = (o.sens != null ? o.sens : .07) * p99;
     const peaks = [];
     for(let f = 1; f < F - 1; f++){
       if(flux[f] < flux[f - 1] || flux[f] <= flux[f + 1]) continue;
       const loc = []; for(let j = Math.max(0, f - W); j <= Math.min(F - 1, f + W); j++) loc.push(flux[j]);
-      const thr = median(loc) * 1.4 + delta;
-      const r2 = Math.max(rms[f], rms[Math.min(F - 1, f + 1)], rms[Math.min(F - 1, f + 2)]);
-      if(flux[f] > thr && r2 > gate) peaks.push({ f, v:flux[f] });
+      const thr = median(loc) * 1.4 + delta, bnd = who[f], eb = engB[bnd];
+      const r2 = Math.max(rms[f], rms[Math.min(F - 1, f + 1)], rms[Math.min(F - 1, f + 2)]), e2 = Math.max(eb[f], eb[Math.min(F - 1, f + 1)], eb[Math.min(F - 1, f + 2)]);
+      if(flux[f] > thr && r2 > gate && e2 > gB[bnd]) peaks.push({ f, v:flux[f] });
     }
     // enveloppe fine (1 ms) pour dater l'attaque précisément
     const m1 = Math.max(1, Math.round(.001 * sr)), cs = new Float64Array(x.length + 1);
@@ -214,7 +223,7 @@ const RY = (() => {
   // Soustraction du clic : le clic du haut-parleur est toujours le même → on en fait un modèle (moyenne des clics seuls) et on l'enlève à chaque temps
   function unclick(x, sr, ons, clk, spb){
     const p0 = ons.filter(o => o.ton >= 100 && clk.onGrid(o)), late = o => { let e = 0; for(let i = o.s + Math.round(.02 * sr); i < Math.min(x.length, o.s + Math.round(.08 * sr)); i++) e += x[i] * x[i]; return e; };
-    const el = p0.map(late), emin = Math.min(...el), alone = p0.filter((o, i) => el[i] <= 2.5 * emin + 1e-9); // clics sans son juste après (fin de clic la plus calme)
+    const el = p0.map(late), alone = p0.filter((o, i) => { const same = p0.map((q, j) => q.tf === o.tf ? el[j] : Infinity), emin = Math.min(...same); return el[i] <= 2.5 * emin + 1e-9; }); // clics sans son juste après (par type de clic : le 1er temps est plus fort)
     const pure = alone.length >= 2 ? alone : p0; if(pure.length < 2) return null;
     const ks = pure.map(o => Math.round((o.t - clk.c0) / spb)), n = pure.length;
     let a = clk.c0, b = spb; const uk = new Set(ks);
@@ -261,7 +270,8 @@ const RY = (() => {
       const c0 = ph[bi] + mean(grp.map(q => { let d = q - ph[bi]; if(d > spb / 2) d -= spb; if(d < -spb / 2) d += spb; return d; }));
       return { c0:((c0 % spb) + spb) % spb, R:+(grp.length / cand.length).toFixed(2), n:grp.length };
     };
-    const r = tryC(ons.filter(o => o.ton >= 100), 3) || tryC(ons.filter(o => o.ton >= 12), 4);
+    const first = l => l.filter((o, i) => !l.slice(0, i).some(q => o.t - q.t < .045 && o.t > q.t)); // un clic = sa 1re attaque (pas la suite du même clic)
+    const r = tryC(first(ons.filter(o => o.ton >= 100)), 3) || tryC(first(ons.filter(o => o.ton >= 12)), 4);
     if(!r) return { c0:null, ons };
     // position par rapport au clic (s) : négatif = avant, positif = après
     const rel = o => { let d = ((o.t - r.c0) % spb + spb) % spb; if(d > spb / 2) d -= spb; return d; };
@@ -317,8 +327,10 @@ const RY = (() => {
       for(let k = Math.floor((b0 - phi) / P) - 1; k <= Math.ceil((b1 - phi) / P); k++)
         ev.forEach(e => { const tb = phi + k * P + e.b, tl = tolS(e) / spb; if(tb >= b0 - tl && tb <= b1 + tl) inst.push({ e, k, tb }); });
       const pairs = [];
-      inst.forEach((it, a) => { const tl = tolS(it.e) / spb; beats.forEach((b, j) => { const d = b - it.tb; if(Math.abs(d) < tl) pairs.push({ a, j, d }); }); });
-      pairs.sort((x, y) => Math.abs(x.d) - Math.abs(y.d));
+      inst.forEach((it, a) => { const tl = tolS(it.e) / spb, cand = []; beats.forEach((b, j) => { const d = b - it.tb; if(Math.abs(d) < tl) cand.push({ a, j, d }); });
+        // dans une même case, le vrai son est le plus fort : un petit bruit juste avant (respiration…) ne doit pas prendre sa place
+        const mx = Math.max(-200, ...cand.map(c => ons[c.j].db)); cand.forEach(c => { c.k = Math.abs(c.d) / tl + Math.max(0, mx - ons[c.j].db) / 8; pairs.push(c); }); });
+      pairs.sort((x, y) => x.k - y.k);
       const ua = new Set(), uj = new Set(), hits = [];
       pairs.forEach(p => { if(ua.has(p.a) || uj.has(p.j)) return; ua.add(p.a); uj.add(p.j); hits.push({ e:inst[p.a].e, k:inst[p.a].k, o:ons[p.j], d:p.d * spb }); });
       const miss = inst.filter((_, a) => !ua.has(a)).map(it => ({ e:it.e, k:it.k, t:it.tb * spb }));
@@ -327,11 +339,19 @@ const RY = (() => {
     }
     // Sons longs (inward K~, charleys ouverts Ts / Ts~ / Th~…) : le souffle qui suit l'attaque peut ressembler à une 2e attaque.
     // Un « son en trop » qui arrive juste après un son long, avec le même timbre et pas plus fort, est la queue de ce son.
+    // bruits très faibles (souffle, frottement, reste de clic) : bien plus faibles que les sons joués → pas des sons « en trop »
+    if(best.hits.length >= 4){ const hd = best.hits.map(h => h.o.db).sort((p, q) => p - q), thrX = Math.min(median(hd) - 20, hd[Math.floor(hd.length * .1)] - 8);
+      best.noise = best.extra.filter(x => x.o.db < thrX).length; best.extra = best.extra.filter(x => x.o.db >= thrX); }
     const tails = [];
     best.extra = best.extra.filter(x => { const t = x.o.t;
       const h = best.hits.filter(z => z.o.t < t && t - z.o.t < .4).sort((p, q) => q.o.t - p.o.t)[0]; if(!h || !isLong(h.e.tok)) return true;
       const same = Math.abs(Math.log2(Math.max(60, x.o.c) / Math.max(60, h.o.c))) < 1 && x.o.db <= h.o.db + 1.5;
       if(same){ tails.push(x); return false; } return true; });
+    // Queue de n'importe quel son : souffle après un P, « h » après un K, « sss » après un Ts… (peu après, nettement plus faible)
+    best.extra = best.extra.filter(x => { const t = x.o.t, h = best.hits.filter(z => z.o.t < t && t - z.o.t < .3).sort((p, q) => q.o.t - p.o.t)[0]; if(!h) return true;
+      const dt = t - h.o.t, rumble = x.o.lo > .85 && x.o.c < 220 && x.o.db <= h.o.db + 1; // souffle grave d'une plosive (P, B…) dans le micro
+      const part2 = dt < .14 && x.o.db <= h.o.db + 4; // 2e partie d'un son composé : P-ch, F-sh, K-h, P-f… (juste après, à peu près aussi fort)
+      if(x.o.db < h.o.db - (dt < .15 ? 6 : 9) || rumble || part2){ tails.push(x); return false; } return true; });
     // décalage par rapport au clic (seulement si on a un repère exact)
     let off = null;
     if(c0b != null && best.hits.length >= 3){ const r = (((best.phi - c0b) % minSt) + minSt) % minSt, sh = (r > minSt / 2 ? r - minSt : r) * spb; off = Math.round((sh + median(best.hits.map(h => h.d)) - (o.lat || 0)) * 1000); }
@@ -381,17 +401,19 @@ const RY = (() => {
         ons = onsets(y, sr, { ...opt, drop:z => { const e = en(y, z.s), f = features(x, sr, z.s), r = e / (en(x, z.s) + 1e-12); z.nr = +r.toFixed(2); z.ton = f.ton; if(!clk.rel) return false; const d = clk.rel(z);
           if(d > -.015 && d < .06 && r < .1) return true; // reste du clic
           if(Math.abs(d) >= .015) return false;
-          const quiet = clickE ? e < .2 * clickE : (r < .35 || (z.c > 7000 && f.ton >= 8 && z.db < -6)); // presque rien en dehors du clic
+          const quiet = clickE ? e < .35 * clickE : (r < .35 || (z.c > 7000 && f.ton >= 8 && z.db < -6)); // presque rien en dehors du clic
           if(!quiet) return false;
           // un son commence peut-être juste après le clic : on cherche son attaque dans les 60 ms
           const W2 = Math.round(.06 * sr); let e2 = 0; for(let k = z.s; k < Math.min(y.length, z.s + W2); k++) e2 += y[k] * y[k];
-          if(e2 < (clickE ? .15 * clickE : 4 * e)) return true;
+          if(e2 < (clickE ? (opt.cdelay != null ? .4 : .15) * clickE : 4 * e)) return true;
           const lag = Math.round(.002 * sr), m1 = Math.round(.001 * sr), env = i => { let v = 0; for(let k = i; k < i + m1; k++) v += Math.abs(y[k] || 0); return v / m1; };
           let bi = z.s, bv = -1; for(let i = z.s + Math.round(.004 * sr); i < z.s + W2; i += 2){ const v = env(i) - env(i - lag); if(v > bv){ bv = v; bi = i; } }
           let k = z.s + Math.round(.004 * sr); while(k < bi && env(k) - env(k - lag) < .5 * bv) k += 2;
           Object.assign(z, features(y, sr, k), { s:k, t:k / sr, re:1 }); return false;
         } }); } }
-    const c0 = opt.c0 != null ? opt.c0 : clk.c0;
+    // clic mélangé numériquement dans le fichier (enregistrement relu plus tard) : ses restes et son pré-écho autour du temps ne sont pas des sons
+    if(opt.cdelay != null && clk.rel) ons = ons.filter(o => { const d = clk.rel(o); return !(d > -.04 && d < .02 && (o.ton >= 8 || o.db < -30)); });
+    const c0 = opt.c0 != null ? opt.c0 : clk.c0 != null ? clk.c0 + (opt.cdelay || 0) : null; // cdelay : clic mélangé numériquement dans le fichier (pas de retard), le micro arrive après
     let m = null;
     let start = opt.start != null ? opt.start : null;
     if(start != null && opt.bpm && opt.pat){ const spb = 60 / opt.bpm, P = grid(opt.pat).P * spb;
@@ -769,7 +791,7 @@ async function capt2(sec, onStart){
   const st = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
   const src = ac.createMediaStreamSource(st), node = new AudioWorkletNode(ac, 'rec-ry'), mute = ac.createGain(); mute.gain.value = 0;
   const mono = ac.createGain(); mono.channelCount = 1; mono.channelCountMode = 'explicit'; mono.channelInterpretation = 'speakers';
-  const bus = ac.createGain(); bus.channelCount = 1; bus.channelCountMode = 'explicit';
+  const bus = ac.createGain(); bus.channelCount = 1; bus.channelCountMode = 'explicit'; bus.gain.value = .07; // clic de repère discret dans le fichier : sur iPhone le fichier est mono, la voix doit rester au-dessus
   const mg = ac.createChannelMerger(2), dst = ac.createMediaStreamDestination();
   src.connect(node); node.connect(mute); mute.connect(ac.destination); src.connect(mono); mono.connect(mg, 0, 0); bus.connect(mg, 0, 1); mg.connect(dst);
   const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
@@ -1056,6 +1078,23 @@ async function adminImport(files){
   await adminLoad(); adminRender();
 }
 document.addEventListener('change', e => { if(MODE === 'admin' && e.target.id === 'adimp' && e.target.files.length) adminImport([...e.target.files]); });
+// Relecture d'un enregistrement de la collecte. Deux cas :
+// - vrai stéréo (ordinateur) : gauche = micro seul, droite = clic exact ;
+// - mono (iPhone…) : micro + clic numérique mélangés ; le clic du fichier n'a pas de retard, la voix arrive après (retard D estimé)
+function reanalyseRec(dec, x, lat){
+  const spb = 60 / x.bpm, st = spb / (x.kind === 'son' ? 1 : x.div), pat = x.kind === 'son' ? [{ div:1, tok:[x.son, x.son, x.son, x.son].join(' ') }] : [{ div:x.div, tok:x.tok }], opt = { bpm:x.bpm, pat, cycles:x.tours || 4 };
+  const L = dec.chans[0], Rc = dec.chans[1]; let diff = 0, tot = 1e-9; if(Rc) for(let i = 0; i < L.length; i += 7){ diff += Math.abs(L[i] - Rc[i]); tot += Math.abs(L[i]); }
+  if(Rc && diff / tot > .3){ // vrai stéréo
+    let first = null; for(let i = 0; i < Rc.length; i++) if(Math.abs(Rc[i]) > .01){ first = i / dec.sr; break; }
+    if(first != null){ opt.start = first + 4 * spb + lat; if(x.mode === 'casque'){ opt.c0 = first + lat; opt.clicks = false; } }
+    return RY.analyze(L, dec.sr, opt); }
+  const m = dec.x, raw = RY.onsets(m, dec.sr), cl = RY.findClicks(raw, x.bpm);
+  if(cl.c0 == null){ if(x.t0 != null) opt.start = x.t0 + 4 * spb + lat; return RY.analyze(m, dec.sr, opt); }
+  const first = raw.filter(o => o.ton >= 100 && cl.onGrid(o)).map(o => o.t)[0], nc = raw.filter(o => !(o.ton >= 100 && cl.onGrid(o))), dbs = nc.map(o => o.db).sort((a, b) => a - b), loud = dbs[Math.floor(dbs.length * .75)] || -99;
+  const res = nc.filter(o => o.db > loud - 12).map(o => ((o.t - cl.c0) % st + st) % st); let D = .08, bn = 0;
+  for(let d = 0; d < Math.min(st, .35); d += .005){ const n = res.filter(r => Math.abs(r - d) < .02 || Math.abs(r - d - st) < .02).length; if(n > bn){ bn = n; D = d; } }
+  return RY.analyze(m, dec.sr, { ...opt, start:(first != null ? first : cl.c0) + 4 * spb + D, cdelay:D });
+}
 // Ré-analyse : on relit chaque enregistrement (gauche = micro, droite = clic exact) avec le moteur actuel
 async function adminReanalyse(b){
   b.disabled = true; const st = document.querySelector('#adreanst'), S = AD.data.sessions, P = AD.data.prises; let n = 0, tot = 0;
@@ -1064,12 +1103,7 @@ async function adminReanalyse(b){
   for(const [sid, pr] of Object.entries(P)){ const lat = S[sid] && S[sid].lat != null ? S[sid].lat / 1000 : .05;
     for(const [pid, x] of Object.entries(pr || {})){ n++; if(st) st.textContent = `⏳ ${n} / ${tot}…`;
       try{ const d = (await R('audio/' + sid + '/' + pid).once('value')).val(); if(!d || !x.bpm) continue;
-        const dec = await RY.decode(d, ac), mic = dec.chans[0], clk = dec.chans[1], spb = 60 / x.bpm;
-        let first = null; if(clk){ for(let i = 0; i < clk.length; i++) if(Math.abs(clk[i]) > .02){ first = i / dec.sr; break; } } // 1er clic (canal droit, exact)
-        const pat = x.kind === 'son' ? [{ div:1, tok:[x.son, x.son, x.son, x.son].join(' ') }] : [{ div:x.div, tok:x.tok }], opt = { bpm:x.bpm, pat, cycles:x.tours || 4 };
-        if(first != null){ opt.start = first + 4 * spb + lat; if(x.mode === 'casque'){ opt.c0 = first + lat; opt.clicks = false; } }
-        else if(x.t0 != null) opt.start = x.t0 + 4 * spb + lat;
-        const A = RY.compact(RY.analyze(mic, dec.sr, opt)), v2 = x.kind === 'son' ? null : vu({ ...x, err:x.err }, A);
+        const dec = await RY.decode(d, ac), A = RY.compact(reanalyseRec(dec, x, lat)), v2 = x.kind === 'son' ? null : vu({ ...x, err:x.err }, A);
         await R('prises/' + sid + '/' + pid).set(JSON.parse(JSON.stringify({ ...x, auto2:A, vu2:v2, reV:RY.V, reT:Date.now() }))); }
       catch(e){ console.warn('ré-analyse', sid, pid, e); } } }
   await adminLoad(); adminRender();
