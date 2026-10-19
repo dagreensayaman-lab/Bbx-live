@@ -55,7 +55,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <!-- ================= ACCUEIL ================= -->
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !</p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 5 · 19 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -563,11 +563,13 @@ const HERO = (() => {
       o = o || {}; this.notes = notes; this.T0 = T0; this.lat = lat;
       notes.forEach(n => { n.tc = T0 + n.rel; n.t = n.tc + lat; n.state = 0; n.res = null; });
       this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0;
-      this.score = 0; this.combo = 0; this.maxCombo = 0; this.life = 100; this.dead = false; this.ip = 0;
+      this.score = 0; this.combo = 0; this.maxCombo = 0; this.life = 100; this.dead = false; this.ip = 0; this.charge = 0; this.zaps = 0; this.maxCharged = 0;
       this.cnt = { perfect:0, good:0, miss:0, wrong:0, extra:0 }; this.log = []; this.lastHit = null; this.hitDb = []; this.by = {};
       if(o.fp) Object.keys(o.fp).forEach(f => { this.by[f] = o.fp[f].slice(); });
     }
-    mult(){ const c = this.combo; return c >= 50 ? 4 : c >= 25 ? 3 : c >= 10 ? 2 : 1; }
+    mult(){ const c = this.combo; return (c >= 50 ? 4 : c >= 25 ? 3 : c >= 10 ? 2 : 1) + (this.charge >= 100 ? 1 : 0); } // barre pleine (électrique) : +1 au multiplicateur
+    // barre électrique : +10 par Parfait, « Bien » = neutre, toute erreur (raté, mauvais son, son en trop) la remet à zéro
+    _err(){ if(this.charge >= 100) this.zaps++; this.charge = 0; }
     vec(z){ return [Math.log2(Math.max(60, z.c)), z.lo * 3, z.hi * 3]; }
     stats(){
       const fs = Object.keys(this.by).filter(f => this.by[f].length >= 3); if(fs.length < 2) return null;
@@ -596,16 +598,16 @@ const HERO = (() => {
         const d = z.t - best.t; let heard = null;
         if(this.strict){ const S = this.stats(), v = this.vec(z); if(S && S.sep >= 1.2 && S.cen[best.lane]){ let nd = S.dist(v, S.cen[best.lane]), nf = best.lane; S.fs.forEach(f => { const dd = S.dist(v, S.cen[f]); if(dd < nd - 1){ nd = dd; nf = f; } }); if(nf !== best.lane) heard = nf; } }
         best.res = { d, z, heard }; this.lastHit = { note:best, z }; this.hitDb.push(z.db); z.verdict = heard ? 'wrong' : 'hit'; z.note = best.i;
-        if(heard){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-8); ev.push({ type:'wrong', note:best, d, z, heard }); }
+        if(heard){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-8); this._err(); ev.push({ type:'wrong', note:best, d, z, heard }); }
         else {
           best.state = 1; (this.by[best.lane] = this.by[best.lane] || []).push(this.vec(z)); if(this.by[best.lane].length > 30) this.by[best.lane].shift();
           const perfect = Math.abs(d) <= .5 * best.W, m = this.mult(); this.combo++; if(this.combo > this.maxCombo) this.maxCombo = this.combo;
           this.score += (perfect ? 100 : 60) * m; this.cnt[perfect ? 'perfect' : 'good']++; this._life(perfect ? 2 : 1);
-          best.grade = perfect ? 'perfect' : 'good'; ev.push({ type:best.grade, note:best, d, z });
+          if(perfect){ this.charge = Math.min(100, this.charge + 10); if(this.charge >= 100) this.maxCharged++; } best.grade = perfect ? 'perfect' : 'good'; ev.push({ type:best.grade, note:best, d, z });
         }
       } else if(this._tail(z)) z.verdict = 'tail';
       else if(this._noise(z)) z.verdict = 'noise';
-      else { z.verdict = 'extra'; this.cnt.extra++; this._life(-3); ev.push({ type:'extra', z }); }
+      else { z.verdict = 'extra'; this.cnt.extra++; this._life(-3); this._err(); ev.push({ type:'extra', z }); }
       this.log.push(z); return ev;
     }
     // appelé régulièrement avec detector.settled() : les cases dont la fenêtre est passée sont ratées
@@ -613,7 +615,7 @@ const HERO = (() => {
       const ev = [];
       while(this.ip < this.notes.length && this.notes[this.ip].state !== 0) this.ip++;
       for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t + n.W >= settled) break; if(n.state !== 0) continue;
-        n.state = 2; this.cnt.miss++; this.combo = 0; this._life(-8); ev.push({ type:'miss', note:n }); }
+        n.state = 2; this.cnt.miss++; this.combo = 0; this._life(-8); this._err(); ev.push({ type:'miss', note:n }); }
       return ev;
     }
     accuracy(){ const h = this.cnt.perfect + this.cnt.good, t = h + this.cnt.miss + this.cnt.wrong + this.cnt.extra; return t ? Math.round(100 * h / t) : 0; }
@@ -645,7 +647,17 @@ const HERO = (() => {
       if(!best || dev < best.dev) best = { o, refs, ons, raw, dev, idx:i }; });
     return best;
   }
-  return { tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
+  // Vérifie le son de chaque case réussie de l'analyse finale contre les sons du test de calibration (référence absolue).
+  // RY.analyze compare les familles entre elles dans la prise : si tout est joué pareil (que des kicks), il ne voit aucune confusion.
+  function crossCheck(a, fp){
+    if(!a || !a._best || !fp) return null;
+    const J = new Judge([], 0, 0, { fp }), S = J.stats(); if(!S || S.sep < 1.2) return null;
+    const bad = [];
+    a._best.hits.forEach(h => { const lane = laneOf(h.e.tok); if(!S.cen[lane]) return; const v = J.vec(h.o); let nd = S.dist(v, S.cen[lane]), nf = lane;
+      S.fs.forEach(f => { const d = S.dist(v, S.cen[f]); if(d < nd - 1){ nd = d; nf = f; } }); if(nf !== lane) bad.push({ cell:h.e.i, heard:nf }); });
+    return bad;
+  }
+  return { crossCheck, tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
 })();
 
 </script>
@@ -655,6 +667,8 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const LS = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
 const LC = { grave:'#e0607e', medium:'#8b6fd6', aigu:'#2fb3d9' }, LNAME = { grave:'grave', medium:'medium', aigu:'aigu' };
+// couleurs des verdicts : vert = parfait, jaune = bien, rouge = faux / raté, violet = bon rythme mais mauvais son
+const V_OK = '#2fd073', V_GOOD = '#ffd23f', V_BAD = '#ff4d5e', V_WRONG = '#b05cff';
 
 /* ---------- phrases : styles × 3 niveaux (même format que le Workout : [{div, tok}]) ---------- */
 const STYLES = [
@@ -907,9 +921,9 @@ function onOnset(z){
 }
 function fx(e){
   const g = G; if(!g) return; const now = performance.now();
-  if(e.type === 'extra'){ const lane = ['grave', 'medium', 'aigu'][e.z.band] || 'medium'; g.fx.push({ k:'extra', lane, t0:now, txt:'✕', col:'#ff8aa0' }); return; }
-  const lane = e.note.lane, ms = e.d != null ? Math.round(e.d * 1000) : 0;
-  const m = { perfect:['PARFAIT', '#ffe27a'], good:['BIEN', '#7fd6f0'], miss:['RATÉ', '#ef5b6e'], wrong:['MAUVAIS SON', '#b9a2f0'] }[e.type];
+  if(e.type === 'extra'){ const lane = ['grave', 'medium', 'aigu'][e.z.band] || 'medium'; if(g.disp > 5) g.zapAt = now; g.fx.push({ k:'extra', lane, t0:now, txt:'✕', col:V_BAD }); return; }
+  const lane = e.note.lane, ms = e.d != null ? Math.round(e.d * 1000) : 0; e.note.fxAt = now; if((e.type === 'miss' || e.type === 'wrong') && g.disp > 5) g.zapAt = now; if(e.type === 'perfect') g.pulseAt = now;
+  const m = { perfect:['PARFAIT', V_OK], good:['BIEN', V_GOOD], miss:['RATÉ', V_BAD], wrong:['MAUVAIS SON', V_WRONG] }[e.type];
   g.fx.push({ k:e.type, lane, t0:now, txt:m[0], col:m[1], sub:e.type === 'perfect' || e.type === 'good' ? (ms > 0 ? '+' : '') + ms + ' ms' : (e.type === 'wrong' ? '(entendu : ' + LNAME[e.heard] + ')' : '') });
 }
 function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
@@ -922,23 +936,40 @@ function frame(){
   if(now > g.endAt){ endGame('ok'); return; }
   g.raf = requestAnimationFrame(frame);
 }
+// barre « électrique » : se charge sur les Parfaits, pleine = éclairs + bonus de multiplicateur, retombe à zéro à la moindre erreur
+function drawElectric(g, J, x, y, w, h, t){
+  const tgt = J.charge; if(g.disp == null) g.disp = 0; g.disp += (tgt - g.disp) * (tgt > g.disp ? .25 : .55); if(Math.abs(tgt - g.disp) < .4) g.disp = tgt;
+  const f = g.disp / 100, full = tgt >= 100 && g.disp > 99, zap = g.zapAt && t - g.zapAt < 380, pulse = g.pulseAt && t - g.pulseAt < 160, bx = x + 20, bw = w - 20;
+  ctx.save(); ctx.fillStyle = 'rgba(255,255,255,.14)'; rr(bx, y, bw, h, h / 2); ctx.fill();
+  if(f > 0.01){ const fw = Math.max(h, bw * f), gr = ctx.createLinearGradient(bx, 0, bx + bw, 0); gr.addColorStop(0, '#2bb8ff'); gr.addColorStop(.65, '#8ee9ff'); gr.addColorStop(1, full ? '#fff7a8' : '#d9f7ff');
+    ctx.shadowColor = zap ? V_BAD : full ? '#8ff0ff' : '#4dd8ff'; ctx.shadowBlur = zap ? 16 : full ? 20 + 8 * Math.sin(t / 55) : pulse ? 14 : 7; ctx.fillStyle = zap ? V_BAD : gr; rr(bx, y, fw, h, h / 2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = zap ? '#ffd0d4' : '#fff'; ctx.lineWidth = full ? 2.2 : 1.3; ctx.globalAlpha = .95; // éclairs : lignes brisées qui crépitent dans la partie chargée
+    for(let k = 0; k < (full ? 3 : 1); k++){ ctx.beginPath(); ctx.moveTo(bx + 4, y + h / 2); const n = Math.max(3, Math.floor(fw / 11)); for(let i = 1; i <= n; i++) ctx.lineTo(bx + 4 + (fw - 10) * i / n, y + h / 2 + (Math.random() - .5) * h * .8); ctx.stroke(); }
+    ctx.globalAlpha = 1; if(full) for(let i = 0; i < 5; i++){ ctx.fillStyle = '#fff'; ctx.globalAlpha = Math.random(); ctx.fillRect(bx + Math.random() * bw, y - 3 - Math.random() * 6, 2, 2); } ctx.globalAlpha = 1; }
+  ctx.font = '900 16px Nunito,sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = full ? '#fff7a8' : 'rgba(255,255,255,.8)'; ctx.fillText('⚡', x, y + h / 2 + 1);
+  ctx.textAlign = 'center'; ctx.font = '900 11px Nunito,sans-serif'; ctx.fillStyle = full ? '#17324a' : 'rgba(255,255,255,.55)'; ctx.fillText(full ? 'ÉLECTRIQUE  ×+1' : 'enchaîne les PARFAIT', bx + bw / 2, y + h / 2 + 1);
+  ctx.restore(); }
 function draw(g, now){
-  const J = g.J, B = g.B, spb = g.spb, W = VW, H = VH, PW = Math.min(W, 520), X0 = (W - PW) / 2, LW = PW / 3, topY = 116, lineY = H * .8, LA = Math.max(1.3, Math.min(2.4, spb * 3.2)), py = t => lineY - (t - now) / LA * (lineY - topY);
+  const J = g.J, B = g.B, spb = g.spb, W = VW, H = VH, PW = Math.min(W, 520), X0 = (W - PW) / 2, LW = PW / 3, topY = 132, lineY = H * .8, LA = Math.max(1.3, Math.min(2.4, spb * 3.2)), py = t => lineY - (t - now) / LA * (lineY - topY);
   ctx.fillStyle = '#0f2a3d'; ctx.fillRect(0, 0, W, H);
   ['grave', 'medium', 'aigu'].forEach((l, i) => { ctx.fillStyle = LC[l] + '22'; ctx.fillRect(X0 + i * LW, topY - 10, LW, H); ctx.fillStyle = LC[l]; ctx.globalAlpha = .9; ctx.fillRect(X0 + i * LW + 2, topY - 10, LW - 4, 3); ctx.globalAlpha = 1; });
   // temps (traits horizontaux ; plus marqué sur le 1er temps de chaque groupe de 4)
   const k0 = Math.floor((now - g.T0) / spb) - 1, k1 = Math.ceil((now + LA - g.T0) / spb);
   for(let k = Math.max(0, k0); k <= k1; k++){ const y = py(g.T0 + k * spb); if(y < topY - 10 || y > H) continue; ctx.strokeStyle = k % 4 === 0 ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.12)'; ctx.lineWidth = k % 4 === 0 ? 2 : 1; ctx.beginPath(); ctx.moveTo(X0, y); ctx.lineTo(X0 + PW, y); ctx.stroke(); }
   // ligne de frappe
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X0, lineY); ctx.lineTo(X0 + PW, lineY); ctx.stroke();
+  const elec = J.charge >= 100; ctx.save(); ctx.strokeStyle = elec ? '#bff6ff' : '#fff'; ctx.lineWidth = elec ? 4 : 3; if(elec){ ctx.shadowColor = '#7fe9ff'; ctx.shadowBlur = 14 + 6 * Math.sin(performance.now() / 70); } ctx.beginPath(); ctx.moveTo(X0, lineY); ctx.lineTo(X0 + PW, lineY); ctx.stroke(); ctx.restore();
   ['grave', 'medium', 'aigu'].forEach((l, i) => { const cx = X0 + i * LW + LW / 2; ctx.beginPath(); ctx.arc(cx, lineY, 22, 0, 7); ctx.strokeStyle = LC[l]; ctx.lineWidth = 4; ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '800 12px Nunito,sans-serif'; ctx.textAlign = 'center'; ctx.fillText(LNAME[l], cx, lineY + 44); });
   // notes
-  const nh = 36; ctx.font = '900 17px Nunito,sans-serif'; ctx.textBaseline = 'middle';
-  for(let j = B.notes.length - 1; j >= 0; j--){ const n = B.notes[j], y = py(n.tc); if(y < topY - 30 || y > H + 40) continue; if(n.state === 1) continue;
+  const nh = 36, tNow = performance.now(); ctx.font = '900 17px Nunito,sans-serif'; ctx.textBaseline = 'middle';
+  for(let j = B.notes.length - 1; j >= 0; j--){ const n = B.notes[j], y = py(n.tc); if(y < topY - 30 || y > H + 40) continue;
     const li = ['grave', 'medium', 'aigu'].indexOf(n.lane), cx = X0 + li * LW + LW / 2, w = LW * .72;
-    const dead = n.state === 2, wr = n.state === 3;
-    ctx.globalAlpha = dead ? .35 : 1; ctx.fillStyle = wr ? '#9b6bdf' : dead ? '#777' : LC[n.lane]; rr(cx - w / 2, y - nh / 2, w, nh, 12); ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2; ctx.stroke(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.fillText(n.tok, cx, y + 1); ctx.globalAlpha = 1; }
+    let fill = '#eef7fc', edge = LC[n.lane], txt = LC[n.lane], al = 1, bw = 4, glow = null; // pas encore jouée : claire, bord de la couleur de piste
+    if(n.state !== 0){ // jugée : couleur du verdict, puis s'efface
+      const age = n.fxAt ? (tNow - n.fxAt) / 1000 : 0; al = Math.max(0, 1 - Math.max(0, age - .45) / .6); if(al <= 0) continue;
+      fill = n.state === 1 ? (n.grade === 'perfect' ? V_OK : V_GOOD) : n.state === 2 ? V_BAD : V_WRONG; glow = fill; edge = '#fff'; bw = 3; txt = (n.state === 1 && n.grade === 'good') ? '#17324a' : '#fff'; }
+    ctx.globalAlpha = al; if(glow){ ctx.shadowColor = glow; ctx.shadowBlur = 16; }
+    ctx.fillStyle = fill; rr(cx - w / 2, y - nh / 2, w, nh, 12); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = edge; ctx.lineWidth = bw; ctx.stroke(); ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.fillText(n.tok, cx, y + 1); ctx.globalAlpha = 1; }
   // effets
   const t = performance.now(); g.fx = g.fx.filter(f => t - f.t0 < 700);
   g.fx.forEach(f => { const li = ['grave', 'medium', 'aigu'].indexOf(f.lane), cx = X0 + li * LW + LW / 2, a = 1 - (t - f.t0) / 700;
@@ -951,10 +982,11 @@ function draw(g, now){
   if(cd < 4.2){ const k = Math.floor(cd); const txt = cd < 0 ? '' : k < 4 ? String(4 - k) : 'GO !'; if(txt){ ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.font = '900 96px Nunito,sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = Math.max(0, 1 - (cd - k) * .9); ctx.fillText(txt, W / 2, H * .42); ctx.globalAlpha = 1; } }
   // HUD
   ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'right'; ctx.fillStyle = '#fff'; ctx.font = '900 30px Nunito,sans-serif'; ctx.fillText(String(J.score), X0 + PW - 12, 50);
-  ctx.textAlign = 'center'; if(J.combo >= 2){ ctx.font = '900 20px Nunito,sans-serif'; ctx.fillStyle = J.mult() > 1 ? '#ffe27a' : '#fff'; ctx.fillText(J.combo + ' combo' + (J.mult() > 1 ? '  ×' + J.mult() : ''), W / 2, 50); }
-  const bx = X0 + 12, bw = PW - 24; ctx.fillStyle = 'rgba(255,255,255,.15)'; rr(bx, 66, bw, 10, 5); ctx.fill(); const lf = J.life / 100; ctx.fillStyle = lf > .5 ? '#3fbf6f' : lf > .25 ? '#f2b705' : '#ef5b6e'; rr(bx, 66, Math.max(10, bw * lf), 10, 5); ctx.fill();
+  ctx.textAlign = 'center'; if(J.combo >= 2){ ctx.font = '900 20px Nunito,sans-serif'; ctx.fillStyle = J.mult() > 1 ? '#ffe27a' : '#fff'; ctx.fillText(J.combo + ' combo' + (J.mult() > 1 ? '  ×' + J.mult() : '') + (J.charge >= 100 ? ' ⚡' : ''), W / 2, 50); }
+  const bx = X0 + 12, bw = PW - 24; ctx.fillStyle = 'rgba(255,255,255,.15)'; rr(bx, 62, bw, 9, 4.5); ctx.fill(); const lf = J.life / 100; ctx.fillStyle = lf > .5 ? '#3fbf6f' : lf > .25 ? '#f2b705' : '#ef5b6e'; rr(bx, 62, Math.max(9, bw * lf), 9, 4.5); ctx.fill();
+  drawElectric(g, J, bx, 80, bw, 16, performance.now());
   const pr = Math.max(0, Math.min(1, (now - g.T0 - 4 * spb) / ((B.endBeat - 4) * spb))); ctx.fillStyle = '#7fd6f0'; ctx.fillRect(0, 0, W * pr, 4);
-  ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = '800 12px Nunito,sans-serif'; ctx.fillText('♥ ' + Math.round(J.life) + '%  ·  ' + g.bpm + ' BPM', X0 + 12, 94 - 2);
+  ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = '800 12px Nunito,sans-serif'; ctx.fillText('♥ ' + Math.round(J.life) + '%  ·  ' + g.bpm + ' BPM', X0 + 12, 118);
   // niveau du micro
   g.lvl = Math.max(g.lvl * .9, g.D.peak); g.D.peak = 0; ctx.fillStyle = 'rgba(255,255,255,.15)'; ctx.fillRect(12, H - 18, 80, 6); ctx.fillStyle = g.lvl > .9 ? '#ef5b6e' : '#7fd6f0'; ctx.fillRect(12, H - 18, Math.min(80, g.lvl * 160), 6);
 }
@@ -983,6 +1015,11 @@ async function endGame(why){
 function cellClass(c){ if(c.f > 0) return 'conf'; const t = c.h + c.m; if(!t) return ''; const r = c.h / t; return r >= .85 ? 'ok' : r >= .5 ? 'mid' : 'low'; }
 function renderEnd(){
   const { g, a, why, err } = LASTRES, J = g.J, cn = J.cnt, hasA = a && a.pct != null;
+  if(hasA && !a._x){ a._x = 1; // sons confondus : référence = tes sons du test de calibration (l'analyse seule ne voit rien si tout est joué pareil)
+    const C = getCal(), bad = (J.strict && C) ? HERO.crossCheck(a, C.fp) : null;
+    if(bad && bad.length){ const per = {}; bad.forEach(b => { (per[b.cell] = per[b.cell] || { n:0, h:b.heard }).n++; });
+      Object.keys(per).forEach(i => { const c = a.cells[i]; if(c && c.f < per[i].n){ c.f = per[i].n; c.fh = per[i].h; } });
+      a.conf = a.cells.reduce((t, c) => t + (c.f || 0), 0); const tot = a.hits + a.miss + a.extra; a.pct = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, tot)); } }
   const pct = hasA ? a.pct : J.accuracy(), grade = pct >= 95 ? 'S' : pct >= 85 ? 'A' : pct >= 70 ? 'B' : pct >= 50 ? 'C' : 'D';
   let h = `<div class="row" style="align-items:flex-end"><div><div class="pctbig">${pct}%</div><div class="small muted">${hasA ? 'précision (analyse complète)' : 'précision (jugement en direct)'}</div></div><span class="sp"></span><div class="grade">${grade}</div></div>`;
   if(hasA) h += `<div class="small muted">Pendant le jeu : ${J.accuracy()}%</div>`;
