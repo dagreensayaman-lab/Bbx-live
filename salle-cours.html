@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>BBX Salle de cours</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#29AADC;--ink:#1d2b4f;--card:#fff;--pink:#FFB3D1;--cyan:#A8F0F0;--yel:#FFE68A;--vio:#CDB4FF;--ok:#7BE0A0;--warn:#FFB86B;--bad:#FF7A8A;--tile:#1d2b4f}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-weight:700;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;border:0;cursor:pointer;border-radius:14px;background:var(--card);padding:8px 12px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+button:active{transform:translateY(2px);box-shadow:none}
+button:disabled{opacity:.4;cursor:default}
+button.on{background:var(--yel)}
+button.off{background:var(--bad);color:#fff}
+input,select{font:inherit;color:var(--ink);border:2px solid #d6e6f2;border-radius:12px;padding:10px;width:100%;background:#fff}
+.hide{display:none!important}
+/* écran d'accueil */
+#lobby{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
+.card{background:var(--card);border-radius:24px;padding:20px;width:100%;max-width:440px;box-shadow:0 6px 0 rgba(0,0,0,.12)}
+.card h1{margin:0 0 4px;font-weight:900;font-size:24px}
+.card .sub{margin:0 0 14px;color:#5a6b8c;font-size:14px}
+.card label{display:block;font-size:13px;margin:12px 0 4px;color:#5a6b8c}
+.prev{position:relative;border-radius:18px;overflow:hidden;background:var(--tile);aspect-ratio:4/3;margin-top:6px}
+.prev video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.prev .lv{position:absolute;left:10px;right:10px;bottom:10px;height:8px;border-radius:4px;background:rgba(255,255,255,.25);overflow:hidden}
+.prev .lv i{display:block;height:100%;width:0;background:var(--ok);transition:width .08s}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modes button{text-align:left;padding:10px;border:2px solid transparent}
+.modes button.sel{border-color:var(--ink);background:var(--cyan)}
+.modes small{display:block;font-weight:600;font-size:12px;color:#5a6b8c;margin-top:2px}
+.big{width:100%;margin-top:16px;padding:14px;font-size:18px;font-weight:900;background:var(--pink)}
+.langs{display:flex;gap:6px;justify-content:flex-end;margin-bottom:6px}
+.langs button{padding:4px 8px;font-size:12px}
+.err{color:#c0304a;font-size:14px;margin-top:10px}
+.warn{background:var(--yel);border-radius:12px;padding:8px 10px;font-size:13px;margin-top:10px}
+/* salle */
+#room{position:fixed;inset:0;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#top{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:wrap}
+#top .logo{font-weight:900;color:#fff;font-size:17px;margin-right:auto;white-space:nowrap}
+#top button{padding:6px 10px;font-size:14px}
+.metro{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:14px;padding:4px 8px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.metro button{box-shadow:none;background:#eef6fb;padding:4px 8px}
+.metro b{min-width:56px;text-align:center}
+.dots{display:flex;gap:4px}
+.dots i{width:10px;height:10px;border-radius:50%;background:#d6e6f2}
+.dots i.hit{background:var(--pink)}
+.dots i.hit.a{background:#ff5f9e}
+#main{flex:1;display:flex;min-height:0;gap:10px;padding:0 12px}
+#col{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;gap:8px}
+#stage{flex:1;min-height:0;position:relative;display:flex}
+#stage.grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));grid-auto-rows:minmax(110px,1fr);overflow:auto}
+#strip{display:flex;gap:8px;overflow-x:auto;min-height:0;flex:none}
+#strip:empty{display:none}
+#strip .tile{flex:none;width:120px;height:90px}
+.tile{position:relative;background:var(--tile);border-radius:18px;overflow:hidden;flex:1;min-width:0;border:3px solid transparent;transition:border-color .1s}
+.tile.talk{border-color:var(--ok)}
+.tile.spot{border-color:var(--yel)}
+.tile video{width:100%;height:100%;object-fit:cover;display:block}
+#stage:not(.grid) .tile video{object-fit:contain}
+.tile.me video{transform:scaleX(-1)}
+.tile .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;color:#fff;background:linear-gradient(135deg,#3a4f86,#1d2b4f)}
+.tile.hasv .ph{display:none}
+.tile .nm{position:absolute;left:6px;bottom:6px;right:6px;display:flex;gap:4px;align-items:center;flex-wrap:wrap;pointer-events:none}
+.tile .nm span{background:rgba(255,255,255,.92);border-radius:10px;padding:1px 7px;font-size:12px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.tile .lv{position:absolute;right:6px;top:6px;width:8px;height:40%;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden;display:flex;align-items:flex-end}
+.tile .lv i{display:block;width:100%;height:0;background:var(--ok)}
+.tile .tb{position:absolute;left:6px;top:6px;display:flex;gap:4px;flex-wrap:wrap;max-width:calc(100% - 24px)}
+.tile .tb button{padding:3px 7px;font-size:13px;border-radius:10px}
+#strip .tile .tb{display:none}
+.react{position:absolute;font-size:38px;pointer-events:none;animation:fly 2.2s ease-out forwards;z-index:5}
+@keyframes fly{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1;transform:translateY(-10px) scale(1.1)}100%{transform:translateY(-140px) scale(1);opacity:0}}
+#bar{display:flex;gap:8px;justify-content:center;align-items:center;padding:10px 12px;flex-wrap:wrap}
+#bar button{min-width:46px;padding:10px 12px;font-size:18px;position:relative}
+#bar .lbl{font-size:13px}
+.badge{position:absolute;top:-6px;right:-6px;background:#ff5f9e;color:#fff;border-radius:10px;font-size:11px;padding:1px 6px}
+#rx{display:flex;gap:4px}
+/* chat */
+#chat{width:300px;background:var(--card);border-radius:20px;display:flex;flex-direction:column;min-height:0;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+#chat h3{margin:0;padding:12px 14px 6px;font-weight:900;display:flex;justify-content:space-between;align-items:center}
+#chat h3 button{padding:2px 9px;box-shadow:none;background:#eef6fb}
+#msgs{flex:1;overflow-y:auto;padding:4px 14px;font-size:14px}
+#msgs p{margin:6px 0}
+#msgs b{color:#2a7fb0}
+#chat form{display:flex;gap:6px;padding:10px}
+#chat form button{background:var(--cyan)}
+#hands{background:var(--yel);border-radius:14px;padding:6px 10px;font-size:14px}
+#banner{margin:0 12px 6px;background:var(--yel);border-radius:14px;padding:8px 12px;font-size:14px}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;z-index:50;max-width:90vw;text-align:center}
+#unlock{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:40;background:var(--pink);font-size:16px;padding:12px 18px}
+/* calage */
+#calm{position:fixed;inset:0;background:rgba(29,43,79,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+#calm .card{text-align:center}
+#pad{width:180px;height:180px;border-radius:50%;margin:16px auto;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900;background:var(--pink);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#pad.hit{background:#ff5f9e;color:#fff}
+.calres{font-size:15px;min-height:22px}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+#end{min-height:100%;display:flex;align-items:center;justify-content:center;padding:16px}
+@media (max-width:820px){
+  #chat{position:fixed;left:8px;right:8px;bottom:76px;top:30%;width:auto;z-index:30}
+  #bar .lbl{display:none}
+  #bar{gap:5px;padding:8px 6px}
+  #bar button{min-width:0;padding:8px 9px;font-size:17px}
+  #rx{gap:5px}
+  #rx button:nth-child(n+3){display:none}
+  #strip .tile{width:96px;height:72px}
+  #top .logo{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div id="lobby"></div>
+<div id="room" class="hide">
+  <div id="top"></div>
+  <div id="banner" class="hide"></div>
+  <div id="main">
+    <div id="col"><div id="stage"></div><div id="strip"></div></div>
+    <div id="chat" class="hide"><h3><span data-t="chat"></span><button id="chatx">✕</button></h3><div id="msgs"></div>
+      <form id="chatf"><input id="chati" autocomplete="off" maxlength="300"><button data-t="send"></button></form></div>
+  </div>
+  <div id="bar"></div>
+</div>
+<div id="end" class="hide"></div>
+<div id="audios" class="hide"></div>
+<div id="calm" class="hide"></div>
+<div id="toast" class="hide"></div>
+<button id="unlock" class="hide"></button>
+
+<script src="https://unpkg.com/@daily-co/daily-js@0.92.2/dist/daily.js" crossorigin="anonymous"></script>
+<script>
+'use strict';
+/* =====================================================================
+   BBX Classroom — prototype « salle de cours » (vidéo intégrée, Daily)
+   ?room=<lien de la salle Daily>  ·  ajouter &prof pour l'interface prof
+   ===================================================================== */
+const L = {
+fr:{title:'Salle de cours',sub:'Prototype BBX Classroom : vidéo + cours au même endroit.',name:'Ton prénom',room:'Lien de la salle (Daily)',
+ mode:'Son du micro',m_voix:'🗣 Parole',m_voix_d:'Anti-écho et anti-bruit. Sans casque.',m_bbx:'🎧 Beatbox',m_bbx_d:'Son brut, haute qualité. Casque obligatoire.',
+ join:'Entrer dans la salle',joining:'Connexion…',prof:'Prof',me:'toi',chat:'Chat',send:'Envoyer',leave:'Quitter',
+ mute_all:'🔇 Tous',turn:'🎤 Tour suivant',spot_off:'⭐ Fin',cal_class:'🎯 Calage classe',invite:'🔗 Lien élèves',copied:'Lien élèves copié',
+ start:'▶',stop:'■',cal:'🎯 Calage',click:'Clic',hand:'Lever la main',hands:'✋ {n}',
+ cal_t:'Calage du clic',cal_d:'Le prof joue un son sur chaque temps. Tape le rond en même temps que ce que tu ENTENDS. Ton clic est coupé pendant le calage.',
+ tap:'TAP',taps_left:'Encore {n} taps',cal_res:'Décalage mesuré : {ms} ms',cal_irr:'Pas encore régulier, continue',cal_ok:'✅ Valider',cal_cancel:'Annuler',cal_wait:'Attends que le prof lance le métronome.',
+ cal_prof:'🎯 Calage : joue un kick sur chaque temps (casque sur les oreilles). {n}/{t} élèves calés.',cal_end:'Terminer le calage',
+ muted_by:'Le prof a coupé ton micro',solo_by:'{name} joue seul : ton micro est coupé',unsolo:'Tu peux rallumer ton micro',
+ sound:'🔊 Activer le son',listen:'🎧',listen_t:'Écouter seul (pour toi)',spot:'⭐',spot_t:'Mettre en avant pour tous',solo:'🎤',solo_t:'Seul au micro',lower:'✋↓',
+ no_room:'Il manque le lien de la salle Daily.',err_join:'Impossible d\'entrer : {e}',no_lib:'La bibliothèque vidéo n\'a pas chargé (connexion ?).',
+ net_bad:'Connexion faible',waiting_prof:'En attente du prof…',left:'Tu as quitté la salle.',rejoin:'Revenir',
+ hs_warn:'Mode beatbox sans casque = écho pour toute la classe.',prof_warn:'Prof : garde ton casque, sinon ton clic et les élèves repartent dans ton micro.',
+ delay:'décalage',beat:'temps',cam_err:'Caméra ou micro refusés : autorise-les dans le navigateur.'},
+en:{title:'Classroom',sub:'BBX Classroom prototype: video + lesson in one place.',name:'Your first name',room:'Room link (Daily)',
+ mode:'Mic sound',m_voix:'🗣 Speech',m_voix_d:'Echo and noise reduction. No headphones.',m_bbx:'🎧 Beatbox',m_bbx_d:'Raw, high-quality sound. Headphones required.',
+ join:'Join the room',joining:'Connecting…',prof:'Teacher',me:'you',chat:'Chat',send:'Send',leave:'Leave',
+ mute_all:'🔇 All',turn:'🎤 Next turn',spot_off:'⭐ End',cal_class:'🎯 Class sync',invite:'🔗 Student link',copied:'Student link copied',
+ start:'▶',stop:'■',cal:'🎯 Sync',click:'Click',hand:'Raise hand',hands:'✋ {n}',
+ cal_t:'Click sync',cal_d:'The teacher plays a sound on every beat. Tap the circle together with what you HEAR. Your click is off during sync.',
+ tap:'TAP',taps_left:'{n} more taps',cal_res:'Measured offset: {ms} ms',cal_irr:'Not steady yet, keep going',cal_ok:'✅ Confirm',cal_cancel:'Cancel',cal_wait:'Wait for the teacher to start the metronome.',
+ cal_prof:'🎯 Sync: play a kick on every beat (headphones on). {n}/{t} students synced.',cal_end:'End sync',
+ muted_by:'The teacher muted your mic',solo_by:'{name} plays solo: your mic is muted',unsolo:'You can turn your mic back on',
+ sound:'🔊 Enable sound',listen:'🎧',listen_t:'Listen alone (for you)',spot:'⭐',spot_t:'Spotlight for everyone',solo:'🎤',solo_t:'Solo on mic',lower:'✋↓',
+ no_room:'The Daily room link is missing.',err_join:'Could not join: {e}',no_lib:'The video library did not load (connection?).',
+ net_bad:'Weak connection',waiting_prof:'Waiting for the teacher…',left:'You left the room.',rejoin:'Rejoin',
+ hs_warn:'Beatbox mode without headphones = echo for the whole class.',prof_warn:'Teacher: keep your headphones on, or your click and the students go back into your mic.',
+ delay:'offset',beat:'beat',cam_err:'Camera or mic blocked: allow them in your browser.'},
+ja:{title:'教室',sub:'BBX Classroom 試作版：ビデオとレッスンを一か所で。',name:'名前',room:'ルームのリンク（Daily）',
+ mode:'マイクの音',m_voix:'🗣 会話',m_voix_d:'エコー・ノイズ除去あり。ヘッドホンなし。',m_bbx:'🎧 ビートボックス',m_bbx_d:'加工なしの高音質。ヘッドホン必須。',
+ join:'入室する',joining:'接続中…',prof:'先生',me:'あなた',chat:'チャット',send:'送信',leave:'退出',
+ mute_all:'🔇 全員',turn:'🎤 次の人',spot_off:'⭐ 終了',cal_class:'🎯 クラス同期',invite:'🔗 生徒用リンク',copied:'生徒用リンクをコピーしました',
+ start:'▶',stop:'■',cal:'🎯 同期',click:'クリック',hand:'手を挙げる',hands:'✋ {n}',
+ cal_t:'クリックの同期',cal_d:'先生が毎拍に音を出します。聞こえた音に合わせて円をタップ。同期中はクリックが止まります。',
+ tap:'TAP',taps_left:'あと {n} 回',cal_res:'ずれ：{ms} ms',cal_irr:'まだ安定していません。続けて',cal_ok:'✅ 決定',cal_cancel:'キャンセル',cal_wait:'先生がメトロノームを始めるまで待ってください。',
+ cal_prof:'🎯 同期：毎拍キックを鳴らしてください（ヘッドホン着用）。{n}/{t} 人同期済み。',cal_end:'同期を終了',
+ muted_by:'先生があなたのマイクをオフにしました',solo_by:'{name} のソロ：マイクはオフです',unsolo:'マイクをオンに戻せます',
+ sound:'🔊 音声をオンにする',listen:'🎧',listen_t:'一人だけ聞く（自分のみ）',spot:'⭐',spot_t:'全員に大きく表示',solo:'🎤',solo_t:'ソロ',lower:'✋↓',
+ no_room:'Daily のルームリンクがありません。',err_join:'入室できません：{e}',no_lib:'ビデオライブラリを読み込めません（接続？）。',
+ net_bad:'接続が弱い',waiting_prof:'先生を待っています…',left:'退出しました。',rejoin:'戻る',
+ hs_warn:'ヘッドホンなしのビートボックスモード＝クラス全体にエコー。',prof_warn:'先生：ヘッドホンを着けてください。クリックや生徒の声がマイクに戻ります。',
+ delay:'ずれ',beat:'拍',cam_err:'カメラかマイクが拒否されました。ブラウザで許可してください。'}};
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let LANG=ls.get('bbx-lang',null)||((navigator.language||'fr').slice(0,2));if(!L[LANG])LANG='fr';
+const t=(k,o)=>{let s=(L[LANG][k]??L.fr[k]??k);if(o)for(const x in o)s=s.split('{'+x+'}').join(o[x]);return s};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nowMs=()=>performance.timeOrigin+performance.now();
+const Q=new URLSearchParams(location.search);
+const IS_PROF=Q.has('prof');
+const TAP_ADV=30;           // on tape en moyenne ~30 ms en avance sur ce qu'on entend
+const S={call:null,me:null,profId:null,mode:ls.get('bbx-salle-mode','voix'),mic:true,cam:true,hand:false,spot:null,
+  metro:{on:false,bpm:90,t0:0},nextK:0,off:0,syncs:[],delay:ls.get('bbx-salle-delay',null),clickOn:true,clickVol:.5,
+  calOn:false,calTaps:[],calAdj:0,calRes:null,classCal:false,calId:0,calDone:0,joined:false,listen:null,turnIdx:-1,mutedBy:null,net:'good',unread:0,order:[]};
+let ac=null;
+const tiles={};      // id -> {el,video,vt,at,an,buf,lvEl}
+const auds={};       // id -> <audio>
+
+function toast(m,ms=2600){const e=$('#toast');e.textContent=m;e.classList.remove('hide');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add('hide'),ms)}
+function applyT(root=document){root.querySelectorAll('[data-t]').forEach(e=>e.textContent=t(e.dataset.t))}
+
+/* ---------------- Accueil ---------------- */
+let prevStream=null,prevRaf=0;
+function audioCons(){return S.mode==='bbx'?{echoCancellation:false,noiseSuppression:false,autoGainControl:false}:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}
+function lobby(err){
+  const room=Q.get('room')||ls.get('bbx-room','');
+  $('#lobby').innerHTML=`<div class="card">
+   <div class="langs">${['fr','en','ja'].map(l=>`<button data-lang="${l}" class="${l===LANG?'on':''}">${l.toUpperCase()}</button>`).join('')}</div>
+   <h1>🎤 ${t('title')}${IS_PROF?` · ${t('prof')}`:''}</h1><p class="sub">${t('sub')}</p>
+   <div class="prev"><video id="pv" playsinline autoplay muted></video><div class="lv"><i id="plv"></i></div></div>
+   <label>${t('name')}</label><input id="nm" maxlength="24" value="${esc(ls.get('bbx-salle-nom',''))}">
+   ${(!Q.get('room')||IS_PROF)?`<label>${t('room')}</label><input id="rm" placeholder="https://xxx.daily.co/cours" value="${esc(room)}">`:''}
+   <label>${t('mode')}</label>
+   <div class="modes"><button data-mode="voix" class="${S.mode==='voix'?'sel':''}">${t('m_voix')}<small>${t('m_voix_d')}</small></button>
+   <button data-mode="bbx" class="${S.mode==='bbx'?'sel':''}">${t('m_bbx')}<small>${t('m_bbx_d')}</small></button></div>
+   ${IS_PROF?`<div class="warn">${t('prof_warn')}</div>`:''}
+   <button class="big" id="go">${t('join')}</button>
+   ${err?`<div class="err">${esc(err)}</div>`:''}</div>`;
+  $('#lobby').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.lang){LANG=b.dataset.lang;ls.set('bbx-lang',LANG);document.documentElement.lang=LANG;stopPrev();lobby();}
+    else if(b.dataset.mode){S.mode=b.dataset.mode;ls.set('bbx-salle-mode',S.mode);$('#lobby').querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('sel',x===b));startPrev();}
+    else if(b.id==='go')join();};
+  startPrev();
+}
+async function startPrev(){
+  stopPrev();
+  try{prevStream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:audioCons()});}
+  catch(e){try{prevStream=await navigator.mediaDevices.getUserMedia({audio:audioCons()});}catch(e2){prevStream=null;}}
+  if(!prevStream){const s=$('#lobby .sub');if(s)s.insertAdjacentHTML('afterend',`<div class="err">${t('cam_err')}</div>`);return;}
+  const v=$('#pv');if(v)v.srcObject=prevStream;
+  const a=prevStream.getAudioTracks()[0];if(!a)return;
+  const c=new (window.AudioContext||window.webkitAudioContext)();const an=c.createAnalyser();an.fftSize=512;
+  c.createMediaStreamSource(new MediaStream([a])).connect(an);const buf=new Float32Array(512);
+  const loop=()=>{an.getFloatTimeDomainData(buf);let m=0;for(const x of buf)m=Math.max(m,Math.abs(x));const el=$('#plv');if(el)el.style.width=Math.min(100,m*140)+'%';prevRaf=requestAnimationFrame(loop)};loop();
+  prevStream._ctx=c;
+}
+function stopPrev(){cancelAnimationFrame(prevRaf);if(prevStream){prevStream.getTracks().forEach(x=>x.stop());try{prevStream._ctx.close()}catch(e){}}prevStream=null}
+
+/* ---------------- Connexion ---------------- */
+async function join(){
+  const name=($('#nm').value||'').trim()||'?';ls.set('bbx-salle-nom',name);
+  const rm=$('#rm');const room=(rm?rm.value.trim():Q.get('room'))||'';
+  if(!room)return lobby(t('no_room'));
+  if(!window.Daily&&!window.DailyIframe)return lobby(t('no_lib'));
+  ls.set('bbx-room',room);S.room=room;S.name=name;
+  $('#go').textContent=t('joining');$('#go').disabled=true;
+  stopPrev();
+  ac=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});try{await ac.resume()}catch(e){}
+  const D=window.Daily||window.DailyIframe;
+  const call=D.createCallObject({
+    dailyConfig:{micAudioMode:{bitrate:128000,stereo:false}},
+    inputSettings:{audio:{settings:audioCons()},video:{settings:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:24}}}},
+    subscribeToTracksAutomatically:true});
+  S.call=call;
+  call.on('participant-joined',refresh).on('participant-updated',refresh).on('participant-left',e=>{dropTile(e.participant.session_id);refresh()})
+      .on('track-started',refresh).on('track-stopped',refresh)
+      .on('app-message',onMsg)
+      .on('network-quality-change',e=>{const n=e.networkState||(e.threshold==='good'?'good':'bad');if(n!==S.net){S.net=n;pushUser();refresh()}})
+      .on('error',e=>{if(S.joined)leaveUI(t('err_join',{e:(e&&e.errorMsg)||'?'}))})
+      .on('left-meeting',()=>{});
+  try{
+    await call.join({url:room,userName:name,userData:userData()});
+  }catch(e){S.call=null;try{call.destroy()}catch(_){};return lobby(t('err_join',{e:(e&&(e.errorMsg||e.message))||String(e)}));}
+  S.me=call.participants().local.session_id;S.joined=true;
+  if(IS_PROF){try{await call.setNetworkTopology({topology:'sfu'})}catch(e){}}  // SFU = son 128 kbps même à 2
+  pushUser();
+  $('#lobby').classList.add('hide');$('#room').classList.remove('hide');
+  chrome();refresh();
+  setInterval(sched,25);levels();
+  setInterval(()=>{if(!IS_PROF)syncClock(2)},20000);
+}
+function userData(){return{r:IS_PROF?'p':'e',mode:S.mode,hand:S.hand,cal:S.delay,calId:S.calDone,net:S.net,
+  st:IS_PROF?{m:[S.metro.on?1:0,S.metro.bpm,Math.round(S.metro.t0)],spot:S.spot,cal:S.classCal?1:0}:undefined}}
+let pushT=0;
+function pushUser(){if(!S.call)return;clearTimeout(pushT);pushT=setTimeout(()=>{try{S.call.setUserData(userData())}catch(e){}},120)}
+function send(data,to='*'){try{S.call.sendAppMessage(data,to)}catch(e){}}
+
+/* ---------------- Participants & tuiles ---------------- */
+function parts(){if(!S.call)return[];const P=S.call.participants();return Object.values(P).map(p=>({...p,id:p.local?S.me:p.session_id}))}
+function refresh(){
+  if(!S.call)return;
+  const ps=parts();
+  const prof=ps.find(p=>p.userData&&p.userData.r==='p');
+  const was=S.profId;S.profId=prof?prof.id:null;
+  if(!IS_PROF&&S.profId&&S.profId!==was)syncClock(6);
+  if(!IS_PROF&&prof&&prof.userData.st)applyProf(prof.userData.st);
+  for(const p of ps){if(!S.order.includes(p.id))S.order.push(p.id)}
+  S.order=S.order.filter(id=>ps.some(p=>p.id===id));
+  for(const p of ps)upTile(p);
+  layout(ps);chrome();
+}
+function tileOf(p){
+  let T=tiles[p.id];if(T)return T;
+  const el=document.createElement('div');el.className='tile'+(p.local?' me':'');el.dataset.id=p.id;
+  el.innerHTML='<video playsinline autoplay muted></video><div class="ph"></div><div class="lv"><i></i></div><div class="tb"></div><div class="nm"></div>';
+  T=tiles[p.id]={el,video:el.querySelector('video'),lvEl:el.querySelector('.lv i'),vt:null,at:null};
+  return T;
+}
+function dropTile(id){const T=tiles[id];if(T){T.el.remove();delete tiles[id]}const a=auds[id];if(a){a.srcObject=null;a.remove();delete auds[id]}}
+function track(p,k){const x=p.tracks&&p.tracks[k];return x&&x.state==='playable'?x.persistentTrack:null}
+function upTile(p){
+  const T=tileOf(p),u=p.userData||{};
+  const vt=track(p,'video');
+  if(T.vt!==vt){T.vt=vt;T.video.srcObject=vt?new MediaStream([vt]):null;if(vt)T.video.play().catch(()=>{})}
+  T.el.classList.toggle('hasv',!!vt);
+  const at=p.local?(p.tracks&&p.tracks.audio&&p.tracks.audio.persistentTrack)||null:track(p,'audio');
+  if(T.at!==at){T.at=at;T.an=null;
+    if(at&&ac){try{const an=ac.createAnalyser();an.fftSize=512;ac.createMediaStreamSource(new MediaStream([at])).connect(an);T.an=an;T.buf=new Float32Array(512)}catch(e){}}
+    if(!p.local){let a=auds[p.id];if(!a){a=auds[p.id]=document.createElement('audio');a.autoplay=true;a.setAttribute('playsinline','');$('#audios').appendChild(a)}
+      a.srcObject=at?new MediaStream([at]):null;if(at)a.play().catch(()=>needUnlock());}
+  }
+  if(auds[p.id])auds[p.id].muted=!!(S.listen&&S.listen!==p.id);
+  const nm=(p.user_name||'?');
+  T.el.querySelector('.ph').textContent=nm.slice(0,1).toUpperCase();
+  const isP=u.r==='p',bits=[];
+  bits.push(`<span>${isP?'🎓 ':''}${esc(nm)}${p.local?' ('+t('me')+')':''}</span>`);
+  if(!p.audio)bits.push('<span>🔇</span>');
+  if(u.mode==='bbx')bits.push('<span>🎧</span>');
+  if(u.hand)bits.push('<span>✋</span>');
+  if(IS_PROF&&!isP&&u.cal!=null)bits.push(`<span>🎯 ${u.cal} ms</span>`);
+  if(u.net&&u.net!=='good')bits.push(`<span title="${t('net_bad')}">📶${u.net==='bad'?'❗':''}</span>`);
+  T.el.querySelector('.nm').innerHTML=bits.join('');
+  T.el.querySelector('.tb').innerHTML=(IS_PROF&&!p.local)?
+    `<button data-act="spot" title="${t('spot_t')}" class="${S.spot===p.id?'on':''}">${t('spot')}</button><button data-act="solo" title="${t('solo_t')}">${t('solo')}</button><button data-act="listen" title="${t('listen_t')}" class="${S.listen===p.id?'on':''}">${t('listen')}</button>${u.hand?`<button data-act="lower">${t('lower')}</button>`:''}`:'';
+  T.el.classList.toggle('spot',S.spot===p.id);
+}
+function layout(ps){
+  const stage=$('#stage'),strip=$('#strip');
+  let big=null;
+  if(S.spot&&tiles[S.spot])big=S.spot;
+  else if(!IS_PROF&&S.profId&&tiles[S.profId])big=S.profId;
+  const want=[];
+  if(big){stage.classList.remove('grid');want.push([stage,[big]]);
+    want.push([strip,S.order.filter(id=>id!==big&&tiles[id])]);}
+  else if(IS_PROF){const others=S.order.filter(id=>id!==S.me&&tiles[id]);
+    stage.classList.add('grid');want.push([stage,others.length?others:[S.me]]);want.push([strip,others.length?[S.me]:[]]);}
+  else{stage.classList.remove('grid');want.push([stage,[S.me]]);want.push([strip,S.order.filter(id=>id!==S.me&&tiles[id])]);}
+  for(const [box,ids] of want){
+    const cur=[...box.children].map(c=>c.dataset.id);
+    if(cur.join()!==ids.join()){ids.forEach(id=>{box.appendChild(tiles[id].el);const v=tiles[id].video;if(v.srcObject)v.play().catch(()=>{})});}
+    [...box.children].forEach(c=>{if(!ids.includes(c.dataset.id))c.remove()});
+  }
+  if(!IS_PROF&&!S.profId&&!S.spot){$('#banner').textContent=t('waiting_prof');$('#banner').classList.remove('hide')}
+  else if(!S.classCal||!IS_PROF)$('#banner').classList.add('hide');
+  // vignettes en basse qualité, grande image en haute qualité (économise le réseau des téléphones)
+  try{const rs={};for(const p of ps){if(p.local)continue;rs[p.id]={video:{layer:(p.id===big||(IS_PROF&&!big))?2:0}}}const j=JSON.stringify(rs);if(j!==layout.rs&&j!=='{}'){layout.rs=j;S.call.updateReceiveSettings(rs)}}catch(e){}
+}
+function levels(){
+  let last=0;const loop=ts=>{requestAnimationFrame(loop);if(ts-last<70)return;last=ts;
+    for(const id in tiles){const T=tiles[id];if(!T.an)continue;T.an.getFloatTimeDomainData(T.buf);let m=0;for(const x of T.buf)m=Math.max(m,Math.abs(x));
+      T.lvEl.style.height=Math.min(100,m*150)+'%';T.el.classList.toggle('talk',m>.08)}};requestAnimationFrame(loop);
+}
+function needUnlock(){const b=$('#unlock');b.textContent=t('sound');b.classList.remove('hide');
+  b.onclick=()=>{try{ac.resume()}catch(e){}Object.values(auds).forEach(a=>a.play().catch(()=>{}));b.classList.add('hide')}}
+
+/* ---------------- Barres de commandes ---------------- */
+function chrome(){
+  const ps=parts(),hands=ps.filter(p=>p.userData&&p.userData.hand&&!p.local).length;
+  const m=S.metro;
+  const metro=IS_PROF?
+    `<div class="metro"><button data-a="bpm-">−</button><b>${m.bpm} BPM</b><button data-a="bpm+">+</button><button data-a="metro" class="${m.on?'on':''}">${m.on?t('stop'):t('start')}</button><div class="dots" id="dots"><i></i><i></i><i></i><i></i></div></div>`:
+    `<div class="metro"><b>${m.on?m.bpm+' BPM':'—'}</b><div class="dots" id="dots"><i></i><i></i><i></i><i></i></div><button data-a="click" class="${S.clickOn?'on':''}" title="${t('click')}">🔔</button></div>`;
+  $('#top').innerHTML=`<div class="logo">🎤 BBX ${t('title')}</div>${metro}`+
+    (IS_PROF?`${hands?`<span id="hands">${t('hands',{n:hands})}</span>`:''}<button data-a="muteall">${t('mute_all')}</button><button data-a="turn">${t('turn')}</button>${S.spot?`<button data-a="spotoff" class="on">${t('spot_off')}</button>`:''}<button data-a="classcal" class="${S.classCal?'on':''}">${t('cal_class')}</button><button data-a="invite">${t('invite')}</button>`:
+    `<button data-a="cal">${t('cal')}${S.delay!=null?` · ${S.delay} ms`:''}</button>`);
+  const fr=['👏','🔥','😮','💯'];
+  $('#bar').innerHTML=`<button data-a="mic" class="${S.mic?'':'off'}">${S.mic?'🎤':'🔇'}</button>
+   <button data-a="cam" class="${S.cam?'':'off'}">${S.cam?'📷':'🚫'}</button>
+   <button data-a="mode" class="${S.mode==='bbx'?'on':''}">${S.mode==='bbx'?'🎧':'🗣'} <span class="lbl">${S.mode==='bbx'?t('m_bbx').slice(3):t('m_voix').slice(3)}</span></button>
+   ${IS_PROF?'':`<button data-a="hand" class="${S.hand?'on':''}" title="${t('hand')}">✋</button>`}
+   <span id="rx">${fr.map(x=>`<button data-rx="${x}">${x}</button>`).join('')}</span>
+   <button data-a="chat">💬${S.unread?`<span class="badge">${S.unread}</span>`:''}</button>
+   <button data-a="leave" class="off">🚪</button>`;
+  if(IS_PROF&&S.classCal){const studs=ps.filter(p=>!(p.userData&&p.userData.r==='p'));const ok=studs.filter(p=>p.userData&&p.userData.calId===S.calId).length;
+    $('#banner').innerHTML=`${t('cal_prof',{n:ok,t:studs.length})} <button data-a="classcal">${t('cal_end')}</button>`;$('#banner').classList.remove('hide');}
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b||!S.call)return;
+  const tile=b.closest('.tile'),id=tile&&tile.dataset.id;
+  if(b.dataset.rx){send({k:'re',e:b.dataset.rx});showReact(S.me,b.dataset.rx);return}
+  if(b.dataset.act&&id){const a=b.dataset.act;
+    if(a==='spot'){setSpot(S.spot===id?null:id)}
+    else if(a==='solo'){setSpot(id);send({k:'solo',id})}
+    else if(a==='listen'){S.listen=S.listen===id?null:id}
+    else if(a==='lower'){send({k:'lower',id})}
+    refresh();return}
+  switch(b.dataset.a){
+    case 'mic':S.mic=!S.mic;S.call.setLocalAudio(S.mic);S.mutedBy=null;break;
+    case 'cam':S.cam=!S.cam;S.call.setLocalVideo(S.cam);break;
+    case 'mode':S.mode=S.mode==='bbx'?'voix':'bbx';ls.set('bbx-salle-mode',S.mode);
+      try{await S.call.updateInputSettings({audio:{settings:audioCons()}})}catch(err){}
+      if(S.mode==='bbx')toast(t('hs_warn'));pushUser();break;
+    case 'hand':S.hand=!S.hand;pushUser();break;
+    case 'chat':{const c=$('#chat');c.classList.toggle('hide');if(!c.classList.contains('hide')){S.unread=0;$('#chati').focus()}break}
+    case 'leave':leaveUI(t('left'));return;
+    case 'click':S.clickOn=!S.clickOn;break;
+    case 'cal':openCal();return;
+    case 'bpm-':case 'bpm+':{S.metro.bpm=Math.max(40,Math.min(200,S.metro.bpm+(b.dataset.a==='bpm+'?5:-5)));if(S.metro.on)S.metro.t0=nowMs()+400;S.nextK=0;pushUser();break}
+    case 'metro':S.metro.on=!S.metro.on;S.metro.t0=nowMs()+400;S.nextK=0;pushUser();break;
+    case 'muteall':send({k:'mute'});break;
+    case 'turn':nextTurn();break;
+    case 'spotoff':setSpot(null);send({k:'unsolo'});break;
+    case 'classcal':S.classCal=!S.classCal;if(S.classCal){S.calId=Date.now()%1e9;if(!S.metro.on){S.metro.on=true;S.metro.t0=nowMs()+600;S.nextK=0}send({k:'cal',id:S.calId})}pushUser();break;
+    case 'invite':{const u=location.origin+location.pathname+'?room='+encodeURIComponent(S.room);try{await navigator.clipboard.writeText(u);toast(t('copied'))}catch(err){prompt('',u)}return}
+  }
+  refresh();
+});
+$('#chatx').onclick=()=>$('#chat').classList.add('hide');
+$('#chatf').onsubmit=e=>{e.preventDefault();const v=$('#chati').value.trim();if(!v)return;send({k:'chat',m:v});addMsg(S.name,v);$('#chati').value=''};
+function addMsg(who,m){const box=$('#msgs');box.insertAdjacentHTML('beforeend',`<p><b>${esc(who)}</b> ${esc(m)}</p>`);box.scrollTop=1e9;
+  if($('#chat').classList.contains('hide')){S.unread++;chrome()}}
+function setSpot(id){S.spot=id;pushUser();refresh()}
+function nextTurn(){const st=S.order.filter(id=>id!==S.me&&tiles[id]);if(!st.length)return;S.turnIdx=(S.turnIdx+1)%st.length;const id=st[S.turnIdx];setSpot(id);send({k:'solo',id})}
+function showReact(id,e){const T=tiles[id];const host=(T&&T.el.isConnected)?T.el:$('#stage');const s=document.createElement('div');s.className='react';s.textContent=e;
+  s.style.left=(20+Math.random()*50)+'%';s.style.bottom='10px';host.appendChild(s);setTimeout(()=>s.remove(),2300)}
+function nameOf(id){const p=parts().find(x=>x.id===id);return p?p.user_name:'?'}
+
+/* ---------------- Messages ---------------- */
+function onMsg(ev){
+  const d=ev.data||{},from=ev.fromId,fromProf=from===S.profId;
+  switch(d.k){
+    case 'ping':if(IS_PROF)send({k:'pong',t1:d.t1,tp:nowMs()},from);break;
+    case 'pong':onPong(d);break;
+    case 're':showReact(from,d.e);break;
+    case 'chat':addMsg(nameOf(from),d.m);break;
+    case 'mute':if(fromProf&&S.mic){S.mic=false;S.call.setLocalAudio(false);S.mutedBy='prof';toast(t('muted_by'));chrome()}break;
+    case 'solo':if(fromProf){if(d.id!==S.me&&S.mic){S.mic=false;S.call.setLocalAudio(false);S.mutedBy='solo';toast(t('solo_by',{name:nameOf(d.id)}))}
+      else if(d.id===S.me&&!S.mic&&S.mutedBy==='solo'){S.mic=true;S.call.setLocalAudio(true);S.mutedBy=null}chrome()}break;
+    case 'unsolo':if(fromProf&&S.mutedBy==='solo'){S.mic=true;S.call.setLocalAudio(true);S.mutedBy=null;toast(t('unsolo'));chrome()}break;
+    case 'lower':if(fromProf&&d.id===S.me){S.hand=false;pushUser();chrome()}break;
+    case 'cal':if(fromProf&&!IS_PROF){S.calFor=d.id||0;openCal()}break;
+  }
+}
+function applyProf(st){
+  const m=st.m||[0,90,0];const on=!!m[0];
+  if(on!==S.metro.on||m[1]!==S.metro.bpm||m[2]!==S.metro.t0){S.metro={on,bpm:m[1],t0:m[2]};S.nextK=0;if(S.calOn)S.calTaps=[];}
+  if((st.spot||null)!==S.spot)S.spot=st.spot||null;
+}
+
+/* ---------------- Horloge commune (prof = référence) ---------------- */
+function syncClock(n){if(!S.profId||IS_PROF)return;for(let i=0;i<n;i++)setTimeout(()=>send({k:'ping',t1:nowMs()},S.profId),i*250)}
+function onPong(d){const t2=nowMs(),rtt=t2-d.t1;if(rtt<0||rtt>3000)return;
+  S.syncs.push({rtt,off:d.tp-(d.t1+t2)/2,at:t2});S.syncs=S.syncs.filter(s=>t2-s.at<120000).slice(-12);
+  const best=S.syncs.reduce((a,b)=>b.rtt<a.rtt?b:a);S.off=best.off;}
+
+/* ---------------- Métronome local, calé sur le prof ----------------
+   temps k (horloge du prof) = t0 + k·P
+   chez l'élève : t0 + k·P − décalage d'horloge + délai audio mesuré au tap
+   → le clic tombe en même temps que le son du prof qui arrive par la vidéo */
+function curDelay(){return IS_PROF?0:(S.delay!=null?S.delay:150)}
+function sched(){
+  const m=S.metro;if(!m.on||!ac)return;
+  const P=60000/m.bpm,base=m.t0-(IS_PROF?0:S.off)+curDelay(),now=nowMs();
+  let k=Math.max(S.nextK,Math.ceil((now-base)/P));
+  for(;;k++){const tl=base+k*P;if(tl>now+180)break;
+    const mute=!S.clickOn||(S.calOn&&!IS_PROF);
+    if(!mute)click(tl,k%4===0);
+    beatUI(tl,k);}
+  S.nextK=k;
+}
+function click(tl,acc){
+  const when=ac.currentTime+Math.max(0,(tl-nowMs())/1000);
+  const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=acc?1760:1180;
+  g.gain.setValueAtTime(0,when);g.gain.linearRampToValueAtTime(S.clickVol*(acc?.5:.32),when+.002);g.gain.exponentialRampToValueAtTime(.0001,when+.05);
+  o.connect(g).connect(ac.destination);o.start(when);o.stop(when+.06);
+}
+function beatUI(tl,k){setTimeout(()=>{const d=$('#dots');if(!d)return;[...d.children].forEach((x,i)=>{x.classList.toggle('hit',i===((k%4)+4)%4);x.classList.toggle('a',k%4===0)});
+  setTimeout(()=>{d&&[...d.children].forEach(x=>x.classList.remove('hit'))},90)},Math.max(0,tl-nowMs()))}
+
+/* ---------------- Calage au tap ---------------- */
+function openCal(){
+  S.calOn=true;S.calTaps=[];S.calAdj=0;S.calRes=null;if(!S.syncs.length)syncClock(6);
+  const box=$('#calm');box.classList.remove('hide');
+  box.innerHTML=`<div class="card"><h1>${t('cal_t')}</h1><p class="sub">${t('cal_d')}</p>
+   <div id="pad">${t('tap')}</div><div class="calres" id="calr"></div>
+   <div class="row"><button data-c="-">−10 ms</button><button data-c="+">+10 ms</button></div>
+   <div class="row"><button data-c="x">${t('cal_cancel')}</button><button data-c="ok" id="calok" class="on" disabled>${t('cal_ok')}</button></div></div>`;
+  const pad=$('#pad');
+  const hit=e=>{e.preventDefault();pad.classList.add('hit');setTimeout(()=>pad.classList.remove('hit'),80);calTap(nowMs())};
+  pad.addEventListener('pointerdown',hit);
+  box.onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;const c=b.dataset.c;
+    if(c==='x')closeCal();
+    else if(c==='ok'){S.delay=S.calRes;ls.set('bbx-salle-delay',S.delay);S.calDone=S.calFor||0;S.nextK=0;pushUser();closeCal();refresh()}
+    else{S.calAdj+=c==='+'?10:-10;showCal()}};
+  calKey=e=>{if(e.code==='Space'){hit(e)}};document.addEventListener('keydown',calKey);
+  showCal();
+}
+let calKey=null;
+function closeCal(){S.calOn=false;$('#calm').classList.add('hide');if(calKey)document.removeEventListener('keydown',calKey);S.nextK=0}
+function calTap(tm){
+  const m=S.metro;if(!m.on||!S.syncs.length){showCal();return}
+  const P=60000/m.bpm,base=m.t0-S.off;
+  let r=((tm-base)%P+P)%P;if(r>.8*P)r-=P;      // délai attendu entre -20 % et +80 % d'un temps
+  S.calTaps.push(r);S.calTaps=S.calTaps.slice(-12);showCal();
+}
+const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):0};
+function showCal(){
+  const r=$('#calr'),ok=$('#calok');if(!r)return;
+  if(!S.metro.on||!S.syncs.length){r.textContent=t('cal_wait');ok.disabled=true;return}
+  const n=S.calTaps.length;
+  if(n<8){r.textContent=t('taps_left',{n:8-n});if(S.calRes==null)ok.disabled=true;return}
+  const tk=S.calTaps.slice(-8),md=med(tk),mad=med(tk.map(x=>Math.abs(x-md)));
+  if(mad>45){r.textContent=t('cal_irr');ok.disabled=true;return}
+  S.calRes=Math.max(0,Math.round(md+TAP_ADV)+S.calAdj);
+  r.textContent=t('cal_res',{ms:S.calRes})+(S.calAdj?` (${S.calAdj>0?'+':''}${S.calAdj})`:'');ok.disabled=false;
+}
+
+/* ---------------- Sortie ---------------- */
+async function leaveUI(msg){
+  if(S.call){try{await S.call.leave()}catch(e){}try{S.call.destroy()}catch(e){}S.call=null}
+  Object.keys(tiles).forEach(dropTile);S.metro.on=false;
+  $('#room').classList.add('hide');$('#calm').classList.add('hide');
+  $('#end').classList.remove('hide');
+  $('#end').innerHTML=`<div class="card"><h1>👋</h1><p>${esc(msg)}</p><button class="big" onclick="location.reload()">${t('rejoin')}</button></div>`;
+}
+applyT();lobby();
+</script>
+</body>
+</html>
