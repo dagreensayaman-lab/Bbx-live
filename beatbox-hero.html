@@ -56,7 +56,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <!-- ================= ACCUEIL ================= -->
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 12 · 19 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 13 · 19 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -93,6 +93,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
     <div class="row"><label><input type="checkbox" id="oSend"> Envoyer automatiquement mes parties pour analyse</label></div>
     <div class="row" style="margin-top:6px"><label>Ton prénom <input id="oName" maxlength="30" style="width:160px"></label></div>
     <div class="row" style="margin-top:6px"><label>Code d'analyse <input id="oCode" style="width:250px;font-size:.8rem" spellcheck="false" autocapitalize="off"></label><button id="bCode" style="padding:4px 10px">📋</button><button id="bSeeAdm" style="padding:4px 10px">📂 Mes parties</button></div>
+    <div class="row" style="margin-top:6px"><button id="bGoogle" class="b-cyan" style="padding:6px 12px">🔗 Lier à mon compte Google</button><span id="gSt" class="small muted"></span></div>
     <div class="small muted">Envoie le résultat et l'enregistrement de ton micro à la fin de chaque partie. Le code est secret : sur un autre appareil, colle le même pour tout retrouver au même endroit. Tu peux décocher à tout moment.</div>
   </div>
 
@@ -785,6 +786,7 @@ $('#oSend').checked = !!LS.get('bbx-hero-send', false); $('#oSend').onchange = e
 const newCode = () => { const a = new Uint8Array(20); crypto.getRandomValues(a); return Array.from(a, v => (v % 36).toString(36)).join(''); };
 const getCode = () => { let c = LS.get('bbx-hero-code', ''); if(!/^[a-z0-9]{24,60}$/.test(c)){ c = newCode() + newCode().slice(0, 6); LS.set('bbx-hero-code', c); } return c; };
 $('#oCode').value = getCode(); $('#oCode').onchange = e => { const c = e.target.value.trim().toLowerCase(); if(/^[a-z0-9]{24,60}$/.test(c)) LS.set('bbx-hero-code', c); else e.target.value = getCode(); };
+addEventListener('load', () => { gInit().catch(() => {}); });
 $('#bCode').onclick = async () => { try{ await navigator.clipboard.writeText(getCode()); $('#bCode').textContent = '✓'; }catch(e){ prompt('Copie ton code :', getCode()); } };
 $('#bSeeAdm').onclick = () => admInit();
 $('#oName').value = LS.get('bbx-hero-name', ''); $('#oName').oninput = e => LS.set('bbx-hero-name', e.target.value.slice(0, 30));
@@ -1052,8 +1054,24 @@ function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
   return { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:R.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
     onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) }; }
 /* ---------- envoi automatique vers Firebase (bbx-live) : hero/takes/{uid}/{id} + hero/audio/{uid}/{id}/{k} ---------- */
-const VERSION = 'v12', CH = 600000;
+const VERSION = 'v13', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
+/* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
+async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
+    const app = await fbApp(false), au = app.auth(), prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' });
+    if(!au.currentUser || au.currentUser.isAnonymous){
+      try{ await au.signInWithPopup(prov); }
+      catch(e){ if(/popup|operation-not-supported|cancelled/.test(e.code || '')){ LS.set('bbx-hero-gpend', 1); return au.signInWithRedirect(prov); } throw e; } }
+    await gSync(); }catch(e){ st.textContent = '⚠ ' + (e.message || e); } }
+async function gSync(){ const st = $('#gSt'), app = await fbApp(false), u = app.auth().currentUser; if(!u || u.isAnonymous){ gShow(); return; }
+  const ref = app.database().ref('comptes/' + u.uid + '/codeAnalyse'); let c = null;
+  try{ c = (await ref.once('value')).val(); }catch(e){ st.textContent = '⚠ Lecture du compte refusée : les règles Firebase « comptes » ne sont pas publiées.'; return; }
+  if(typeof c === 'string' && /^[a-z0-9]{24,60}$/.test(c)){ LS.set('bbx-hero-code', c); $('#oCode').value = c; }
+  else { try{ await ref.set(getCode()); }catch(e){ st.textContent = '⚠ Écriture refusée (règles « comptes »).'; return; } }
+  LS.set('bbx-hero-g', u.email || '1'); LS.set('bbx-hero-send', true); $('#oSend').checked = true; gShow(); }
+function gShow(){ const m = LS.get('bbx-hero-g', ''), st = $('#gSt'); if(st) st.textContent = m ? '✅ Lié à ' + m + ' — même code sur tous tes appareils' : 'Non lié'; }
+async function gInit(){ gShow(); $('#bGoogle').onclick = gLink;
+  if(LS.get('bbx-hero-gpend', false)){ LS.set('bbx-hero-gpend', 0); try{ const app = await fbApp(false); await app.auth().getRedirectResult(); await gSync(); }catch(e){ $('#gSt').textContent = '⚠ ' + (e.message || e); } } }
 async function fbApp(anon){ if(!window.firebase) throw new Error('Firebase non chargé (hors ligne ?)');
   const app = (firebase.apps || []).find(a => a.name === 'hero') || firebase.initializeApp(FB_CFG, 'hero'), au = app.auth();
   if(anon && !au.currentUser) await au.signInAnonymously(); return app; }
@@ -1063,7 +1081,7 @@ function sendMsg(R, html, cls){ R.stHtml = html; R.stCls = cls; const st = $('#s
 async function sendTake(){ const R = LASTRES; if(!R || R.sending) return; R.sending = true; sendMsg(R, '📤 Envoi pour analyse…', '');
   try{ const app = await fbApp(true), db = app.database(), id = R.id || (R.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5));
     const w = b64(HERO.toWav(R.x, R.sr)), n = Math.ceil(w.length / CH), withAudio = n <= 14;
-    const code = getCode(), take = Object.assign(takeObj(), { t:Date.now(), v:VERSION, source:'hero', who:String(LS.get('bbx-hero-name', '')).slice(0, 30), audioChunks:withAudio ? n : 0 });
+    const code = getCode(), take = Object.assign(takeObj(), { t:Date.now(), v:VERSION, source:'hero', acct:LS.get('bbx-hero-g', ''), who:String(LS.get('bbx-hero-name', '')).slice(0, 30), audioChunks:withAudio ? n : 0 });
     if(withAudio) for(let k = 0; k < n; k++) await db.ref('analyse/' + code + '/audio/' + id + '/' + k).set(w.slice(k * CH, (k + 1) * CH)); // audio d'abord : une prise visible = prise complète
     await db.ref('analyse/' + code + '/takes/' + id).set(take);
     sendMsg(R, '✅ Envoyé pour analyse' + (withAudio ? '' : ' (résultat seulement : prise trop longue pour l\'audio)'), 'ok');
