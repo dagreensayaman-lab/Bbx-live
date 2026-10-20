@@ -146,7 +146,7 @@ fr:{title:'Salle de cours',sub:'Prototype BBX Classroom : vidéo + cours au mêm
  cal_prof:'🎯 Calage : joue un kick sur chaque temps (casque sur les oreilles). {n}/{t} élèves calés.',cal_end:'Terminer le calage',
  muted_by:'Le prof a coupé ton micro',solo_by:'{name} joue seul : ton micro est coupé',unsolo:'Tu peux rallumer ton micro',
  sound:'🔊 Activer le son',listen:'🎧',listen_t:'Écouter seul (pour toi)',spot:'⭐',spot_t:'Mettre en avant pour tous',solo:'🎤',solo_t:'Seul au micro',lower:'✋↓',
- no_room:'Il manque le lien de la salle Daily.',err_join:'Impossible d\'entrer : {e}',no_lib:'La bibliothèque vidéo n\'a pas chargé (connexion ?).',
+ no_room:'Il manque le lien de la salle Daily.',bad_room:'Ce lien de salle ne va pas. Colle le lien de TA salle Daily (tableau de bord › Rooms), du type https://tonnom.daily.co/cours',err_join:'Impossible d\'entrer : {e}',no_lib:'La bibliothèque vidéo n\'a pas chargé (connexion ?).',
  net_bad:'Connexion faible',waiting_prof:'En attente du prof…',left:'Tu as quitté la salle.',rejoin:'Revenir',
  hs_warn:'Mode beatbox sans casque = écho pour toute la classe.',prof_warn:'Prof : garde ton casque, sinon ton clic et les élèves repartent dans ton micro.',
  delay:'décalage',beat:'temps',cam_err:'Caméra ou micro refusés : autorise-les dans le navigateur.'},
@@ -160,7 +160,7 @@ en:{title:'Classroom',sub:'BBX Classroom prototype: video + lesson in one place.
  cal_prof:'🎯 Sync: play a kick on every beat (headphones on). {n}/{t} students synced.',cal_end:'End sync',
  muted_by:'The teacher muted your mic',solo_by:'{name} plays solo: your mic is muted',unsolo:'You can turn your mic back on',
  sound:'🔊 Enable sound',listen:'🎧',listen_t:'Listen alone (for you)',spot:'⭐',spot_t:'Spotlight for everyone',solo:'🎤',solo_t:'Solo on mic',lower:'✋↓',
- no_room:'The Daily room link is missing.',err_join:'Could not join: {e}',no_lib:'The video library did not load (connection?).',
+ no_room:'The Daily room link is missing.',bad_room:'This room link is not valid. Paste YOUR Daily room link (dashboard › Rooms), like https://yourname.daily.co/class',err_join:'Could not join: {e}',no_lib:'The video library did not load (connection?).',
  net_bad:'Weak connection',waiting_prof:'Waiting for the teacher…',left:'You left the room.',rejoin:'Rejoin',
  hs_warn:'Beatbox mode without headphones = echo for the whole class.',prof_warn:'Teacher: keep your headphones on, or your click and the students go back into your mic.',
  delay:'offset',beat:'beat',cam_err:'Camera or mic blocked: allow them in your browser.'},
@@ -174,7 +174,7 @@ ja:{title:'教室',sub:'BBX Classroom 試作版：ビデオとレッスンを一
  cal_prof:'🎯 同期：毎拍キックを鳴らしてください（ヘッドホン着用）。{n}/{t} 人同期済み。',cal_end:'同期を終了',
  muted_by:'先生があなたのマイクをオフにしました',solo_by:'{name} のソロ：マイクはオフです',unsolo:'マイクをオンに戻せます',
  sound:'🔊 音声をオンにする',listen:'🎧',listen_t:'一人だけ聞く（自分のみ）',spot:'⭐',spot_t:'全員に大きく表示',solo:'🎤',solo_t:'ソロ',lower:'✋↓',
- no_room:'Daily のルームリンクがありません。',err_join:'入室できません：{e}',no_lib:'ビデオライブラリを読み込めません（接続？）。',
+ no_room:'Daily のルームリンクがありません。',bad_room:'ルームリンクが正しくありません。Daily のダッシュボード › Rooms からあなたのリンクを貼ってください（例：https://yourname.daily.co/class）',err_join:'入室できません：{e}',no_lib:'ビデオライブラリを読み込めません（接続？）。',
  net_bad:'接続が弱い',waiting_prof:'先生を待っています…',left:'退出しました。',rejoin:'戻る',
  hs_warn:'ヘッドホンなしのビートボックスモード＝クラス全体にエコー。',prof_warn:'先生：ヘッドホンを着けてください。クリックや生徒の声がマイクに戻ります。',
  delay:'ずれ',beat:'拍',cam_err:'カメラかマイクが拒否されました。ブラウザで許可してください。'}};
@@ -185,6 +185,9 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nowMs=()=>performance.timeOrigin+performance.now();
 const Q=new URLSearchParams(location.search);
+function normRoom(v){v=String(v||'').trim().replace(/\s+/g,'').replace(/\/+$/,'');if(!v)return '';
+  if(!/^https?:\/\//i.test(v))v='https://'+v;v=v.replace(/^http:/i,'https:');
+  try{const u=new URL(v);return 'https://'+u.hostname.toLowerCase()+u.pathname.replace(/\/+$/,'')}catch(e){return v}}
 const IS_PROF=Q.has('prof');
 const TAP_ADV=30;           // on tape en moyenne ~30 ms en avance sur ce qu'on entend
 const S={call:null,me:null,profId:null,mode:ls.get('bbx-salle-mode','voix'),mic:true,cam:true,hand:false,spot:null,
@@ -201,7 +204,7 @@ function applyT(root=document){root.querySelectorAll('[data-t]').forEach(e=>e.te
 let prevStream=null,prevRaf=0;
 function audioCons(){return S.mode==='bbx'?{echoCancellation:false,noiseSuppression:false,autoGainControl:false}:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}
 function lobby(err){
-  const room=Q.get('room')||ls.get('bbx-room','');
+  const room=S.typedRoom!=null?S.typedRoom:(Q.get('room')||ls.get('bbx-room',''));
   $('#lobby').innerHTML=`<div class="card">
    <div class="langs">${['fr','en','ja'].map(l=>`<button data-lang="${l}" class="${l===LANG?'on':''}">${l.toUpperCase()}</button>`).join('')}</div>
    <h1>🎤 ${t('title')}${IS_PROF?` · ${t('prof')}`:''}</h1><p class="sub">${t('sub')}</p>
@@ -237,8 +240,11 @@ function stopPrev(){cancelAnimationFrame(prevRaf);if(prevStream){prevStream.getT
 /* ---------------- Connexion ---------------- */
 async function join(){
   const name=($('#nm').value||'').trim()||'?';ls.set('bbx-salle-nom',name);
-  const rm=$('#rm');const room=(rm?rm.value.trim():Q.get('room'))||'';
+  const rm=$('#rm');if(rm)S.typedRoom=rm.value;
+  const room=normRoom(rm?rm.value:Q.get('room'));
   if(!room)return lobby(t('no_room'));
+  if(/TONDOMAINE|xxx\.daily/i.test(room)||!/^https:\/\/[a-z0-9-]+\.daily\.co\/[A-Za-z0-9_-]+$/.test(room))return lobby(t('bad_room'));
+  if(Q.get('room')!==room){Q.set('room',room);try{history.replaceState(null,'',location.pathname+'?'+(IS_PROF?'prof&':'')+'room='+encodeURIComponent(room))}catch(e){}}
   if(!window.Daily&&!window.DailyIframe)return lobby(t('no_lib'));
   ls.set('bbx-room',room);S.room=room;S.name=name;
   $('#go').textContent=t('joining');$('#go').disabled=true;
