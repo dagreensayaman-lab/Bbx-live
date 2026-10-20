@@ -767,6 +767,46 @@ function vu(p, a){ const e = p.err; if(!e || !a || !a.cells) return null; const 
   if(RY.famOf(e.son) === RY.famOf(p.tok.split(' ')[e.cell - 1])) return c.f > 0 ? true : 'dur'; // deux sons de la même famille : l'appli ne sait pas encore les séparer
   return c.f > 0; }
 
+/* ---------- Liaison compte Google + envoi automatique pour analyse (même code et même compte que BBX Hero) ---------- */
+const LAB_V = 'labo-1', LAB_CH = 600000;
+function labCode(){ let c = ls.get('bbx-hero-code', ''); if(!/^[a-z0-9]{24,60}$/.test(c)){ const a = new Uint8Array(26); crypto.getRandomValues(a); c = Array.from(a, v => 'abcdefghijklmnopqrstuvwxyz0123456789'[v % 36]).join(''); ls.set('bbx-hero-code', c); } return c; }
+async function labFB(anon){ for(const m of ['app', 'auth', 'database']) if(!document.querySelector(`script[src*="firebase-${m}-compat"]`)) await loadJS(`https://www.gstatic.com/firebasejs/10.12.2/firebase-${m}-compat.js`);
+  const app = (firebase.apps || []).find(a => a.name === 'hero') || firebase.initializeApp(FB_CFG, 'hero'), au = app.auth();
+  await new Promise(ok => { const un = au.onAuthStateChanged(() => { un(); ok(); }); });
+  if(anon && !au.currentUser) await au.signInAnonymously(); return app; }
+function labShow(){ const m = ls.get('bbx-hero-g', ''), s = $('#labGst'); if(s) s.textContent = m ? '✅ Lié à ' + m + ' — même code que BBX Hero' : 'Non lié'; }
+async function labSync(){ const app = await labFB(false), u = app.auth().currentUser; if(!u || u.isAnonymous){ labShow(); return; }
+  const ref = app.database().ref('comptes/' + u.uid + '/codeAnalyse'); let c = null;
+  try{ c = (await ref.once('value')).val(); }catch(e){ $('#labGst').textContent = '⚠ Lecture du compte refusée (règles « comptes » non publiées).'; return; }
+  if(typeof c === 'string' && /^[a-z0-9]{24,60}$/.test(c)) ls.set('bbx-hero-code', c); else { try{ await ref.set(labCode()); }catch(e){ $('#labGst').textContent = '⚠ Écriture refusée (règles « comptes »).'; return; } }
+  ls.set('bbx-hero-g', u.email || '1'); ls.set('bbx-hero-send', true); $('#labSend').checked = true; labShow(); }
+async function labLink(){ const s = $('#labGst'); try{ s.textContent = '…'; const app = await labFB(false), au = app.auth(), p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt:'select_account' });
+    if(!au.currentUser || au.currentUser.isAnonymous){ try{ await au.signInWithPopup(p); }catch(e){ if(/popup|operation-not-supported|cancelled/.test(e.code || '')){ ls.set('bbx-hero-gpend', 1); return au.signInWithRedirect(p); } throw e; } }
+    await labSync(); }catch(e){ s.textContent = '⚠ ' + (e.message || e); } }
+function labB64(buf){ const u = new Uint8Array(buf); let s = ''; for(let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+const LAB_SENT = new WeakSet();
+async function labSend(){ const st = $('#labSt'); st.style.display = ''; st.textContent = '📤 Envoi pour analyse…';
+  try{ const x = LAST.x, sr = LAST.sr, a = LAST.a, c = cfg(), app = await labFB(true), db = app.database(), code = labCode(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const buf = await wav(x, sr).arrayBuffer(), b = labB64(buf), n = Math.ceil(b.length / LAB_CH);
+    if(n > 14) throw new Error('enregistrement trop long (' + Math.round(x.length / sr) + ' s)');
+    for(let k = 0; k < n; k++) await db.ref('analyse/' + code + '/audio/' + id + '/' + k).set(b.slice(k * LAB_CH, (k + 1) * LAB_CH));
+    const lat = latGet(), take = { t:Date.now(), v:LAB_V, source:'labo', acct:ls.get('bbx-hero-g', ''), who:'', style:'labo', niv:null, bpm:c.bpm, cycles:c.cyc, pat:c.pat, mode:c.mode, latMs:lat ? lat.ms : null, sr, strict:false, ua:navigator.userAgent.slice(0, 120), audioChunks:n, final:RY.compact(a), onsets:(a._ons || []).map(o => ({ t:+o.t.toFixed(3), c:o.c, lo:o.lo, hi:o.hi, db:o.db })) };
+    await db.ref('analyse/' + code + '/takes/' + id).set(JSON.parse(JSON.stringify(take))); st.textContent = '✅ Envoyé pour analyse'; return true;
+  }catch(e){ st.innerHTML = '⚠ Non envoyé : ' + escH(e.message || e) + ' <button id="labRetry" style="padding:3px 8px">Réessayer</button>'; $('#labRetry').onclick = labSend; return false; } }
+function labAuto(info){ if(MODE !== 'labo' || (info && info.synth) || !LAST.x || LAB_SENT.has(LAST.x)) return;
+  if(!ls.get('bbx-hero-send', false)) return; LAB_SENT.add(LAST.x); labSend(); }
+if(MODE === 'labo'){
+  const _show = show; show = function(){ const r = _show.apply(this, arguments); try{ labAuto(arguments[3]); }catch(e){} return r; };
+  const card = document.createElement('div'); card.className = 'card'; card.id = 'linkcard';
+  card.innerHTML = `<h2>🔗 Analyse automatique</h2><div class="row"><label><input type="checkbox" id="labSend"> Envoyer mes essais pour analyse</label></div>
+    <div class="row" style="margin-top:6px"><button id="labG" class="b-cyan" style="padding:6px 12px">🔗 Lier à mon compte Google</button><span id="labGst" class="small muted"></span></div>
+    <div id="labSt" class="small" style="display:none;margin-top:6px"></div>
+    <div class="small muted" style="margin-top:4px">Même compte et même code que BBX Hero : tout arrive au même endroit. Les essais avec l'exemple intégré ne sont pas envoyés.</div>`;
+  const sc = $('#sharecard'); sc.parentNode.insertBefore(card, sc.nextSibling);
+  $('#labSend').checked = !!ls.get('bbx-hero-send', false); $('#labSend').onchange = e => ls.set('bbx-hero-send', e.target.checked); $('#labG').onclick = labLink; labShow();
+  if(ls.get('bbx-hero-gpend', false)){ ls.set('bbx-hero-gpend', 0); labFB(false).then(app => app.auth().getRedirectResult()).then(labSync).catch(e => { $('#labGst').textContent = '⚠ ' + (e.message || e); }); }
+}
+
 /* ---------- Firebase (chargé seulement pour la collecte et l'espace responsable) ---------- */
 const FB = { app:null, db:null, auth:null, ok:false };
 async function fbInit(){
