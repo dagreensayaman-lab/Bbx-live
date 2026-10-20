@@ -29,6 +29,7 @@ label{font-weight:700;font-size:.9rem}
 .st{display:flex;align-items:center;gap:8px;margin:4px 0;font-weight:700}.dot{width:14px;height:14px;border-radius:50%;background:#cbd;flex:none}.dot.ok{background:var(--ok)}.dot.warn{background:var(--mid)}.dot.no{background:var(--low)}
 .tk{display:inline-block;min-width:34px;text-align:center;border-radius:9px;padding:3px 6px;font-weight:900;color:#fff;background:var(--c,#cde);margin:1px}
 .tk.sil{background:#eef6fb;color:#9bb}
+.tk.now{outline:3px solid #ffd23f;transform:scale(1.18);position:relative;z-index:1}
 .beat{display:inline-flex;gap:2px;padding:2px 3px;margin:2px;border-radius:10px;background:#f2f8fc}
 .prev{margin:8px 0 2px;line-height:1.1}
 .scr{display:none}.scr.on{display:block}
@@ -56,7 +57,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <!-- ================= ACCUEIL ================= -->
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 13 · 19 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 14 · 20 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -71,11 +72,14 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
     <div class="chips" id="styles"></div>
     <div class="row" style="margin:10px 0 4px"><label>Niveau</label>
       <div class="seg" id="nivs" style="min-width:210px"><button data-n="1">Niv 1</button><button data-n="2">Niv 2</button><button data-n="3">Niv 3</button></div></div>
+    <div class="row" id="lenRow" style="margin:6px 0 4px"><label>Longueur</label>
+      <div class="seg" id="lens" style="min-width:230px"><button data-l="short">Courte · 1 mesure</button><button data-l="long">Longue · 4 mesures</button></div></div>
     <div class="prev" id="prev"></div>
     <div class="small muted" id="prevInfo"></div>
-    <details id="persoBox" style="margin-top:8px"><summary style="font-weight:800;cursor:pointer">✏️ Ma propre phrase</summary>
+    <div class="row" style="margin-top:6px"><button id="bHear" class="b-cyan" style="padding:8px 14px">▶ Écouter le rythme</button><span class="small muted">4 clics pour partir, puis la phrase une fois, au tempo choisi.</span></div>
+    <details id="persoBox" style="margin-top:8px"><summary style="font-weight:800;cursor:pointer">✏️ Ma propre phrase (longue possible)</summary>
       <div class="row" style="margin-top:6px"><input id="pTok" value="P . K . P P K ." style="flex:1;min-width:200px;font-weight:800"><label>Cases/temps <select id="pDiv"><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label></div>
-      <div class="small muted">Format du Workout : un son par case, « . » = silence, 2 = croches, 4 = doubles.</div>
+      <div class="small muted">Format du Workout : un son par case, « . » = silence, 2 = croches, 4 = doubles. Pour une phrase plus longue, sépare les mesures par <b>|</b> : <i>P . K . P P K . | 4: P . P . K . P P . . . . . . . .</i> (le « 4: » donne 4 cases par temps à cette mesure).</div>
     </details>
   </div>
 
@@ -83,7 +87,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
     <h2>3. Tempo &amp; options</h2>
     <div class="seg" id="speeds"></div>
     <div class="row" style="margin-top:8px"><label>BPM <input id="bpm" type="number" min="50" max="150" style="width:76px"></label>
-      <label>Tours <select id="cycles"><option>2</option><option>4</option><option>6</option><option>8</option></select></label></div>
+      <label>Tours <select id="cycles"><option>1</option><option>2</option><option>4</option><option>6</option><option>8</option></select></label></div>
     <div class="row" style="margin-top:8px"><label><input type="checkbox" id="oDie"> Game over si la vie tombe à 0</label></div>
     <div class="row" style="margin-top:4px"><label><input type="checkbox" id="oStrict" checked> Vérifier le son (grave / medium / aigu)</label></div>
   </div>
@@ -709,11 +713,23 @@ const STYLES = [
   { id:'electro', n:'🎛 Électro', bpm:[80, 100, 120], niv:{ 1:[{ div:2, tok:'P . P . P . P T' }], 2:[{ div:2, tok:'P T P Ts P T P Ts' }], 3:[{ div:4, tok:'P . T . P . T . P . T K P . Ts T' }] } },
   { id:'perso', n:'✏️ Ma phrase', bpm:[70, 85, 100], niv:{} }
 ];
-const CFG = Object.assign({ style:'rock', niv:1, speed:1, bpm:null, cycles:4, die:false, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
+/* phrases LONGUES : 4 mesures (16 temps), chaque mesure différente. [cases par temps, [mesures]] */
+const LONGP = {
+  decouverte:{ 1:[1, ['P K P K', 'P K K P', 'P P K K', 'P K P .']], 2:[2, ['P . K . P . K .', 'P . K . P P K .', 'P . K . P . K P', 'P K . K P . K .']], 3:[2, ['P K Ts K P K Ts K', 'P K Ts K P P Ts K', 'P K Ts K P K Ts Ts', 'P Ts K Ts P K Ts .']] },
+  rock:{ 1:[2, ['P . K . P . K .', 'P . K . P P K .', 'P . K . P . K K', 'P P K . P . K .']], 2:[2, ['P T K T P P K T', 'P T K T P T K T', 'P P K T P P K T', 'P T K T P T K K']], 3:[4, ['P . T . K . T . P . P T K . T .', 'P . T . K . T . P . T P K . T T', 'P . T . K . T . P P . T K . T .', 'P . T P K . T . P . P T K T T .']] },
+  boombap:{ 1:[2, ['P . K . . P K .', 'P . K . . P K P', 'P . K . P . K .', 'P . K . . P P K']], 2:[2, ['P T K . . P K T', 'P T K . . P K K', 'P T K . P P K T', 'P T K T . P K .']], 3:[4, ['P . T . K . P T . . P T K . T .', 'P . T . K . P T . . P T K . T T', 'P . T . K . P T . P P T K . T .', 'P . T P K . P T . . P T K T T .']] },
+  reggae:{ 1:[2, ['. T . T P . . T', '. T . T P . P T', '. T . T P . T T', '. T . T P P . T']], 2:[2, ['. T . T P K . T', '. T . T P K P T', '. T . T P K . K', '. T . T P . K T']], 3:[4, ['. . T . . . T . P . K . . . T T', '. . T . . . T . P . K . . T T .', '. . T . . . T T P . K . . . T T', '. . T . . . T . P P K . . . T T']] },
+  dnb:{ 1:[4, ['P . . . K . . . . . P . K . . .', 'P . . . K . . . . P P . K . . .', 'P . . . K . . . . . P . K . P .', 'P . . P K . . . . . P . K . . .']], 2:[4, ['P . T . K . T . . T P . K . T T', 'P . T . K . T . . T P P K . T T', 'P . T . K . T T . T P . K . T .', 'P . T . K . T . . T P . K T T T']], 3:[4, ['P . T P K . T . . P P T K . T T', 'P . T P K . T . P P . T K . T T', 'P . T P K . T . . P P T K T T T', 'P T T P K . T . . P P T K . T .']] },
+  electro:{ 1:[2, ['P . P . P . P T', 'P . P . P T P T', 'P . P . P . P P', 'P . P . P P P T']], 2:[2, ['P T P Ts P T P Ts', 'P T P Ts P T P T', 'P T P Ts P P P Ts', 'P T P Ts P P T Ts']], 3:[4, ['P . T . P . T . P . T K P . Ts T', 'P . T . P . T . P . T K P T Ts T', 'P . T . P . T K P . T . P . Ts T', 'P . T P P . T . P . T K P . Ts T']] }
+};
+const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:false, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
 const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
 const styleOf = () => STYLES.find(s => s.id === CFG.style) || STYLES[1];
 function patOf(){
-  if(CFG.style === 'perso'){ const tok = String(CFG.ptok).trim().split(/\s+/).filter(Boolean).join(' '); return tok ? [{ div:+CFG.pdiv || 2, tok }] : []; }
+  if(CFG.style === 'perso'){ // plusieurs mesures : sépare-les par « | » ; « 4: » au début d'une mesure = 4 cases par temps pour elle seule
+    return String(CFG.ptok).split('|').map(part => { let d = +CFG.pdiv || 2, t = part.trim(); const m = /^([124])\s*:\s*(.*)$/.exec(t); if(m){ d = +m[1]; t = m[2]; } return { div:d, tok:t.split(/\s+/).filter(Boolean).join(' ') }; }).filter(x => x.tok); }
+  const L = CFG.len === 'long' && LONGP[CFG.style] && LONGP[CFG.style][CFG.niv];
+  if(L) return L[1].map(tok => ({ div:L[0], tok }));
   return styleOf().niv[CFG.niv];
 }
 const bpmOf = () => CFG.speed === 3 ? (+CFG.bpm || 85) : styleOf().bpm[CFG.speed];
@@ -745,6 +761,35 @@ async function recStart(onBlock){
 function clickAt(t, acc, bus){ const o = ac.createOscillator(), g = ac.createGain(); o.type = 'square'; o.frequency.setValueAtTime(acc ? 1500 : 1000, t);
   g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(acc ? .45 : .28, t + .002); g.gain.exponentialRampToValueAtTime(.0001, t + .05); o.connect(g); g.connect(bus || ac.destination); o.start(t); o.stop(t + .07); }
 
+/* ---------- écouter le rythme avant de jouer (sons synthétiques par famille : grave = kick, medium = snare, aigu = charley) ---------- */
+let HEAR = null;
+function noiseBuf(){ if(!HEAR_NB){ HEAR_NB = ac.createBuffer(1, ac.sampleRate * .3, ac.sampleRate); const d = HEAR_NB.getChannelData(0); for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } return HEAR_NB; }
+let HEAR_NB = null;
+function drumAt(t, lane, bus){
+  if(lane === 'grave'){ const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(170, t); o.frequency.exponentialRampToValueAtTime(48, t + .12); g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(.001, t + .2); o.connect(g); g.connect(bus); o.start(t); o.stop(t + .22); return; }
+  const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); n.buffer = noiseBuf();
+  if(lane === 'medium'){ f.type = 'bandpass'; f.frequency.value = 1900; f.Q.value = .8; g.gain.setValueAtTime(.9, t); g.gain.exponentialRampToValueAtTime(.001, t + .14);
+    const o = ac.createOscillator(), og = ac.createGain(); o.frequency.value = 210; og.gain.setValueAtTime(.35, t); og.gain.exponentialRampToValueAtTime(.001, t + .09); o.connect(og); og.connect(bus); o.start(t); o.stop(t + .1); }
+  else { f.type = 'highpass'; f.frequency.value = 7000; g.gain.setValueAtTime(.55, t); g.gain.exponentialRampToValueAtTime(.001, t + .06); }
+  n.connect(f); f.connect(g); g.connect(bus); n.start(t); n.stop(t + .2);
+}
+function stopHear(){ if(!HEAR) return; const H = HEAR; HEAR = null; cancelAnimationFrame(H.raf); try{ H.bus.gain.setValueAtTime(0, ac.currentTime); H.bus.disconnect(); }catch(e){} $$('#prev .tk.now').forEach(x => x.classList.remove('now')); $('#bHear').textContent = '▶ Écouter le rythme'; }
+function startHear(){
+  if(HEAR){ stopHear(); return; }
+  const pat = patOf(), bpm = bpmOf(), G = RY.grid(pat); if(!G.cells.length) return;
+  ensure(); const spb = 60 / bpm, bus = ac.createGain(); bus.gain.value = .9; bus.connect(ac.destination);
+  const T = ac.currentTime + .15, nB = 4 + G.P;
+  for(let b = 0; b < nB; b++) clickAt(T + b * spb, b % 4 === 0, bus);
+  G.cells.forEach(c => { if(c.ev) drumAt(T + (4 + c.b) * spb, HERO.laneOf(c.tok), bus); });
+  const tks = $$('#prev .tk'); let last = -1;
+  HEAR = { bus, raf:0 }; $('#bHear').textContent = '■ Stop';
+  const tick = () => { if(!HEAR) return; const bt = (ac.currentTime - T) / spb - 4; let cur = -1;
+    if(bt >= 0) for(let i = 0; i < G.cells.length; i++){ if(G.cells[i].b <= bt + 1e-6) cur = i; else break; }
+    if(cur !== last){ if(tks[last]) tks[last].classList.remove('now'); if(tks[cur]) tks[cur].classList.add('now'); last = cur; }
+    if(bt > G.P + .3){ stopHear(); return; } HEAR.raf = requestAnimationFrame(tick); };
+  HEAR.raf = requestAnimationFrame(tick);
+}
+
 /* ---------- état de calibration ---------- */
 const getLat = () => LS.get('bbx-rylat', null);       // { ms, t, n } : partagé avec le labo et l'appli
 const getCal = () => { const c = LS.get('bbx-hero-cal', null); return c && c.refs ? c : null; };
@@ -764,18 +809,20 @@ function refreshStatus(){
 function toks(pat){ const G = RY.grid(pat); const by = []; G.cells.forEach(c => { const k = Math.floor(c.b + 1e-6); (by[k] = by[k] || []).push(c); }); return by; }
 function renderPrev(){
   const pat = patOf(), by = toks(pat);
-  $('#prev').innerHTML = by.map(b => '<span class="beat">' + (b || []).map(c => c.ev ? `<span class="tk" style="--c:${LC[HERO.laneOf(c.tok)]}">${c.tok}</span>` : '<span class="tk sil">·</span>').join('') + '</span>').join('');
+  $('#prev').innerHTML = by.map((b, k) => '<span class="beat"' + (k && k % 4 === 0 ? ' style="margin-left:12px"' : '') + '>' + (b || []).map(c => c.ev ? `<span class="tk" style="--c:${LC[HERO.laneOf(c.tok)]}">${c.tok}</span>` : '<span class="tk sil">·</span>').join('') + '</span>').join('');
   const G = RY.grid(pat); $('#prevInfo').textContent = G.cells.length ? G.P + ' temps par tour · ' + G.ev.length + ' sons · Parfait ±' + Math.round(1000 * (HERO.LEVELS[CFG.niv] || HERO.LEVELS[1])[0]) + ' ms' : 'Phrase vide';
 }
-function renderHome(){
+function renderHome(){ stopHear();
   $('#styles').innerHTML = STYLES.map(s => `<button class="chip ${s.id === CFG.style ? 'on' : ''}" data-s="${s.id}">${s.n}</button>`).join('');
-  $$('#nivs button').forEach(b => b.classList.toggle('on', +b.dataset.n === CFG.niv)); $('#nivs').style.display = CFG.style === 'perso' ? 'none' : '';
+  $$('#nivs button').forEach(b => b.classList.toggle('on', +b.dataset.n === CFG.niv)); $('#nivs').style.display = CFG.style === 'perso' ? 'none' : ''; $('#lenRow').style.display = CFG.style === 'perso' ? 'none' : ''; $$('#lens button').forEach(b => b.classList.toggle('on', b.dataset.l === CFG.len));
   $('#persoBox').open = CFG.style === 'perso'; $('#pTok').value = CFG.ptok; $('#pDiv').value = CFG.pdiv;
   const S = styleOf(); $('#speeds').innerHTML = ['Lent', 'Moyen', 'Rapide'].map((n, i) => `<button data-sp="${i}" class="${CFG.speed === i ? 'on' : ''}">${n} · ${S.bpm[i]}</button>`).join('') + `<button data-sp="3" class="${CFG.speed === 3 ? 'on' : ''}">Perso</button>`;
   $('#bpm').value = CFG.speed === 3 ? (CFG.bpm || 85) : S.bpm[CFG.speed]; $('#cycles').value = CFG.cycles; $('#oDie').checked = CFG.die; $('#oStrict').checked = CFG.strict;
   renderPrev(); refreshStatus();
 }
 $('#styles').onclick = e => { const b = e.target.closest('[data-s]'); if(!b) return; CFG.style = b.dataset.s; if(CFG.speed !== 3) CFG.speed = Math.min(CFG.speed, 2); saveCfg(); renderHome(); };
+$('#bHear').onclick = startHear;
+$('#lens').onclick = e => { const b = e.target.closest('[data-l]'); if(!b) return; stopHear(); CFG.len = b.dataset.l; saveCfg(); renderHome(); };
 $('#nivs').onclick = e => { const b = e.target.closest('[data-n]'); if(!b) return; CFG.niv = +b.dataset.n; saveCfg(); renderHome(); };
 $('#speeds').onclick = e => { const b = e.target.closest('[data-sp]'); if(!b) return; CFG.speed = +b.dataset.sp; if(CFG.speed === 3 && !CFG.bpm) CFG.bpm = bpmOf(); saveCfg(); renderHome(); };
 $('#bpm').oninput = e => { CFG.speed = 3; CFG.bpm = Math.max(50, Math.min(150, +e.target.value || 85)); saveCfg(); $$('#speeds button').forEach(b => b.classList.toggle('on', b.dataset.sp === '3')); };
@@ -929,7 +976,7 @@ const heardNow = lat => {
   return ac.currentTime - (ac.outputLatency || lat / 2);
 };
 async function startGame(){
-  const cal = getCal(); if(!cal) return;
+  const cal = getCal(); if(!cal) return; stopHear();
   const pat = patOf(), bpm = bpmOf(), cycles = CFG.cycles, B = HERO.buildNotes(pat, bpm, cycles, CFG.niv);
   if(!B.notes.length){ alert('Phrase vide.'); return; }
   ensure(); if(cal.sr && cal.sr !== ac.sampleRate){ alert('La fréquence audio a changé (' + cal.sr + ' → ' + ac.sampleRate + ' Hz) : refais le test de sons.'); return; }
@@ -1054,7 +1101,7 @@ function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
   return { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:R.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
     onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) }; }
 /* ---------- envoi automatique vers Firebase (bbx-live) : hero/takes/{uid}/{id} + hero/audio/{uid}/{id}/{k} ---------- */
-const VERSION = 'v13', CH = 600000;
+const VERSION = 'v14', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
