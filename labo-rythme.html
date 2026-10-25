@@ -130,7 +130,7 @@ button.mini{padding:4px 10px;font-size:.85rem}
 // Entrée : signal mono (Float32Array), sampleRate, et ce que l'élève devait jouer (pat + bpm).
 // Sortie : sons détectés (onsets), placement sur la grille (ok / oubliés / en trop), décalage, régularité, sons confondus.
 const RY = (() => {
-  const V = 1;
+  const V = 2;
   // Familles de sons (pour repérer un K à la place d'un P) : grave = lèvres/kick, aigu = hi-hat, medium = snares
   const FAM = { grave:['B','P','Bf','Bm','Bo','Pu','Bh','Bb'], aigu:['Ts','T','S','Tss','Ch','Tk','St','H','Tch','Sh','Ss'], medium:['K','Pch','Pf','L','Kch','Psh','Ks','Kt','Kh','Ksh','Pff','Cl','Fsh','Spt'] };
   const FAMOF = {}; Object.entries(FAM).forEach(([f, l]) => l.forEach(n => { FAMOF[n.toLowerCase()] = f; }));
@@ -352,9 +352,20 @@ const RY = (() => {
       if(same){ tails.push(x); return false; } return true; });
     // Queue de n'importe quel son : souffle après un P, « h » après un K, « sss » après un Ts… (peu après, nettement plus faible)
     best.extra = best.extra.filter(x => { const t = x.o.t, h = best.hits.filter(z => z.o.t < t && t - z.o.t < .3).sort((p, q) => q.o.t - p.o.t)[0]; if(!h) return true;
+      if(String(h.e.tok).length === 1 && t - h.o.t > .55 * ((h.e.st || minSt) * spb) && !((x.o.lo || 0) > .85 && x.o.c < 220) && (x.o.c > 2.5 * Math.max(60, h.o.c) || (x.o.db > h.o.db - 9 && Math.abs(Math.log2(Math.max(60, x.o.c) / Math.max(60, h.o.c))) > 1.3))) return true; // dans la case suivante avec un autre timbre : un vrai son (ex. un Ts ajouté après un K), pas la queue
       const dt = t - h.o.t, rumble = x.o.lo > .85 && x.o.c < 220 && x.o.db <= h.o.db + 1; // souffle grave d'une plosive (P, B…) dans le micro
       const part2 = dt < .14 && x.o.db <= h.o.db + 4; // 2e partie d'un son composé : P-ch, F-sh, K-h, P-f… (juste après, à peu près aussi fort)
       if(x.o.db < h.o.db - (dt < .15 ? 6 : 9) || rumble || part2){ tails.push(x); return false; } return true; });
+    // v2 (données de la collecte, 25.10) — 1re partie d'un son en 2 temps (le P de P-ch, le t de Ts, le k de K…) : juste AVANT le son trouvé, dans la même case
+    { const cellS = c => (c && c.st ? c.st : minSt) * spb;
+      best.extra = best.extra.filter(x => { const h = best.hits.filter(z => z.o.t > x.o.t && z.o.t - x.o.t < Math.min(.13, .45 * cellS(z.e)) && (!x.cell || x.cell === z.e)).sort((p, q) => p.o.t - q.o.t)[0];
+        if(h && x.o.db <= h.o.db + 6){ tails.push(x); return false; } return true; }); }
+    // grondement isolé (souffle, cogne sur le micro ou la table) : très grave et bien plus faible que les sons joués
+    if(best.hits.length >= 4){ const md = median(best.hits.map(h => h.o.db));
+      best.extra = best.extra.filter(x => { if((x.o.lo || 0) > .9 && x.o.c < 260 && x.o.db < md - 15){ best.noise = (best.noise || 0) + 1; return false; } return true; });
+      // « son » trouvé dans une case mais presque inaudible et pas du bon registre : ce n'est pas l'élève → la case est un oubli
+      const keep = []; best.hits.forEach(h => { const f = famOf(h.e.tok), rumble = (h.o.lo || 0) > .9 && h.o.c < 260, clickish = (h.o.ton || 0) >= 60 && h.o.db < md - 10, faint = h.o.db < md - 26 || (h.o.db < md - 18 && rumble && f !== 'grave') || clickish; // clickish : reste du clic (son pur) bien plus faible que les sons joués
+        if(faint){ best.miss.push({ e:h.e, k:h.k, t:h.o.t }); best.noise = (best.noise || 0) + 1; } else keep.push(h); }); best.hits = keep; }
     // décalage par rapport au clic (seulement si on a un repère exact)
     let off = null;
     if(c0b != null && best.hits.length >= 3){ const r = (((best.phi - c0b) % minSt) + minSt) % minSt, sh = (r > minSt / 2 ? r - minSt : r) * spb; off = Math.round((sh + median(best.hits.map(h => h.d)) - (o.lat || 0)) * 1000); }
@@ -421,7 +432,8 @@ const RY = (() => {
     let start = opt.start != null ? opt.start : null;
     if(start != null && opt.bpm && opt.pat){ const spb = 60 / opt.bpm, P = grid(opt.pat).P * spb;
       if(c0 != null && opt.c0 == null) start = c0 + Math.round((start - c0) / spb) * spb; // calé sur le clic entendu
-      const end = start + (opt.cycles || 1) * P; ons = ons.filter(o => o.t > start - .2 && o.t < end + .2); }
+      const g = grid(opt.pat), lastSt = (g.cells.length ? g.cells[g.cells.length - 1].st : .5) * spb, end = start + (opt.cycles || 1) * P;
+      ons = ons.filter(o => o.t > start - .2 && o.t < end - lastSt / 2 + .07); } // après la dernière case, ce qui suit (respiration, bruit) n'est plus la phrase
     if(opt.bpm && opt.pat && opt.pat.length) m = match(ons, opt.bpm, opt.pat, { c0, lat:opt.lat, start, cycles:opt.cycles });
     else if(opt.bpm && opt.libre && ons.length >= 3){ const tok = opt.son || 'X'; m = match(ons, opt.bpm, [{ div:2, tok:tok + ' ' + tok }], { c0, lat:opt.lat }); if(m){ m.libre = true; m.pct = Math.round(100 * m.hits / Math.max(1, m.hits + m.extra)); m.miss = 0; } }
     const q = quality(m ? m._best.hits.map(h => ({ o:h.o, k:h.e.tok })) : ons.map(o => ({ o, k:'?' })));
