@@ -38,6 +38,21 @@ label{font-weight:700;font-size:.9rem}
 .bigletter{font-size:5rem;font-weight:900;text-align:center;line-height:1.1;color:#fff;border-radius:24px;padding:10px;margin:8px 0;background:var(--c,#cde)}
 .timebar{height:8px;border-radius:6px;background:#e6f2f9;overflow:hidden}.timebar i{display:block;height:100%;width:0;background:var(--pink)}
 /* jeu */
+
+#arc{position:fixed;inset:0;z-index:110;background:radial-gradient(ellipse at 50% 0%,#2a1a5e 0,#0b0620 70%);display:none;overflow:auto;color:#fff;font-family:'Courier New',ui-monospace,monospace;font-weight:900;padding:18px 14px 30px}
+#arc.on{display:block}#arc .w{max-width:420px;margin:0 auto;text-align:center}
+#arc h2{font-size:1.5rem;letter-spacing:.14em;margin:6px 0 2px;color:#ffe27a;text-shadow:0 0 12px #ff9d2e,0 0 28px #ff5e8a}
+#arc .sc{font-size:2.6rem;color:#7fe9ff;text-shadow:0 0 14px #19b6ff;letter-spacing:.08em}
+#arc .bl{animation:abl 1s steps(2,start) infinite}@keyframes abl{to{visibility:hidden}}
+#arc .ini{display:flex;gap:14px;justify-content:center;margin:12px 0}
+#arc .ini div{width:62px}#arc .ini b{display:block;font-size:3rem;line-height:1.1;border-bottom:4px solid #ffe27a;color:#fff;text-shadow:0 0 12px #ff5e8a}
+#arc .ini button{background:#ffffff18;color:#ffe27a;border:0;border-radius:8px;width:100%;font-size:1.3rem;padding:6px 0;box-shadow:none}
+#arc table{width:100%;border-collapse:collapse;margin:12px 0;font-size:1.05rem;letter-spacing:.06em}
+#arc td{padding:5px 6px;text-align:left}#arc td:nth-child(1){width:42px;color:#ff9dc0}#arc td:nth-child(3){text-align:right;color:#7fe9ff}#arc td:nth-child(4){text-align:right;color:#ffffff88;font-size:.8rem}
+#arc tr.me{background:#ffe27a33;color:#ffe27a;animation:abl .8s steps(2,start) infinite}
+#arc tr.r1 td:nth-child(2){color:#ffe27a;text-shadow:0 0 10px #ffb02e}
+#arc .bt{display:inline-block;background:#ff5e8a;color:#fff;border:0;border-radius:12px;font:inherit;font-size:1.1rem;padding:12px 22px;margin:6px;box-shadow:0 4px 0 #a52a55}
+#arc .bt.s{background:#ffffff22;box-shadow:none}#arc .sm{font-size:.75rem;color:#ffffff88;font-weight:700;letter-spacing:.04em}
 #game{position:fixed;inset:0;background:#0f2a3d;z-index:50;display:none}
 #game.on{display:block}
 #cv{width:100%;height:100%;display:block}
@@ -57,7 +72,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <!-- ================= ACCUEIL ================= -->
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 15 · 25 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 17 · 25 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -101,7 +116,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
     <div class="small muted">Envoie le résultat et l'enregistrement de ton micro à la fin de chaque partie. Le code est secret : sur un autre appareil, colle le même pour tout retrouver au même endroit. Tu peux décocher à tout moment.</div>
   </div>
 
-  <div class="row"><button class="b-pink big" id="bPlay">▶ Jouer</button><span class="small" style="color:#fff;font-weight:800" id="playHint"></span></div>
+  <div class="row"><button class="b-pink big" id="bPlay">▶ Jouer</button><button id="bTop" class="b-cyan" style="padding:10px 14px">🏆 Classement</button><span class="small" style="color:#fff;font-weight:800" id="playHint"></span></div>
   <p class="small" style="color:#eaf8ff;margin-top:16px">Prototype FR uniquement (FR/EN/JA viendront à l'intégration). La précision finale vient de l'analyse complète de la prise (même moteur que le labo) ; le jugement en direct sert au score.</p>
 </div>
 
@@ -130,6 +145,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 </div>
 
 <!-- ================= JEU ================= -->
+<div id="arc"><div class="w" id="arcW"></div></div>
 <div id="game"><canvas id="cv"></canvas><button id="quit">✕ Quitter</button><div id="warn"></div></div>
 
 <script>
@@ -1000,7 +1016,7 @@ async function startGame(){
     if(g.f0 == null) throw new Error('le micro ne donne aucun son');
   }catch(e){ alert('Micro indisponible : ' + (e.message || e)); quitGame(true); return; }
   g.bus = ac.createGain(); g.bus.connect(ac.destination);
-  g.T0 = ac.currentTime + .9;
+  g.board = boardKey(); g.T0 = ac.currentTime + .9;
   for(let b = 0; b < B.endBeat + 3; b++) clickAt(g.T0 + b * spb, b % 4 === 0, g.bus);
   g.J = new HERO.Judge(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:CFG.die, fp:cal.fp, lvl:cal.lvl });
   g.endAt = g.T0 + B.endBeat * spb + lat + .5; g.last = null;
@@ -1121,7 +1137,11 @@ function draw(g, now){
   ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'right'; ctx.fillStyle = '#fff'; ctx.font = '900 30px Nunito,sans-serif'; ctx.fillText(String(J.score), X0 + PW - 12, 50);
   ctx.textAlign = 'center'; if(J.combo >= 2){ const pop = g.comboAt && t - g.comboAt < 140 ? 1 + .25 * (1 - (t - g.comboAt) / 140) : 1; ctx.save(); ctx.translate(W / 2, 46); ctx.scale(pop, pop); ctx.font = '900 22px Nunito,sans-serif'; ctx.fillStyle = J.mult() > 1 ? '#ffe27a' : '#fff'; if(J.mult() > 1){ ctx.shadowColor = '#ff9d2e'; ctx.shadowBlur = 10; } ctx.fillText(J.combo + ' combo' + (J.mult() > 1 ? '  ×' + J.mult() : '') + (J.charge >= 100 ? ' ⚡' : ''), 0, 0); ctx.restore(); }
   drawHearts(g, J, X0 + 12, 62, 22, t);
-  ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '800 12px Nunito,sans-serif'; ctx.fillText('♪ ' + g.bpm + ' BPM', X0 + PW - 12, 80);
+  // pulsation du tempo (utile sans clic) : BPM + 4 temps qui s'allument, et la ligne de frappe qui flashe
+  { const bt = (now - g.T0) / spb, bk = Math.floor(bt), bph = bt - bk, on = bt >= 0, bi = ((bk % 4) + 4) % 4, acc = bi === 0, pul = on ? Math.pow(1 - bph, 2.2) : 0;
+    const cx = W / 2, cy = H - 16; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(255,255,255,' + (.6 + .4 * pul) + ')'; ctx.font = '900 ' + Math.round(14 + 4 * pul) + 'px Nunito,sans-serif'; ctx.fillText('♪ ' + g.bpm + ' BPM', cx, cy);
+    for(let i = 0; i < 4; i++){ const x = cx - 33 + i * 22, act = on && i === bi; ctx.beginPath(); ctx.arc(x, cy - 28, act ? 7 + 3 * pul : 5, 0, 6.283); ctx.fillStyle = act ? (acc ? '#ffe27a' : '#7fe9ff') : 'rgba(255,255,255,.22)'; if(act){ ctx.shadowColor = acc ? '#ffb02e' : '#7fe9ff'; ctx.shadowBlur = 14; } ctx.fill(); ctx.shadowBlur = 0; }
+    if(pul > .02){ ctx.save(); ctx.globalAlpha = pul * (acc ? .55 : .3); ctx.fillStyle = acc ? '#ffe27a' : '#7fe9ff'; ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 18; ctx.fillRect(X0, lineY - 3, PW, 6); ctx.restore(); ctx.save(); ctx.globalAlpha = pul * .12; ctx.fillStyle = '#fff'; ctx.fillRect(X0, lineY - 40 * pul, PW, 80 * pul); ctx.restore(); } }
   drawElectric(g, J, X0 + 12, 102, PW - 24, 16, t);
   const pr = Math.max(0, Math.min(1, (now - g.T0 - 4 * spb) / ((B.endBeat - 4) * spb))); ctx.fillStyle = '#7fd6f0'; ctx.fillRect(0, 0, W * pr, 4);
   // niveau du micro
@@ -1159,7 +1179,50 @@ function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
   return { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:R.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
     onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) }; }
 /* ---------- envoi automatique vers Firebase (bbx-live) : hero/takes/{uid}/{id} + hero/audio/{uid}/{id}/{k} ---------- */
-const VERSION = 'v15', CH = 600000;
+
+/* ---------- classement façon borne d'arcade ---------- */
+const hash = t => { let h = 0; for(const c of t) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h.toString(36); };
+const boardKey = () => [CFG.style === 'perso' ? 'perso' + hash(CFG.ptok + '|' + CFG.pdiv) : CFG.style, 'n' + CFG.niv, CFG.len, bpmOf()].join('_').replace(/[.#$\[\]\/]/g, '-');
+const boardName = k => { const q = k.split('_'); const st = (STYLES.find(x => x.id === q[0]) || {}).n || (q[0].startsWith('perso') ? '✏️ Ma phrase' : q[0]); return (st + ' · niv ' + q[1].slice(1) + ' · ' + (q[2] === 'long' ? 'longue' : 'courte') + ' · ' + q[3] + ' BPM').toUpperCase(); };
+const locBoard = k => LS.get('bbx-hero-hs-' + k, []);
+async function fetchBoard(k){ // top 10 partagé (si Firebase répond), sinon scores de cet appareil
+  const loc = locBoard(k).map(r => Object.assign({ loc:1 }, r));
+  try{ const app = await fbApp(true), db = app.database();
+    const snap = await Promise.race([db.ref('heroScores/' + k).orderByChild('s').limitToLast(10).once('value'), new Promise((_, no) => setTimeout(() => no(new Error('délai')), 4500))]);
+    const a = []; snap.forEach(c => { const v = c.val(); if(v && typeof v.s === 'number') a.push({ id:c.key, n:String(v.n || '???').slice(0, 3), s:v.s, a:v.a, b:v.b, t:v.t }); });
+    return { rows:a.sort((x, y) => y.s - x.s), shared:true }; }
+  catch(e){ return { rows:loc.sort((x, y) => y.s - x.s).slice(0, 10), shared:false, err:String(e.message || e) }; } }
+function tableHtml(rows, meId){ if(!rows.length) return '<p class="sm">Aucun score pour l\'instant. Sois le premier !</p>';
+  return '<table>' + rows.map((r, i) => `<tr class="${r.id === meId || r.me ? 'me' : ''} ${i === 0 ? 'r1' : ''}"><td>${i + 1}${['ST', 'ND', 'RD'][i] || 'TH'}</td><td>${escH(r.n)}</td><td>${String(r.s).padStart(6, '0')}</td><td>${r.a != null ? r.a + '%' : ''}</td></tr>`).join('') + '</table>'; }
+const arcClose = () => { $('#arc').classList.remove('on'); };
+async function showBoard(k, meId, title){ const W = $('#arcW'); W.innerHTML = `<h2>${title || '🏆 CLASSEMENT'}</h2><div class="sm">${boardName(k)}</div><p class="sm bl">CHARGEMENT…</p>`; $('#arc').classList.add('on');
+  const B = await fetchBoard(k);
+  W.innerHTML = `<h2>${title || '🏆 CLASSEMENT'}</h2><div class="sm">${boardName(k)}</div>${tableHtml(B.rows, meId)}<div class="sm">${B.shared ? '🌍 scores de tous les joueurs' : '📱 scores de cet appareil (classement partagé indisponible' + (B.err ? ' : ' + escH(B.err) : '') + ')'}</div><div style="margin-top:10px"><button class="bt" id="arcOk">${meId ? 'VOIR MON BILAN' : 'FERMER'}</button></div>`;
+  $('#arcOk').onclick = arcClose; }
+async function arcade(R){
+  const g = R.g, J = g.J, k = g.board || boardKey(), sc = J.score, acc = J.accuracy(), W = $('#arcW');
+  if(!sc || sc < 1) return; // pas de score → pas d'arcade
+  const B = await fetchBoard(k), rank = B.rows.filter(r => r.s >= sc).length; // 0-based
+  const qualifies = B.rows.length < 10 || sc > B.rows[B.rows.length - 1].s;
+  const head = `<h2>${R.why === 'dead' ? 'GAME OVER' : 'FIN DE PARTIE'}</h2><div class="sm">${boardName(k)}</div><div class="sc">${String(sc).padStart(6, '0')}</div><div class="sm">PRÉCISION ${acc}%</div>`;
+  if(!qualifies){ W.innerHTML = head + tableHtml(B.rows) + '<p class="sm">Il te faut ' + (B.rows[B.rows.length - 1].s + 1) + ' points pour entrer dans le top 10.</p><button class="bt" id="arcOk">VOIR MON BILAN</button><button class="bt s" id="arcAg">REJOUER</button>'; $('#arc').classList.add('on'); $('#arcOk').onclick = arcClose; $('#arcAg').onclick = () => { arcClose(); $('#bAgain') ? $('#bAgain').click() : $('#bMenu') && $('#bMenu').click(); }; return; }
+  let ini = (String(LS.get('bbx-hero-ini', '') || LS.get('bbx-hero-name', '') || 'AAA').toUpperCase().replace(/[^A-Z0-9]/g, '') + 'AAA').slice(0, 3).split('');
+  const AL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const draw = () => { W.innerHTML = head + `<h2 class="bl" style="font-size:1.1rem;margin-top:14px">★ ${rank === 0 ? 'NOUVEAU RECORD' : 'TOP 10 · ' + (rank + 1) + 'ÈME PLACE'} ★</h2><div class="sm">ENTRE TES INITIALES</div><div class="ini">${ini.map((c, i) => `<div><button data-u="${i}">▲</button><b>${c}</b><button data-d="${i}">▼</button></div>`).join('')}</div><button class="bt" id="arcSave">VALIDER</button><div class="sm">tu peux aussi taper au clavier</div>`;
+    W.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const i = +b.dataset.u; ini[i] = AL[(AL.indexOf(ini[i]) + 1) % AL.length]; draw(); });
+    W.querySelectorAll('[data-d]').forEach(b => b.onclick = () => { const i = +b.dataset.d; ini[i] = AL[(AL.indexOf(ini[i]) + AL.length - 1) % AL.length]; draw(); });
+    $('#arcSave').onclick = save; };
+  const key = e => { if(!$('#arc').classList.contains('on') || !$('#arcSave')) return; const c = e.key.toUpperCase(); if(c.length === 1 && AL.includes(c)){ ini.shift(); ini.push(c); draw(); } else if(e.key === 'Enter') save(); };
+  let saved = false;
+  async function save(){ if(saved) return; saved = true; document.removeEventListener('keydown', key); const n = ini.join(''); LS.set('bbx-hero-ini', n);
+    const rec = { n, s:sc, a:acc, b:g.bpm, t:Date.now() }, loc = locBoard(k); loc.push(rec); loc.sort((x, y) => y.s - x.s); LS.set('bbx-hero-hs-' + k, loc.slice(0, 10));
+    W.innerHTML = head + '<p class="sm bl">ENREGISTREMENT…</p>'; let meId = null;
+    try{ const app = await fbApp(true), ref = app.database().ref('heroScores/' + k).push(); await Promise.race([ref.set(Object.assign({}, rec, { u:app.auth().currentUser.uid })), new Promise((_, no) => setTimeout(() => no(new Error('délai')), 5000))]); meId = ref.key; }catch(e){ R.arcErr = String(e.message || e); }
+    await showBoard(k, meId || 'x', R.why === 'dead' ? 'GAME OVER' : '🏆 CLASSEMENT'); if(!meId){ const t = $('#arcW').querySelector('table'); if(t){ [...t.rows].forEach(r => { if(r.cells[1].textContent === n && +r.cells[2].textContent === sc) r.classList.add('me'); }); } } }
+  document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
+$('#bTop').onclick = () => showBoard(boardKey(), null);
+
+const VERSION = 'v17', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -1192,6 +1255,16 @@ async function sendTake(){ const R = LASTRES; if(!R || R.sending) return; R.send
     sendMsg(R, '✅ Envoyé pour analyse' + (withAudio ? '' : ' (résultat seulement : prise trop longue pour l\'audio)'), 'ok');
   }catch(e){ sendMsg(R, '⚠ Non envoyé : ' + escH(e && e.message || e) + ' <button id="bRetry" class="b-cyan" style="padding:4px 10px">Réessayer</button>', 'warn'); const b = $('#bRetry'); if(b) b.onclick = () => { R.sending = false; sendTake(); }; }
   R.sending = false; }
+function confetti(gold){
+  const c = document.createElement('canvas'); c.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:120'; document.body.appendChild(c);
+  const W = c.width = innerWidth, H = c.height = innerHeight, x = c.getContext('2d'), cols = gold ? ['#ffe27a','#ffb02e','#fff6c9','#ff9d2e'] : ['#ff6b9d','#7fe9ff','#ffe27a','#b58cff','#5ee08a','#fff'], P = [];
+  const burst = (n, ox) => { for(let i = 0; i < n; i++){ const a = -Math.PI / 2 + (Math.random() - .5) * 1.6, v = 500 + Math.random() * 600; P.push({ x:ox, y:H * .9, vx:Math.cos(a) * v, vy:Math.sin(a) * v, r:Math.random() * 6, vr:(Math.random() - .5) * 14, w:6 + Math.random() * 7, h:4 + Math.random() * 6, col:cols[i % cols.length] }); } };
+  burst(90, W * .15); burst(90, W * .85); let t0 = performance.now(), last = t0, more = 0;
+  (function f(){ const t = performance.now(), dt = Math.min(.05, (t - last) / 1000); last = t;
+    if(t - t0 > 600 && more < 3 && t - t0 > more * 700 + 600){ more++; burst(60, W * (.2 + Math.random() * .6)); }
+    x.clearRect(0, 0, W, H); P.forEach(p => { p.vy += 700 * dt; p.vx *= .992; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.scale(1, Math.cos(p.r * 1.7)); x.fillStyle = p.col; x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); x.restore(); });
+    if(t - t0 < 7000 && P.some(p => p.y < H + 30)) requestAnimationFrame(f); else c.remove(); })();
+}
 function renderEnd(){
   const { g, a, why, err } = LASTRES, J = g.J, cn = J.cnt, hasA = a && a.pct != null;
   if(hasA && !a._x){ a._x = 1; // sons confondus : référence = tes sons du test de calibration (l'analyse seule ne voit rien si tout est joué pareil)
@@ -1200,7 +1273,9 @@ function renderEnd(){
       Object.keys(per).forEach(i => { const c = a.cells[i]; if(c && c.f < per[i].n){ c.f = per[i].n; c.fh = per[i].h; } });
       a.conf = a.cells.reduce((t, c) => t + (c.f || 0), 0); const tot = a.hits + a.miss + a.extra; a.pct = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, tot)); a.sons = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, a.hits)); } }
   const pct = J.accuracy(), grade = pct >= 95 ? 'S' : pct >= 85 ? 'A' : pct >= 70 ? 'B' : pct >= 50 ? 'C' : 'D';
-  let h = `<div class="row" style="align-items:flex-end"><div><div class="pctbig">${pct}%</div><div class="small muted">précision (jugement en direct)</div></div><span class="sp"></span><div class="grade">${grade}</div></div>`;
+  const perfectRun = why !== 'dead' && cn.miss + cn.wrong + cn.extra === 0 && cn.perfect + cn.good > 0, allPerfect = perfectRun && cn.good === 0;
+  if(perfectRun && !LASTRES.conf){ LASTRES.conf = 1; setTimeout(() => confetti(allPerfect), 250); }
+  let h = (perfectRun ? `<div class="res ok" style="text-align:center;font-size:1.25rem;font-weight:900;background:linear-gradient(135deg,#fff3b0,#ffd36b);color:#7a4a00;border:0">${allPerfect ? '🏆 100 % PARFAIT !' : '🌟 100 % — AUCUNE ERREUR !'}<div class="small" style="font-weight:700">${allPerfect ? 'Chaque son pile dans le temps. Légendaire.' : 'Tous les sons joués. Vise maintenant que tout soit « Parfait » !'}</div></div>` : '') + `<div class="row" style="align-items:flex-end"><div><div class="pctbig">${pct}%</div><div class="small muted">précision (jugement en direct)</div></div><span class="sp"></span><div class="grade">${grade}</div></div>`;
   if(!hasA && why !== 'dead') h += `<div class="res warn">L'analyse complète n'a pas pu placer ta prise (${err || 'trop peu de sons détectés'}). Je montre le jugement en direct.</div>`;
   h += `<div class="kpis"><div class="kpi"><b>${J.score}</b>score</div><div class="kpi"><b>${J.maxCombo}</b>combo max</div><div class="kpi"><b>${cn.perfect}</b>parfait</div><div class="kpi"><b>${cn.good}</b>bien</div></div>
     <div class="kpis"><div class="kpi"><b>${cn.miss}</b>ratés</div><div class="kpi"><b>${cn.extra}</b>en trop</div><div class="kpi"><b>${hasA ? a.conf : cn.wrong}</b>sons confondus</div><div class="kpi"><b>${hasA ? '±' + a.reg : '–'}</b>régularité ms</div></div>`;
@@ -1218,6 +1293,7 @@ function renderEnd(){
     if(conf.length) h += '<h2 style="margin:12px 0 2px">Sons confondus</h2><ul class="l">' + conf.map(z => `<li>Case ${z.c.i + 1} (<b>${z.c.tok}</b>, ${LNAME[HERO.laneOf(z.c.tok)]}) : entendu plutôt « ${LNAME[z.r.fh] || '?'} » ${z.r.f} fois</li>`).join('') + '</ul><div class="small muted">Fiable entre familles différentes (P / K / Ts), pas entre sons proches (Pch / Pf, K / K~).</div>'; }
   h += `<div class="row" style="margin-top:12px"><button id="bCopy">📋 Copier le résultat</button><button id="bWav">💾 Prise (.wav)</button></div><div id="sendSt" class="res" style="margin-top:8px;display:none"></div><div class="row" id="sendRow" style="display:none;margin-top:6px"><button id="bSend" class="b-cyan">📤 Envoyer cette partie pour analyse</button></div>`;
   $('#endBody').innerHTML = h;
+  if(!LASTRES.arc){ LASTRES.arc = 1; setTimeout(() => arcade(LASTRES), perfectRun ? 2600 : 900); }
   { const R = LASTRES, auto = !!LS.get('bbx-hero-send', false);
     if(R.stHtml){ $('#sendSt').style.display = ''; sendMsg(R, R.stHtml, R.stCls); }
     else if(auto && !R.sentOnce){ R.sentOnce = 1; $('#sendSt').style.display = ''; sendTake(); }
