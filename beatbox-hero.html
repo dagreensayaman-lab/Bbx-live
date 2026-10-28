@@ -75,7 +75,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 24 · 28 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 25 · 28 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -736,7 +736,7 @@ const HERO = (() => {
 
   // ---------- Hauteur de note (humming / basse / chœurs) : YIN en flux, sur un signal ramené à ~11 kHz ----------
   class PitchTracker {
-    constructor(sr, o){ o = o || {}; this.sr = sr; this.D = Math.max(1, Math.round(sr / 11025)); this.sd = sr / this.D; this.W = 384; this.tmin = Math.floor(this.sd / 800); this.tmax = Math.ceil(this.sd / 60); this.hop = Math.round(this.sd * .01);
+    constructor(sr, o){ o = o || {}; this.sr = sr; this.D = Math.max(1, Math.round(sr / 11025)); this.sd = sr / this.D; this.W = 512; this.tmin = Math.floor(this.sd / 800); this.tmax = Math.ceil(this.sd / 38); this.hop = Math.round(this.sd * .01);
       this.buf = new Float32Array(1 << 14); this.mask = (1 << 14) - 1; this.n = 0; this.acc = 0; this.k = 0; this.f0 = null; this.next = this.W + this.tmax; this.gate = o.gate != null ? o.gate : .006; this.out = []; this.onFrame = o.onFrame || null; this.d = new Float32Array(this.tmax + 2); this.c = new Float32Array(this.tmax + 2); this.s = 0; }
     feed(d, frame){
       if(this.f0 == null){ this.f0 = frame; }
@@ -765,22 +765,27 @@ const HERO = (() => {
       if(cur && circ(f.m, cur.m) < .8){ cur.n++; cur.m += (f.m - cur.m) / cur.n; cur.t1 = f.t; } else { if(cur) segs.push(cur); cur = { t0:f.t, t1:f.t, m:f.m, n:1 }; } });
     if(cur) segs.push(cur);
     const spb = 60 / bpm, keep = segs.filter(g => g.n >= 6).map(g => ({ b:Math.max(0, Math.round((g.t0 - .045) / spb * 4) / 4), e:g.t1 / spb, m:g.m }));
-    const out = []; keep.forEach((g, i) => { if(out.length && g.b <= out[out.length - 1].b) return; out.push({ beat:g.b, m:g.m, e:g.e }); });
+    const out = []; keep.forEach((g, i) => { if(out.length && g.b <= out[out.length - 1].b) return; out.push({ beat:g.b, m:g.m, e:g.e, snd:Math.max(.1, g.e - g.b) }); });
     out.forEach((g, i) => { const nx = out[i + 1] ? out[i + 1].beat : Math.max(g.beat + .25, Math.ceil(g.e * 4) / 4); g.dur = Math.max(.25, Math.min(nx - g.beat, g.e - g.beat + .3)); }); return out;
   }
   // juge « hauteur » : même interface que Judge (score, vie, combo, barre électrique), mais une note est réussie si tu tiens la bonne hauteur (octave libre)
   class PitchJudge extends Judge {
-    constructor(notes, T0, lat, o){ super(notes, T0, lat, o); this.tolP = (o && o.tolP) || .6; this.tolG = (o && o.tolG) || 1.1; this.cur = null; this.fr = 0; this.voiced = []; this.last = null; notes.forEach(n => { n.sec = n.durB * (n.spb); n.hP = 0; n.hG = 0; n.tot = 0; n.pitch = true; }); }
+    constructor(notes, T0, lat, o){ super(notes, T0, lat, o); this.tolP = (o && o.tolP) || .45; this.tolG = (o && o.tolG) || .75; this.cur = null; this.fr = 0; this.voiced = []; this.last = null;
+      notes.forEach(n => { n.sec = n.durB * n.spb; n.expF = Math.max(4, Math.min(n.sec, n.sndB != null ? n.sndB * n.spb + .06 : n.sec) * 100 * .85); n.hP = 0; n.hG = 0; n.tot = 0; n.pitch = true; n.dsum = 0; n.dn = 0; n.first = null; n.lastHit = null; n.cov = 0; }); }
     onset(z){ z.verdict = 'pitch'; this.log.push(z); return []; }
-    frame(f){ this.fr++; if(f.m != null && f.conf < .36){ this.cur = { m:f.m, t:f.t }; this.voiced.push([f.t, f.m, f.rms]); }
-      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t - .05 > f.t) break; if(n.state !== 0) continue; const a = n.t - .05, b = n.t + n.sec + .08; if(f.t < a || f.t > b) continue; n.tot++; if(f.m != null && f.conf < .36){ const d = circ(f.m, n.m); if(d <= this.tolP) n.hP++; if(d <= this.tolG) n.hG++; } } }
+    frame(f){ this.fr++; const ok = f.m != null && f.conf < .36; if(ok){ this.cur = { m:f.m, t:f.t }; this.voiced.push([+f.t.toFixed(3), +f.m.toFixed(2), +f.rms.toFixed(4)]); }
+      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t - .05 > f.t) break; if(n.state !== 0) continue; const a = n.t - .05, b = n.t + n.sec + .08; if(f.t < a || f.t > b) continue; n.tot++;
+        if(ok){ let dv = ((f.m - n.m) % 12 + 12) % 12; if(dv > 6) dv -= 12; const d = Math.abs(dv); if(d <= this.tolG){ n.hG++; n.dsum += dv; n.dn++; if(n.first == null) n.first = f.t; n.lastHit = f.t; if(d <= this.tolP) n.hP++; } } n.cov = Math.min(1, n.hG / n.expF); } }
     advance(settled){ const ev = [];
       while(this.ip < this.notes.length && this.notes[this.ip].state !== 0) this.ip++;
       for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t + n.sec + .14 >= settled) break; if(n.state !== 0) continue;
-        const exp = Math.max(4, Math.min(16, n.sec * 100 * .4)), rP = n.hP / exp, rG = n.hG / exp; n.cov = Math.max(rP, rG * .8);
-        if(rP >= .6){ n.state = 1; n.grade = 'perfect'; this.combo++; this.cnt.perfect++; this.score += 100 * this.mult(); this._life(1.5); this.charge = Math.min(100, this.charge + 10); if(this.charge >= 100) this.maxCharged++; if(this.combo > this.maxCombo) this.maxCombo = this.combo; ev.push({ type:'perfect', note:n, d:0 }); }
-        else if(rG >= .4){ n.state = 1; n.grade = 'good'; this.combo++; this.cnt.good++; this.score += 60 * this.mult(); this._life(.75); if(this.combo > this.maxCombo) this.maxCombo = this.combo; ev.push({ type:'good', note:n, d:0 }); }
-        else { n.state = 2; this.cnt.miss++; this.combo = 0; this._life(-10); this._err(); ev.push({ type:'miss', note:n }); } }
+        const exp = n.expF, cov = Math.min(1, n.hG / exp), acc = n.hG ? n.hP / n.hG : 0, late = n.first == null ? 0 : n.first - n.t; n.cov = cov; n.late = late; n.dev = n.dn ? n.dsum / n.dn : null;
+        const hit = ev.push.bind(ev);
+        if(n.hG < 3){ n.state = 2; n.grade = 'miss'; this.cnt.miss++; this.combo = 0; this._life(-10); this._err(); hit({ type:'miss', note:n }); }
+        else if(cov >= .8 && acc >= .5 && late <= .14){ n.state = 1; n.grade = 'perfect'; this.combo++; this.cnt.perfect++; this.score += 100 * this.mult(); this._life(1.5); this.charge = Math.min(100, this.charge + 10); if(this.charge >= 100) this.maxCharged++; if(this.combo > this.maxCombo) this.maxCombo = this.combo; hit({ type:'perfect', note:n, d:0 }); }
+        else if(cov >= .45){ n.state = 1; n.grade = 'good'; this.combo++; this.cnt.good++; this.score += 60 * this.mult(); this._life(.75); if(this.combo > this.maxCombo) this.maxCombo = this.combo; hit({ type:'good', note:n, d:0 }); }
+        else { n.state = 1; n.grade = 'short'; this.combo++; this.cnt.good++; this.score += 25 * this.mult(); this._life(0); if(this.combo > this.maxCombo) this.maxCombo = this.combo; hit({ type:'good', note:n, d:0 }); }
+        n.res = { m:+n.m.toFixed(2), sec:+n.sec.toFixed(2), cov:+cov.toFixed(2), acc:+acc.toFixed(2), late:+late.toFixed(3), dev:n.dev == null ? null : +n.dev.toFixed(2), hG:n.hG, hP:n.hP, tot:n.tot, g:n.grade }; }
       return ev; }
   }
 
@@ -1248,7 +1253,7 @@ async function startGame(){
   const pat = patOf(), bpm = bpmOf(), cycles = CFG.boss ? Math.max(3, CFG.cycles) : CFG.cycles;
   let B;
   if(pitch){ const spb0 = 60 / bpm, base = STEMNOTES[sd.id + '|' + sp.id] || [], notes = [];
-    for(let c = 0; c < cycles; c++) base.forEach(n => { const beat = 4 + c * sd.loopBeats + n.beat; notes.push({ i:notes.length, cyc:c, cell:0, tok:'', lane:'medium', long:true, beat, rel:beat * spb0, W:.2, P:.1, durB:n.dur, spb:spb0, m:n.m }); });
+    for(let c = 0; c < cycles; c++) base.forEach(n => { const beat = 4 + c * sd.loopBeats + n.beat; notes.push({ i:notes.length, cyc:c, cell:0, tok:'', lane:'medium', long:true, beat, rel:beat * spb0, W:.2, P:.1, durB:n.dur, spb:spb0, m:n.m, sndB:n.snd }); });
     B = { notes, cells:[], P:sd.loopBeats, spb:spb0, endBeat:4 + cycles * sd.loopBeats }; }
   else B = HERO.buildNotes(pat, bpm, cycles, CFG.niv);
   if(!B.notes.length){ alert('Phrase vide.'); return; }
@@ -1383,7 +1388,11 @@ function draw(g, now){
       let fill = '#f3fafe', edge = '#8b6fd6', al = 1; if(n.state !== 0){ const age = n.fxAt ? (tNow - n.fxAt) / 1000 : 0; al = Math.max(0, 1 - Math.max(0, age - .45) / .6); if(al <= 0) continue; fill = n.state === 1 ? (n.grade === 'perfect' ? V_OK : V_GOOD) : V_BAD; edge = '#fff'; }
       ctx.globalAlpha = al; ctx.shadowColor = act ? '#fff' : edge; ctx.shadowBlur = act ? 20 : 8; const hh = Math.max(22, y - yTop + 10);
       ctx.fillStyle = '#0b0620'; pxr(x - 3, y - hh + 5 - 3, w + 6, hh + 6, 6); ctx.fill(); ctx.fillStyle = edge; pxr(x, y - hh + 5, w, hh, 5); ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = fill; pxr(x + 4, y - hh + 9, w - 8, hh - 8, 3); ctx.fill();
-      if(act){ ctx.fillStyle = 'rgba(95,230,150,.6)'; const exp = Math.max(4, Math.min(16, n.sec * 100 * .4)), r = Math.min(1, n.hG / exp); ctx.fillRect(x + 6, y - 4 - (hh - 14) * r, w - 12, (hh - 14) * r); } ctx.globalAlpha = 1; continue; }
+      { const r = Math.max(0, Math.min(1, n.cov || 0)), bh = hh - 14, col = n.state === 1 ? (n.grade === 'perfect' ? V_OK : n.grade === 'good' ? V_GOOD : V_BAD) : n.state === 2 ? V_BAD : (r >= .8 ? V_OK : r >= .45 ? V_GOOD : V_BAD);
+        if(n.state !== 2 && r > 0){ ctx.fillStyle = col; ctx.fillRect(x + 6, y - 4 - bh * r, w - 12, bh * r); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x + 6, y - 4 - bh * r, w - 12, 2); }
+        const NM = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'], dn = n.durB, dt = dn === .25 ? '¼' : dn === .5 ? '½' : dn === .75 ? '¾' : (Math.round(dn * 10) / 10) + ' t';
+        ctx.fillStyle = '#17324a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 12px ' + RF; const cy = y - hh / 2 + 5; if(hh > 40){ ctx.fillText(NM[((Math.round(n.m) % 12) + 12) % 12], n.px, cy - 7); ctx.font = '900 10px ' + RF; ctx.fillText(dt, n.px, cy + 7); } else { ctx.fillText(NM[((Math.round(n.m) % 12) + 12) % 12], n.px, cy); } }
+      ctx.globalAlpha = 1; continue; }
     if(y < topY - 30 || y > H + 40) continue;
     const li = LORDER.indexOf(n.lane), cx = X0 + li * LW + LW / 2, w = LW * .72;
     let fill = '#f3fafe', edge = LC[n.lane], txt = LC[n.lane], al = 1, bw = 4, glow = LC[n.lane], gb = 9;
@@ -1474,6 +1483,7 @@ async function endGame(why){
 function cellClass(c){ if(c.f > 0) return 'conf'; const t = c.h + c.m; if(!t) return ''; const r = c.h / t; return r >= .85 ? 'ok' : r >= .5 ? 'mid' : 'low'; }
 function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
   return { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:R.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
+    pitch:g.pitch ? { part:CFG.part, song:CFG.songId, tol:[J.tolP, J.tolG], gate:g.PT ? g.PT.gate : null, W:g.PT ? g.PT.W : null, D:g.PT ? g.PT.D : null, floor:(getCal() && getCal().refs) ? getCal().refs.floor : null, notes:g.B.notes.map(n => n.res || { m:+n.m.toFixed(2), sec:+n.sec.toFixed(2), g:n.grade || null, cov:+(n.cov || 0).toFixed(2) }), voiced:J.voiced.length > 2500 ? J.voiced.filter((_, i) => i % 2 === 0) : J.voiced, nvoiced:J.voiced.length } : null,
     onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) }; }
 /* ---------- envoi automatique vers Firebase (bbx-live) : hero/takes/{uid}/{id} + hero/audio/{uid}/{id}/{k} ---------- */
 
@@ -1525,7 +1535,7 @@ async function arcade(R){
   document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v24', CH = 600000;
+const VERSION = 'v25', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -1584,6 +1594,12 @@ function renderEnd(){
   if(!hasA && why !== 'dead' && !g.pitch) h += `<div class="res warn">L'analyse complète n'a pas pu placer ta prise (${err || 'trop peu de sons détectés'}). Je montre le jugement en direct.</div>`;
   h += `<div class="kpis"><div class="kpi"><b>${J.score}</b>score</div><div class="kpi"><b>${J.maxCombo}</b>combo max</div><div class="kpi"><b>${cn.perfect}</b>parfait</div><div class="kpi"><b>${cn.good}</b>bien</div></div>
     <div class="kpis"><div class="kpi"><b>${cn.miss}</b>ratés</div><div class="kpi"><b>${cn.extra}</b>en trop</div><div class="kpi"><b>${hasA ? a.conf : cn.wrong}</b>sons confondus</div><div class="kpi"><b>${hasA ? '±' + a.reg : '–'}</b>régularité ms</div></div>`;
+  if(g.pitch){ const ns = g.B.notes, NM = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'], nn = n => NM[((Math.round(n.m) % 12) + 12) % 12];
+    const gr = { perfect:0, good:0, short:0, miss:0 }; ns.forEach(n => { if(n.grade) gr[n.grade]++; });
+    const devs = ns.filter(n => n.dev != null && n.state === 1).map(n => n.dev), md = devs.length ? devs.reduce((a, b) => a + b, 0) / devs.length : 0;
+    h += `<h2 style="margin:12px 0 4px">Tes notes</h2><div class="kpis"><div class="kpi"><b style="color:${V_OK}">${gr.perfect}</b>🟢 tenue</div><div class="kpi"><b style="color:${V_GOOD}">${gr.good}</b>🟡 moyen</div><div class="kpi"><b style="color:${V_BAD}">${gr.short}</b>🔴 trop court</div><div class="kpi"><b>${gr.miss}</b>ratées</div></div>`;
+    if(devs.length > 3) h += `<div class="res ${Math.abs(md) < .25 ? 'ok' : 'warn'}">Hauteur moyenne : ${Math.abs(md) < .25 ? 'juste 👌' : md > 0 ? 'un peu <b>trop haut</b> (+' + Math.round(md * 100) + ' cents)' : 'un peu <b>trop bas</b> (' + Math.round(md * 100) + ' cents)'}.</div>`;
+    const worst = ns.filter(n => n.state === 2 || n.grade === 'short').slice(0, 6).map(n => nn(n) + ' (' + (n.state === 2 ? 'raté' : 'trop court') + ')'); if(worst.length) h += `<div class="small muted">À retravailler : ${worst.join(' · ')}</div>`; }
   if(g.leak >= 2) h += '<div class="res warn">⚠ Le micro entendait le clic pendant le décompte : mets le casque / baisse le volume, sinon les résultats sont faussés.</div>';
   if(hasA && a.off != null){ const off = a.off, lateTxt = Math.abs(off) < 12 ? 'pile dans le temps 👌' : off > 0 ? 'en retard' : 'en avance';
     h += `<div class="res ${Math.abs(off) < 25 ? 'ok' : 'warn'}">Tu joues en moyenne <b>${off > 0 ? '+' : ''}${off} ms</b> (${lateTxt}).${Math.abs(off) >= 25 ? ` <br><span class="small">Si tu as l'impression de jouer juste, c'est la latence qui est mal réglée : <button id="bRecent" class="b-cyan" style="padding:4px 10px">Recentrer (${off > 0 ? '+' : ''}${off} ms)</button></span>` : ''}</div>`; }
