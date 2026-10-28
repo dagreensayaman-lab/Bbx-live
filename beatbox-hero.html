@@ -75,7 +75,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 25 · 28 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 26 · 28 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -859,6 +859,20 @@ const STEMSONGS = [
     parts:[ { id:'beat', n:'🥁 Beat', kind:'drum', pat:[{ div:2, tok:'P T K T P T K T' }, { div:2, tok:'P T K T P T K T' }] },
             { id:'bass', n:'🎸 Basse (humming)', kind:'pitch' }, { id:'choir', n:'🎤 Chœurs', kind:'pitch' } ],
     stemKey:{ beat:'beat', bass:'bass', choir:'choir' } } ];
+/* ---------- time-stretch (WSOLA) : change le tempo sans changer la hauteur des voix ---------- */
+const STRETCHED = new Map();
+function wsola(x, sr, rate, circ){ // rate = vitesse (1.25 = plus rapide) ; sortie de longueur N/rate ; circ = boucle sans raccord audible
+  const N = x.length, M = Math.round(N / rate), win = 2 * Math.round(sr * .03), ho = win / 2, dl = Math.round(sr * .012), y = new Float32Array(M), ws = new Float32Array(M), hw = new Float32Array(win);
+  for(let i = 0; i < win; i++) hw[i] = .5 - .5 * Math.cos(2 * Math.PI * (i + .5) / win);
+  const at = i => circ ? x[((i % N) + N) % N] : (i >= 0 && i < N ? x[i] : 0); let prev = 0, first = true;
+  for(let k = 0, o = 0; o < M + ho; k++, o = k * ho){
+    const nom = Math.round(k * ho * rate); let best = nom;
+    if(!first){ const tgt = prev + ho; let bs = -1e30; for(let d = -dl; d <= dl; d += 2){ const p = nom + d; let c = 0; for(let i = 0; i < win; i += 4) c += at(p + i) * at(tgt + i); if(c > bs){ bs = c; best = p; } } }
+    first = false; prev = best;
+    for(let i = 0; i < win; i++){ const j = o + i; if(j >= 0 && j < M){ y[j] += at(best + i) * hw[i]; ws[j] += hw[i]; } else if(circ && j >= M){ const jj = j - M; if(jj < M){ y[jj] += at(best + i) * hw[i]; ws[jj] += hw[i]; } } } }
+  for(let i = 0; i < M; i++) y[i] = ws[i] > 1e-3 ? y[i] / ws[i] : y[i]; return y; }
+function stretched(buf, rate, circ, key){ if(Math.abs(rate - 1) < .004) return buf; const kk = key + '|' + rate.toFixed(3) + (circ ? 'c' : ''); if(STRETCHED.has(kk)) return STRETCHED.get(kk);
+  const y = wsola(buf.getChannelData(0), buf.sampleRate, rate, circ), nb = ac.createBuffer(1, y.length, buf.sampleRate); nb.getChannelData(0).set(y); STRETCHED.set(kk, nb); return nb; }
 const STEMBUF = {}, STEMNOTES = {}; let STEMLOAD = null;
 async function stemsLoad(){ if(STEMLOAD) return STEMLOAD; STEMLOAD = (async () => { ensure();
   for(const k of Object.keys(STEM_B64)){ const bin = atob(STEM_B64[k]), u = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); STEMBUF[k] = await ac.decodeAudioData(u.buffer); }
@@ -1274,10 +1288,10 @@ async function startGame(){
   else for(let b = 0; b < 4; b++) clickAt(g.T0 + b * spb, b % 4 === 0, g.bus); // décompte seulement
   g.mus = null; g.evs = null; g.ep = 0;
   if(sd){ g.mus = ac.createGain(); g.mus.gain.value = CFG.mvol; g.mus.connect(ac.destination); g.srcs = []; const rate = bpm / sd.bpm, st = g.T0 + 4 * spb, en = g.T0 + (4 + cycles * sd.loopBeats) * spb;
-    sd.parts.forEach(p => { if(p.id === CFG.part && CFG.guide === false) return; const src = ac.createBufferSource(); src.buffer = STEMBUF[sd.stemKey[p.id]]; src.loop = true; src.playbackRate.value = rate; src.connect(g.mus); src.start(st); src.stop(en + .1); g.srcs.push(src); }); }
+    sd.parts.forEach(p => { if(p.id === CFG.part && CFG.guide === false) return; const src = ac.createBufferSource(); src.buffer = stretched(STEMBUF[sd.stemKey[p.id]], rate, true, sd.stemKey[p.id]); src.loop = true; src.connect(g.mus); src.start(st); src.stop(en + .1); g.srcs.push(src); }); }
   else if(CFG.style === 'song'){ const F = songFlat(); g.mus = ac.createGain(); g.mus.gain.value = CFG.mvol; g.mus.connect(ac.destination);
     if(CFG.mus && F.ev.length){ g.evs = []; for(let c = 0; c < cycles; c++) F.ev.forEach(e => g.evs.push({ trk:e.trk, fr:e.fr, dur:e.dur, beat:4 + c * B.P + e.beat })); }
-    if(USERAUD && CFG.audOn){ const src = ac.createBufferSource(); src.buffer = USERAUD.buf; const rate = CFG.audBpm > 0 ? bpm / CFG.audBpm : 1; src.playbackRate.value = rate; src.connect(g.mus); const off = +CFG.audOff || 0, st = g.T0 + 4 * spb; if(off >= 0) src.start(st, off); else src.start(st - off * -1 / rate, 0); g.src = src; } }
+    if(USERAUD && CFG.audOn){ const src = ac.createBufferSource(); const rate = CFG.audBpm > 0 ? bpm / CFG.audBpm : 1; src.buffer = stretched(USERAUD.buf, rate, false, 'user' + (USERAUD.name || USERAUD.buf.length)); src.connect(g.mus); const off = +CFG.audOff || 0, st = g.T0 + 4 * spb; if(off >= 0) src.start(st, off / rate); else src.start(st - off * -1 / rate, 0); g.src = src; } }
   g.J = new (pitch ? HERO.PitchJudge : HERO.Judge)(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:CFG.die || CFG.boss, boss:CFG.boss, fp:cal.fp, lvl:cal.lvl });
   g.endAt = g.T0 + B.endBeat * spb + lat + 1.6; g.last = null; musicSchedule(g);
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { g.wl = w; }).catch(() => {}); }catch(e){}
@@ -1535,7 +1549,7 @@ async function arcade(R){
   document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v25', CH = 600000;
+const VERSION = 'v26', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
