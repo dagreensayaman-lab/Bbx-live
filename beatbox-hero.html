@@ -75,7 +75,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 19 · 25 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 20 · 28 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -95,6 +95,13 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
     <div class="prev" id="prev"></div>
     <div class="small muted" id="prevInfo"></div>
     <div class="row" style="margin-top:6px"><button id="bHear" class="b-cyan" style="padding:8px 14px">▶ Écouter le rythme</button><span class="small muted">4 clics pour partir, puis la phrase une fois, au tempo choisi — avec tes vrais sons.</span></div>
+    <div id="songBox" style="display:none;margin-top:8px">
+      <div class="row"><label>Morceau <select id="songSel" style="max-width:56vw;font-weight:800"></select></label><button id="songNew" style="padding:6px 10px">＋ Nouveau</button><button id="songDel" style="padding:6px 10px">🗑</button></div>
+      <div class="small muted" id="songInfo" style="margin:4px 0"></div>
+      <textarea id="songTxt" spellcheck="false" style="width:100%;min-height:210px;font:700 .85rem 'Courier New',monospace;border-radius:10px;border:2px solid #cfe3ee;padding:8px;box-sizing:border-box"></textarea>
+      <div class="row" style="margin-top:6px"><button id="songSave" class="b-yel" style="padding:8px 14px">💾 Enregistrer ce morceau</button><span class="small muted" id="songMsg"></span></div>
+      <details style="margin-top:6px"><summary style="font-weight:800;cursor:pointer">❓ Comment écrire une partition</summary><div class="small muted" style="line-height:1.5">Une ligne = une mesure. Un son par case (<b>P K Ts T L Pch Pf Fsh Spt</b>, <b>~</b> pour les sons longs), « <b>.</b> » = silence. En-têtes : <b>TITRE:</b> <b>ARTISTE:</b> <b>BPM:</b> <b>CASES:</b> (cases par temps, 2 par défaut). Une section : <b>[Refrain x2]</b> (le « x2 » répète les mesures qui suivent). <b>4:</b> au début d'une ligne = 4 cases par temps pour cette mesure. Les lignes qui commencent par <b>#</b> sont des notes. Tu peux me donner un morceau (ou un enregistrement) et je t'écris la partition.</div></details>
+    </div>
     <details id="persoBox" style="margin-top:8px"><summary style="font-weight:800;cursor:pointer">✏️ Ma propre phrase (longue possible)</summary>
       <div class="row" style="margin-top:6px"><input id="pTok" value="P . K . P P K ." style="flex:1;min-width:200px;font-weight:800"><label>Cases/temps <select id="pDiv"><option value="1">1</option><option value="2" selected>2</option><option value="4">4</option></select></label></div>
       <div class="small muted">Format du Workout : un son par case, « . » = silence, 2 = croches, 4 = doubles. Pour une phrase plus longue, sépare les mesures par <b>|</b> : <i>P . K . P P K . | 4: P . P . K . P P . . . . . . . .</i> (le « 4: » donne 4 cases par temps à cette mesure).</div>
@@ -736,7 +743,8 @@ const STYLES = [
   { id:'reggae', n:'🌴 Reggae', bpm:[65, 75, 85], niv:{ 1:[{ div:2, tok:'. T . T P . . T' }], 2:[{ div:2, tok:'. T . T P K . T' }], 3:[{ div:4, tok:'. . T . . . T . P . K . . . T T' }] } },
   { id:'dnb', n:'⚡ Drum & bass', bpm:[75, 85, 95], niv:{ 1:[{ div:4, tok:'P . . . K . . . . . P . K . . .' }], 2:[{ div:4, tok:'P . T . K . T . . T P . K . T T' }], 3:[{ div:4, tok:'P . T P K . T . . P P T K . T T' }] } },
   { id:'electro', n:'🎛 Électro', bpm:[80, 100, 120], niv:{ 1:[{ div:2, tok:'P . P . P . P T' }], 2:[{ div:2, tok:'P T P Ts P T P Ts' }], 3:[{ div:4, tok:'P . T . P . T . P . T K P . Ts T' }] } },
-  { id:'perso', n:'✏️ Ma phrase', bpm:[70, 85, 100], niv:{} }
+  { id:'perso', n:'✏️ Ma phrase', bpm:[70, 85, 100], niv:{} },
+  { id:'song', n:'🎵 Morceaux', bpm:[70, 85, 100], niv:{} }
 ];
 /* phrases LONGUES : 4 mesures (16 temps), chaque mesure différente. [cases par temps, [mesures]] */
 const LONGP = {
@@ -747,17 +755,77 @@ const LONGP = {
   dnb:{ 1:[4, ['P . . . K . . . . . P . K . . .', 'P . . . K . . . . P P . K . . .', 'P . . . K . . . . . P . K . P .', 'P . . P K . . . . . P . K . . .']], 2:[4, ['P . T . K . T . . T P . K . T T', 'P . T . K . T . . T P P K . T T', 'P . T . K . T T . T P . K . T .', 'P . T . K . T . . T P . K T T T']], 3:[4, ['P . T P K . T . . P P T K . T T', 'P . T P K . T . P P . T K . T T', 'P . T P K . T . . P P T K T T T', 'P T T P K . T . . P P T K . T .']] },
   electro:{ 1:[2, ['P . P . P . P T', 'P . P . P T P T', 'P . P . P . P P', 'P . P . P P P T']], 2:[2, ['P T P Ts P T P Ts', 'P T P Ts P T P T', 'P T P Ts P P P Ts', 'P T P Ts P P T Ts']], 3:[4, ['P . T . P . T . P . T K P . Ts T', 'P . T . P . T . P . T K P T Ts T', 'P . T . P . T K P . T . P . Ts T', 'P . T P P . T . P . T K P . Ts T']] }
 };
-const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
+const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, songId:'wwry', strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
 const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
 if(CFG.dv !== 15){ CFG.die = true; CFG.dv = 15; saveCfg(); } // v15 : cœurs, game over activé par défaut
 const styleOf = () => STYLES.find(s => s.id === CFG.style) || STYLES[1];
 function patOf(){
+  if(CFG.style === 'song') return songFlat().pat;
   if(CFG.style === 'perso'){ // plusieurs mesures : sépare-les par « | » ; « 4: » au début d'une mesure = 4 cases par temps pour elle seule
     return String(CFG.ptok).split('|').map(part => { let d = +CFG.pdiv || 2, t = part.trim(); const m = /^([124])\s*:\s*(.*)$/.exec(t); if(m){ d = +m[1]; t = m[2]; } return { div:d, tok:t.split(/\s+/).filter(Boolean).join(' ') }; }).filter(x => x.tok); }
   const L = CFG.len === 'long' && LONGP[CFG.style] && LONGP[CFG.style][CFG.niv];
   if(L) return L[1].map(tok => ({ div:L[0], tok }));
   return styleOf().niv[CFG.niv];
 }
+
+/* ---------- morceaux : partitions de chansons ---------- */
+const SONG_BUILTIN = [
+  { id:'wwry', text:`TITRE: We Will Rock You
+ARTISTE: Queen
+BPM: 81
+CASES: 2
+# stomp stomp clap — le même motif tout le morceau
+[Intro x4]
+P . P . K . . .
+[Couplet x4]
+P . P . K . . .
+[Refrain x4]
+P . P . K . . .
+# Transcription simplifiée : à corriger à l'oreille` },
+  { id:'bj', text:`TITRE: Billie Jean (groove simplifié)
+ARTISTE: Michael Jackson
+BPM: 117
+CASES: 2
+# kick 1 et 3, snare 2 et 4, charley en croches
+[Intro x4]
+P T K T P T K T
+[Couplet x4]
+P T K T P T K T
+[Variation — remplissage x1]
+P T K T P T K T
+P T K T P K K K
+# Transcription indicative (pas la partition exacte) : à corriger à l'oreille` }
+];
+const songsUser = () => LS.get('bbx-hero-songs', []);
+const songsAll = () => SONG_BUILTIN.map(b => ({ id:b.id, text:b.text, builtin:true })).concat(songsUser());
+function parseSong(text){
+  const S = { title:'', artist:'', bpm:90, div:2, secs:[], err:'' }; let cur = null;
+  String(text || '').split(/\r?\n/).forEach((raw, ln) => { const l = raw.trim(); if(!l || l[0] === '#') return;
+    let m;
+    if((m = /^(TITRE|TITLE)\s*:\s*(.*)$/i.exec(l))) { S.title = m[2].trim(); return; }
+    if((m = /^(ARTISTE|ARTIST)\s*:\s*(.*)$/i.exec(l))) { S.artist = m[2].trim(); return; }
+    if((m = /^BPM\s*:\s*(\d+)/i.exec(l))) { S.bpm = Math.max(40, Math.min(200, +m[1])); return; }
+    if((m = /^(CASES|DIV)\s*:\s*([124])/i.exec(l))) { S.div = +m[2]; return; }
+    if((m = /^\[(.+?)\]$/.exec(l))) { let name = m[1].trim(), rep = 1; const r = /^(.*?)\s*[x×]\s*(\d+)$/i.exec(name); if(r){ name = r[1].trim() || name; rep = Math.max(1, Math.min(32, +r[2])); } cur = { name, rep, bars:[] }; S.secs.push(cur); return; }
+    let d = S.div, t = l; if((m = /^([124])\s*:\s*(.*)$/.exec(l))){ d = +m[1]; t = m[2]; }
+    const toks = t.split(/\s+/).filter(Boolean); if(!toks.length) return;
+    if(toks.length % d){ S.err = S.err || 'Ligne ' + (ln + 1) + ' : ' + toks.length + ' cases ne tombent pas juste avec ' + d + ' cases par temps.'; }
+    if(!cur){ cur = { name:'Morceau', rep:1, bars:[] }; S.secs.push(cur); } cur.bars.push({ div:d, tok:toks.join(' '), n:toks.length / d }); });
+  S.secs = S.secs.filter(x => x.bars.length); if(!S.secs.length) S.err = S.err || 'Aucune mesure trouvée.'; if(!S.title) S.title = 'Sans titre'; return S; }
+function flatSong(S){ const pat = [], marks = []; let beat = 0;
+  S.secs.forEach(sec => { for(let r = 0; r < sec.rep; r++){ marks.push({ b:beat, name:sec.name + (sec.rep > 1 ? ' ' + (r + 1) + '/' + sec.rep : '') }); sec.bars.forEach(b => { pat.push({ div:b.div, tok:b.tok }); beat += b.n; }); } });
+  return { pat, marks, beats:beat }; }
+const curSong = () => { const a = songsAll(); return a.find(x => x.id === CFG.songId) || a[0]; };
+let SONGFLAT = null;
+function songFlat(){ const sg = curSong(); if(!sg) return { pat:[], marks:[], beats:0 }; if(!SONGFLAT || SONGFLAT.k !== sg.id + '|' + sg.text){ SONGFLAT = Object.assign({ k:sg.id + '|' + sg.text, S:parseSong(sg.text) }, flatSong(parseSong(sg.text))); } return SONGFLAT; }
+function songUI(){
+  const all = songsAll(), sel = $('#songSel'); if(!all.some(x => x.id === CFG.songId)) CFG.songId = all[0].id;
+  sel.innerHTML = all.map(x => { const P = parseSong(x.text); return `<option value="${x.id}" ${x.id === CFG.songId ? 'selected' : ''}>${escH(P.title)}${P.artist ? ' — ' + escH(P.artist) : ''}</option>`; }).join('');
+  const sg = curSong(), F = songFlat(); if(document.activeElement !== $('#songTxt') && $('#songTxt').dataset.id !== sg.id){ $('#songTxt').value = sg.text; $('#songTxt').dataset.id = sg.id; }
+  $('#songDel').style.display = sg.builtin ? 'none' : '';
+  $('#songInfo').innerHTML = F.S.err ? '<span style="color:#b0412e;font-weight:800">⚠ ' + escH(F.S.err) + '</span>' : `🎵 ${escH(F.S.title)}${F.S.artist ? ' — ' + escH(F.S.artist) : ''} · ${F.S.bpm} BPM · ${F.S.secs.length} section(s) · ${Math.round(F.beats / 4)} mesures · ≈ ${Math.round(F.beats * 60 / (bpmOf()))} s`;
+}
+
 const bpmOf = () => CFG.speed === 3 ? (+CFG.bpm || 85) : styleOf().bpm[CFG.speed];
 
 /* ---------- audio ---------- */
@@ -849,11 +917,11 @@ function renderPrev(){
 }
 const bestAll = () => LS.get('bbx-hero-best', {});
 const bestOf = (st, n) => bestAll()[st + '|' + n] || 0;
-const nivOpen = (st, n) => CFG.unlock || st === 'perso' || n === 1 || (n === 2 && bestOf(st, 1) >= 80) || (n === 3 && bestOf(st, 2) >= 90);
+const nivOpen = (st, n) => CFG.unlock || st === 'perso' || st === 'song' || n === 1 || (n === 2 && bestOf(st, 1) >= 80) || (n === 3 && bestOf(st, 2) >= 90);
 const nivNeed = (st, n) => n === 2 ? 'Fais 80 % ou plus au niveau 1 de ce style (record : ' + bestOf(st, 1) + ' %)' : 'Fais 90 % ou plus au niveau 2 de ce style (record : ' + bestOf(st, 2) + ' %)';
 function renderHome(){ stopHear(); setTimeout(() => { try{ marquee(); }catch(e){} }, 50); if(!nivOpen(CFG.style, CFG.niv)){ CFG.niv = 1; saveCfg(); }
   $('#styles').innerHTML = STYLES.map(s => `<button class="chip ${s.id === CFG.style ? 'on' : ''}" data-s="${s.id}">${s.n}</button>`).join('');
-  $$('#nivs button').forEach(b => { const n = +b.dataset.n, ok = nivOpen(CFG.style, n); b.classList.toggle('on', n === CFG.niv); b.textContent = 'Niv ' + n + (ok ? (bestOf(CFG.style, n) >= 95 ? ' ★' : '') : ' 🔒'); b.style.opacity = ok ? '' : '.55'; }); $('#nivs').style.display = CFG.style === 'perso' ? 'none' : ''; $('#lenRow').style.display = CFG.style === 'perso' ? 'none' : ''; $$('#lens button').forEach(b => b.classList.toggle('on', b.dataset.l === CFG.len));
+  $$('#nivs button').forEach(b => { const n = +b.dataset.n, ok = nivOpen(CFG.style, n); b.classList.toggle('on', n === CFG.niv); b.textContent = 'Niv ' + n + (ok ? (bestOf(CFG.style, n) >= 95 ? ' ★' : '') : ' 🔒'); b.style.opacity = ok ? '' : '.55'; }); const free = CFG.style === 'perso' || CFG.style === 'song'; $('#nivs').style.display = free ? 'none' : ''; $('#lenRow').style.display = free ? 'none' : ''; $('#songBox').style.display = CFG.style === 'song' ? '' : 'none'; if(CFG.style === 'song') songUI(); $$('#lens button').forEach(b => b.classList.toggle('on', b.dataset.l === CFG.len));
   $('#persoBox').open = CFG.style === 'perso'; $('#pTok').value = CFG.ptok; $('#pDiv').value = CFG.pdiv;
   const S = styleOf(); $('#speeds').innerHTML = ['Lent', 'Moyen', 'Rapide'].map((n, i) => `<button data-sp="${i}" class="${CFG.speed === i ? 'on' : ''}">${n} · ${S.bpm[i]}</button>`).join('') + `<button data-sp="3" class="${CFG.speed === 3 ? 'on' : ''}">Perso</button>`;
   $('#bpm').value = CFG.speed === 3 ? (CFG.bpm || 85) : S.bpm[CFG.speed]; $('#cycles').value = CFG.cycles; $('#oDie').checked = CFG.die; $('#oBoss').checked = CFG.boss; $('#oUnlock').checked = CFG.unlock; $('#oStrict').checked = CFG.strict;
@@ -861,6 +929,14 @@ function renderHome(){ stopHear(); setTimeout(() => { try{ marquee(); }catch(e){
 }
 $('#styles').onclick = e => { const b = e.target.closest('[data-s]'); if(!b) return; CFG.style = b.dataset.s; if(CFG.speed !== 3) CFG.speed = Math.min(CFG.speed, 2); saveCfg(); renderHome(); };
 $('#bHear').onclick = startHear;
+$('#songSel').onchange = e => { CFG.songId = e.target.value; const F = songFlat(); CFG.speed = 3; CFG.bpm = F.S.bpm; CFG.cycles = 1; $('#songTxt').dataset.id = ''; saveCfg(); renderHome(); };
+$('#songTxt').oninput = () => { const P = parseSong($('#songTxt').value); $('#songMsg').textContent = P.err ? '⚠ ' + P.err : ''; };
+$('#songNew').onclick = () => { const id = 'u' + Date.now().toString(36), arr = songsUser(); arr.push({ id, text:'TITRE: Mon morceau\nARTISTE: \nBPM: 90\nCASES: 2\n[Couplet x2]\nP . K . P P K .\n[Refrain]\nP T K T P T K T' }); LS.set('bbx-hero-songs', arr); CFG.songId = id; $('#songTxt').dataset.id = ''; saveCfg(); renderHome(); };
+$('#songDel').onclick = () => { if(!confirm('Supprimer ce morceau ?')) return; LS.set('bbx-hero-songs', songsUser().filter(x => x.id !== CFG.songId)); CFG.songId = 'wwry'; $('#songTxt').dataset.id = ''; saveCfg(); renderHome(); };
+$('#songSave').onclick = () => { const txt = $('#songTxt').value, P = parseSong(txt); if(P.err && !P.secs.length){ $('#songMsg').textContent = '⚠ ' + P.err; return; }
+  let arr = songsUser(), cur = curSong(), id = cur.id;
+  if(cur.builtin){ id = 'u' + Date.now().toString(36); arr.push({ id, text:txt }); } else arr = arr.map(x => x.id === id ? { id, text:txt } : x);
+  LS.set('bbx-hero-songs', arr); CFG.songId = id; CFG.speed = 3; CFG.bpm = P.bpm; $('#songTxt').dataset.id = ''; saveCfg(); renderHome(); $('#songMsg').textContent = '✓ Enregistré' + (cur.builtin ? ' (copie à toi)' : '') + (P.err ? ' — ⚠ ' + P.err : ''); };
 $('#lens').onclick = e => { const b = e.target.closest('[data-l]'); if(!b) return; stopHear(); CFG.len = b.dataset.l; saveCfg(); renderHome(); };
 $('#nivs').onclick = e => { const b = e.target.closest('[data-n]'); if(!b) return; const n = +b.dataset.n; if(!nivOpen(CFG.style, n)){ const m = $('#lockMsg'); m.textContent = '🔒 ' + nivNeed(CFG.style, n); m.style.display = 'block'; return; } $('#lockMsg').style.display = 'none'; CFG.niv = n; saveCfg(); renderHome(); };
 $('#speeds').onclick = e => { const b = e.target.closest('[data-sp]'); if(!b) return; CFG.speed = +b.dataset.sp; if(CFG.speed === 3 && !CFG.bpm) CFG.bpm = bpmOf(); saveCfg(); renderHome(); };
@@ -1031,7 +1107,7 @@ async function startGame(){
     if(g.f0 == null) throw new Error('le micro ne donne aucun son');
   }catch(e){ alert('Micro indisponible : ' + (e.message || e)); quitGame(true); return; }
   g.bus = ac.createGain(); g.bus.connect(ac.destination);
-  g.board = boardKey(); g.T0 = ac.currentTime + .9;
+  g.board = boardKey(); g.mk = []; if(CFG.style === 'song'){ const F = songFlat(); for(let c = 0; c < cycles; c++) F.marks.forEach(m => g.mk.push({ beat:4 + c * B.P + m.b, name:m.name.toUpperCase() })); } else for(let k = 1; k < cycles; k++) g.mk.push({ beat:4 + k * B.P, name:'TOUR ' + (k + 1) + ' / ' + cycles }); g.T0 = ac.currentTime + .9;
   for(let b = 0; b < B.endBeat + 3; b++) clickAt(g.T0 + b * spb, b % 4 === 0, g.bus);
   g.J = new HERO.Judge(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:CFG.die || CFG.boss, boss:CFG.boss, fp:cal.fp, lvl:cal.lvl });
   g.endAt = g.T0 + B.endBeat * spb + lat + 1.6; g.last = null;
@@ -1159,9 +1235,9 @@ function draw(g, now){
   if(J.combo > (g.cbPrev || 0) && J.combo > 0 && J.combo % 10 === 0){ g.mile = { t0:t, txt:J.combo + ' COMBO !' }; spark(g, W / 2, 56, '#ffe27a', 22, 1.3); }
   g.cbPrev = J.combo;
   if(g.mile && t - g.mile.t0 < 1000){ const a = 1 - (t - g.mile.t0) / 1000; ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, H * .3 - (1 - a) * 30); ctx.scale(1 + .3 * a, 1 + .3 * a); ctx.fillStyle = '#ffe27a'; ctx.shadowColor = '#ff9d2e'; ctx.shadowBlur = 20; ctx.font = '900 34px ' + RF; ctx.textAlign = 'center'; ctx.fillText(g.mile.txt, 0, 0); ctx.restore(); }
-  // repères de tours
-  if(B.P && g.cycles > 1){ ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, lineY + 56); ctx.clip(); for(let k = 1; k < g.cycles; k++){ const tt = g.T0 + (4 + k * B.P) * spb, y = py(tt); if(y > topY - 20 && y < lineY + 60){ ctx.setLineDash([10, 6]); ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 2; ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(X0, y); ctx.lineTo(X0 + PW, y); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; ctx.font = '900 13px ' + RF; ctx.textAlign = 'left'; ctx.fillStyle = '#ffe27a'; ctx.fillText('TOUR ' + (k + 1) + '/' + g.cycles, X0 + 6, y - 6); }
-    if(now >= tt && now < tt + spb * 2){ const a = 1 - (now - tt) / (spb * 2); ctx.globalAlpha = a; ctx.font = '900 30px ' + RF; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe27a'; ctx.shadowColor = '#ff9d2e'; ctx.shadowBlur = 10; ctx.fillText('TOUR ' + (k + 1) + ' / ' + g.cycles, W / 2, lineY - 110); ctx.shadowBlur = 0; ctx.globalAlpha = 1; } } ctx.restore(); }
+  // repères : sections du morceau, ou tours
+  if(g.mk && g.mk.length){ ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, lineY + 56); ctx.clip(); g.mk.forEach(m => { const tt = g.T0 + m.beat * spb, y = py(tt); if(y > topY - 20 && y < lineY + 60){ ctx.setLineDash([10, 6]); ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 2; ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(X0, y); ctx.lineTo(X0 + PW, y); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; ctx.font = '900 13px ' + RF; ctx.textAlign = 'left'; ctx.fillStyle = '#ffe27a'; ctx.fillText(m.name, X0 + 6, y - 6); }
+    if(now >= tt && now < tt + spb * 2.5){ const a = 1 - (now - tt) / (spb * 2.5); ctx.globalAlpha = a; ctx.font = '900 ' + (m.name.length > 14 ? 22 : 30) + 'px ' + RF; ctx.textAlign = 'center'; ctx.fillStyle = '#ffe27a'; ctx.shadowColor = '#ff9d2e'; ctx.shadowBlur = 10; ctx.fillText(m.name, W / 2, lineY - 110); ctx.shadowBlur = 0; ctx.globalAlpha = 1; } }); ctx.restore(); }
   // socle du HUD : sous les pads, tout est posé sur un fond sombre
   { const pg = ctx.createLinearGradient(0, lineY + 56, 0, H); pg.addColorStop(0, 'rgba(10,5,34,.96)'); pg.addColorStop(1, 'rgba(6,3,22,.98)'); ctx.fillStyle = pg; ctx.fillRect(0, lineY + 56, W, H - lineY - 56); ctx.fillStyle = '#7fe9ff'; ctx.globalAlpha = .6; ctx.fillRect(X0, lineY + 56, PW, 2); ctx.globalAlpha = 1; }
   // ligne d'arrivée : damier qui descend après la dernière note
@@ -1224,8 +1300,9 @@ function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
 
 /* ---------- classement façon borne d'arcade ---------- */
 const hash = t => { let h = 0; for(const c of t) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h.toString(36); };
-const boardKey = () => [CFG.style === 'perso' ? 'perso' + hash(CFG.ptok + '|' + CFG.pdiv) : CFG.style, 'n' + CFG.niv, CFG.len, bpmOf()].concat(CFG.boss ? ['boss'] : []).join('_').replace(/[.#$\[\]\/]/g, '-');
-const boardName = k => { const q = k.split('_'); const st = (STYLES.find(x => x.id === q[0]) || {}).n || (q[0].startsWith('perso') ? '✏️ Ma phrase' : q[0]); return (st + ' · niv ' + q[1].slice(1) + ' · ' + (q[2] === 'long' ? 'longue' : 'courte') + ' · ' + q[3] + ' BPM' + (q[4] === 'boss' ? ' · 💀 BOSS' : '')).toUpperCase(); };
+const SONGNAME = {};
+const boardKey = () => [CFG.style === 'perso' ? 'perso' + hash(CFG.ptok + '|' + CFG.pdiv) : CFG.style === 'song' ? (() => { const F = songFlat(), k = 'song' + hash(F.pat.map(b => b.div + b.tok).join('|')); SONGNAME[k] = F.S.title; return k; })() : CFG.style, 'n' + CFG.niv, CFG.len, bpmOf()].concat(CFG.boss ? ['boss'] : []).join('_').replace(/[.#$\[\]\/]/g, '-');
+const boardName = k => { const q = k.split('_'); const st = (STYLES.find(x => x.id === q[0]) || {}).n || (q[0].startsWith('song') ? '🎵 ' + (SONGNAME[q[0]] || 'MORCEAU') : q[0].startsWith('perso') ? '✏️ Ma phrase' : q[0]); return (st + (q[0].startsWith('song') ? ' · ' : ' · niv ' + q[1].slice(1) + ' · ' + (q[2] === 'long' ? 'longue' : 'courte') + ' · ') + q[3] + ' BPM' + (q[4] === 'boss' ? ' · 💀 BOSS' : '')).toUpperCase(); };
 const locBoard = k => LS.get('bbx-hero-hs-' + k, []);
 async function fetchBoard(k){ // top 10 partagé (si Firebase répond), sinon scores de cet appareil
   const loc = locBoard(k).map(r => Object.assign({ loc:1 }, r));
@@ -1269,7 +1346,7 @@ async function arcade(R){
   document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v19', CH = 600000;
+const VERSION = 'v20', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
