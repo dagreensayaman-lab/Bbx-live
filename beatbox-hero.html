@@ -75,7 +75,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 22 · 28 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 24 · 28 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -751,7 +751,8 @@ const HERO = (() => {
       if(rms > this.gate){ const d = this.d, c = this.c; let cs = 0; c[0] = 1;
         for(let tau = 1; tau <= tmax; tau++){ let sum = 0; for(let j = 0; j < W; j++){ const a = b[(o + tmax + j) & m] - b[(o + tmax + j - tau) & m]; sum += a * a; } d[tau] = sum; cs += sum; c[tau] = cs > 1e-12 ? sum * tau / cs : 1; }
         let tau = this.tmin; while(tau < tmax){ if(c[tau] < .16){ while(tau + 1 < tmax && c[tau + 1] < c[tau]) tau++; break; } tau++; }
-        if(tau < tmax && c[tau] < .2){ const a = c[tau - 1], bb = c[tau], cc = c[tau + 1] != null ? c[tau + 1] : bb, den = a - 2 * bb + cc, sh = den ? .5 * (a - cc) / den : 0; f = this.sd / (tau + Math.max(-1, Math.min(1, sh))); conf = c[tau]; } }
+        if(tau >= tmax){ let mn = 9, mt = 0; for(let q = this.tmin; q < tmax; q++){ if(c[q] < mn){ mn = c[q]; mt = q; } } if(mn < .34){ for(let q = this.tmin; q < tmax; q++){ if(c[q] <= mn + .05 && c[q] <= c[q - 1] && c[q] <= (c[q + 1] != null ? c[q + 1] : 9)){ mt = q; break; } } tau = mt; } }
+        if(tau < tmax && c[tau] < .34){ const a = c[tau - 1], bb = c[tau], cc = c[tau + 1] != null ? c[tau + 1] : bb, den = a - 2 * bb + cc, sh = den ? .5 * (a - cc) / den : 0; f = this.sd / (tau + Math.max(-1, Math.min(1, sh))); conf = c[tau]; } }
       const fr = { t, f, rms, conf, m:f > 0 ? 69 + 12 * Math.log2(f / 440) : null }; this.out.push(fr); if(this.onFrame) this.onFrame(fr);
     }
   }
@@ -769,16 +770,16 @@ const HERO = (() => {
   }
   // juge « hauteur » : même interface que Judge (score, vie, combo, barre électrique), mais une note est réussie si tu tiens la bonne hauteur (octave libre)
   class PitchJudge extends Judge {
-    constructor(notes, T0, lat, o){ super(notes, T0, lat, o); this.tolP = (o && o.tolP) || .6; this.tolG = (o && o.tolG) || 1.1; this.cur = null; this.fr = 0; notes.forEach(n => { n.sec = n.durB * (n.spb); n.hP = 0; n.hG = 0; n.tot = 0; n.pitch = true; }); }
+    constructor(notes, T0, lat, o){ super(notes, T0, lat, o); this.tolP = (o && o.tolP) || .6; this.tolG = (o && o.tolG) || 1.1; this.cur = null; this.fr = 0; this.voiced = []; this.last = null; notes.forEach(n => { n.sec = n.durB * (n.spb); n.hP = 0; n.hG = 0; n.tot = 0; n.pitch = true; }); }
     onset(z){ z.verdict = 'pitch'; this.log.push(z); return []; }
-    frame(f){ this.fr++; if(f.m != null && f.conf < .2){ this.cur = { m:f.m, t:f.t }; }
-      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t - .05 > f.t) break; if(n.state !== 0) continue; const a = n.t + .03, b = n.t + n.sec + .05; if(f.t < a || f.t > b) continue; n.tot++; if(f.m != null && f.conf < .2){ const d = circ(f.m, n.m); if(d <= this.tolP) n.hP++; if(d <= this.tolG) n.hG++; } } }
+    frame(f){ this.fr++; if(f.m != null && f.conf < .36){ this.cur = { m:f.m, t:f.t }; this.voiced.push([f.t, f.m, f.rms]); }
+      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t - .05 > f.t) break; if(n.state !== 0) continue; const a = n.t - .05, b = n.t + n.sec + .08; if(f.t < a || f.t > b) continue; n.tot++; if(f.m != null && f.conf < .36){ const d = circ(f.m, n.m); if(d <= this.tolP) n.hP++; if(d <= this.tolG) n.hG++; } } }
     advance(settled){ const ev = [];
       while(this.ip < this.notes.length && this.notes[this.ip].state !== 0) this.ip++;
-      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t + n.sec + .1 >= settled) break; if(n.state !== 0) continue;
-        const exp = Math.max(3, n.sec * 100 * .5), rP = n.hP / exp, rG = n.hG / exp; n.cov = Math.max(rP, rG * .8);
+      for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t + n.sec + .14 >= settled) break; if(n.state !== 0) continue;
+        const exp = Math.max(4, Math.min(16, n.sec * 100 * .4)), rP = n.hP / exp, rG = n.hG / exp; n.cov = Math.max(rP, rG * .8);
         if(rP >= .6){ n.state = 1; n.grade = 'perfect'; this.combo++; this.cnt.perfect++; this.score += 100 * this.mult(); this._life(1.5); this.charge = Math.min(100, this.charge + 10); if(this.charge >= 100) this.maxCharged++; if(this.combo > this.maxCombo) this.maxCombo = this.combo; ev.push({ type:'perfect', note:n, d:0 }); }
-        else if(rG >= .45){ n.state = 1; n.grade = 'good'; this.combo++; this.cnt.good++; this.score += 60 * this.mult(); this._life(.75); if(this.combo > this.maxCombo) this.maxCombo = this.combo; ev.push({ type:'good', note:n, d:0 }); }
+        else if(rG >= .4){ n.state = 1; n.grade = 'good'; this.combo++; this.cnt.good++; this.score += 60 * this.mult(); this._life(.75); if(this.combo > this.maxCombo) this.maxCombo = this.combo; ev.push({ type:'good', note:n, d:0 }); }
         else { n.state = 2; this.cnt.miss++; this.combo = 0; this._life(-10); this._err(); ev.push({ type:'miss', note:n }); } }
       return ev; }
   }
@@ -1120,15 +1121,31 @@ function renderCal(){
       <p>Le téléphone met 70 à 200 ms entre « jouer un clic » et « l'entendre dans le micro ». Je la mesure pour décaler le jugement.</p>
       <div class="res warn"><b>Pour cette mesure seulement : enlève le casque</b> (haut-parleur à moitié volume), reste silencieux 6 s.</div>
       <div class="res" id="cLat">${L ? 'Déjà mesurée : <b>' + L.ms + ' ms</b> (' + ago(L.t) + ') — mesurée dans l\'appli ou le labo.' : 'Pas encore mesurée.'}</div>
-      <div class="row"><button class="b-yel" id="cGo">${L ? 'Refaire la mesure' : 'Mesurer'}</button><span class="sp"></span><button id="cSkip">${L ? 'Garder →' : 'Passer (0 ms) →'}</button></div>`;
+      <div class="row"><button class="b-yel" id="cGo">${L ? 'Refaire la mesure' : 'Mesurer'}</button><span class="sp"></span><button id="cSkip">${L ? 'Garder →' : 'Passer (0 ms) →'}</button></div>
+      <div class="res" style="margin-top:8px"><b>🎧 Casque + micro (le clic ne passe pas dans le micro) ?</b><br>Garde ton casque : 4 clics pour écouter, puis joue un <b>P</b> sur chacun des 8 clics suivants. Je mesure le décalage avec ta voix.<div class="row" style="margin-top:6px"><button class="b-cyan" id="cAlt">Mesurer avec ma voix (8 s)</button><div class="meter"><i id="cLvl"></i></div></div></div>`;
     $('#cSkip').onclick = () => { calStep = 2; renderCal(); };
+    $('#cAlt').onclick = async () => {
+      $('#cAlt').disabled = true; $('#cGo').disabled = true; $('#cSkip').disabled = true; const st = { cur:0 }, stop = lvlLoop(st, 'cLvl'); $('#cLat').textContent = 'Écoute les 4 clics, puis joue P sur les 8 suivants…';
+      try{ const spb = .6, rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; });
+        const T0 = ac.currentTime + .4; for(let b = 0; b < 12; b++) clickAt(T0 + b * spb, b % 4 === 0);
+        await sleep((T0 - ac.currentTime + 12 * spb + .6) * 1000); const r = rec.stop(); stop();
+        let ons = RY.onsets(r.x, r.sr); if(ons.length < 5) ons = RY.onsets(r.x, r.sr, { sens:.03, dynDb:50, dynDb2:65 });
+        const T0r = T0 - r.tStart, v = [];
+        for(let k = 4; k < 12; k++){ const c = T0r + k * spb, o = ons.find(q => q.t >= c - .05 && q.t <= c + .45); if(o) v.push((o.t - c) * 1000); }
+        if(v.length < 5) $('#cLat').innerHTML = '❌ Je n\'ai entendu que ' + v.length + ' sons sur 8 (niveau max ' + Math.round(20 * Math.log10(r.peak + 1e-9)) + ' dB). Joue plus fort et franc, ou passe (0 ms) : tu régleras ensuite avec « Synchro casque ».';
+        else { const med = Math.round(HERO.median(v)), sd = Math.round(HERO.std(v)); const ms = Math.max(0, Math.min(400, med));
+          LS.set('bbx-rylat', { ms, t:Date.now(), n:v.length, via:'voix' }); LS.set('bbx-hero-adj', 0);
+          $('#cLat').innerHTML = (sd > 45 ? '⚠️ Mesure instable (±' + sd + ' ms) — refais-la en jouant bien sur les clics. ' : '✅ ') + 'Latence : <b>' + ms + ' ms</b> (' + v.length + '/8 sons, ±' + sd + ' ms)'; }
+      }catch(e){ stop(); $('#cLat').textContent = 'Micro indisponible : ' + (e.message || e); }
+      $('#cAlt').disabled = false; $('#cGo').disabled = false; $('#cSkip').disabled = false; $('#cSkip').textContent = 'Suivant →'; $('#cSkip').className = 'b-pink';
+    };
     $('#cGo').onclick = async () => {
       $('#cGo').disabled = true; $('#cSkip').disabled = true; $('#cLat').textContent = 'J\'écoute… (6 s)';
       try{ const bpm = 100, spb = .6, rec = await recStart(); const T0 = ac.currentTime + .25; for(let b = 0; b < 9; b++) clickAt(T0 + b * spb, b % 4 === 0);
         await sleep((T0 - ac.currentTime + 5.9) * 1000); const r = rec.stop();
         let ons = RY.onsets(r.x, r.sr), cl = RY.findClicks(ons, bpm);
         if(cl.c0 == null){ ons = RY.onsets(r.x, r.sr, { sens:.03, dynDb:50, dynDb2:65 }); cl = RY.findClicks(ons, bpm); } // 2e essai, plus sensible
-        if(cl.c0 == null) $('#cLat').innerHTML = '❌ Je n\'entends pas bien le clic (niveau max ' + Math.round(20 * Math.log10(r.peak + 1e-9)) + ' dB, ' + ons.length + ' sons repérés). Monte le volume du téléphone, rapproche le micro du haut-parleur, ou passe cette étape (tu régleras ensuite avec « Synchro casque »).';
+        if(cl.c0 == null) $('#cLat').innerHTML = '❌ Je n\'entends pas bien le clic (niveau max ' + Math.round(20 * Math.log10(r.peak + 1e-9)) + ' dB, ' + ons.length + ' sons repérés). Monte le volume du téléphone, rapproche le micro du haut-parleur, ou passe cette étape (tu régleras ensuite avec « Synchro casque »). <b>Avec un casque :</b> utilise plutôt « Mesurer avec ma voix » ci-dessous.';
         else { const exp = ((T0 - r.tStart) % spb + spb) % spb; let d = cl.c0 - exp; if(d < -spb / 2) d += spb; if(d > spb / 2) d -= spb; const ms = Math.round(d * 1000);
           LS.set('bbx-rylat', { ms, t:Date.now(), n:cl.n }); LS.set('bbx-hero-adj', 0); $('#cLat').innerHTML = '✅ Latence : <b>' + ms + ' ms</b> (' + cl.n + ' clics entendus)'; }
       }catch(e){ $('#cLat').textContent = 'Micro indisponible : ' + (e.message || e); }
@@ -1241,7 +1258,7 @@ async function startGame(){
   const g = G = { pitch, part:sp ? sp.id : null, B, pat, bpm, cycles, lat, spb, fx:[], parts:[], leak:0, over:false, done:false, chunks:[], f0:null, mic:null, bus:null, T0:0, J:null, D:null, raf:0, lvl:0, why:'' };
   try{
     g.D = new HERO.LiveDetector(ac.sampleRate, cal.refs, Object.assign({}, cal.det || {}, { onOnset:z => onOnset(z) }));
-    if(pitch){ g.PT = new HERO.PitchTracker(ac.sampleRate, { gate:Math.min(.02, Math.max(.003, (cal.refs.floor || .001) * 3)), onFrame:fr => { if(g.J && g.J.frame) g.J.frame(fr); } }); }
+    if(pitch){ g.PT = new HERO.PitchTracker(ac.sampleRate, { gate:Math.min(.02, Math.max(.0015, (cal.refs.floor || .001) * 2)), onFrame:fr => { g.dbg = fr; if(g.J && g.J.frame) g.J.frame(fr); } }); }
     g.mic = await micOpen((d, f) => { if(g.f0 == null) g.f0 = f; g.chunks.push(d); g.D.feed(d, f); if(g.PT) g.PT.feed(d, f); });
     const t = Date.now(); while(g.f0 == null && Date.now() - t < 2500) await sleep(20);
     if(g.f0 == null) throw new Error('le micro ne donne aucun son');
@@ -1366,7 +1383,7 @@ function draw(g, now){
       let fill = '#f3fafe', edge = '#8b6fd6', al = 1; if(n.state !== 0){ const age = n.fxAt ? (tNow - n.fxAt) / 1000 : 0; al = Math.max(0, 1 - Math.max(0, age - .45) / .6); if(al <= 0) continue; fill = n.state === 1 ? (n.grade === 'perfect' ? V_OK : V_GOOD) : V_BAD; edge = '#fff'; }
       ctx.globalAlpha = al; ctx.shadowColor = act ? '#fff' : edge; ctx.shadowBlur = act ? 20 : 8; const hh = Math.max(22, y - yTop + 10);
       ctx.fillStyle = '#0b0620'; pxr(x - 3, y - hh + 5 - 3, w + 6, hh + 6, 6); ctx.fill(); ctx.fillStyle = edge; pxr(x, y - hh + 5, w, hh, 5); ctx.fill(); ctx.shadowBlur = 0; ctx.fillStyle = fill; pxr(x + 4, y - hh + 9, w - 8, hh - 8, 3); ctx.fill();
-      if(act){ ctx.fillStyle = 'rgba(95,230,150,.6)'; const exp = Math.max(3, n.sec * 100 * .5), r = Math.min(1, n.hG / exp); ctx.fillRect(x + 6, y - 4 - (hh - 14) * r, w - 12, (hh - 14) * r); } ctx.globalAlpha = 1; continue; }
+      if(act){ ctx.fillStyle = 'rgba(95,230,150,.6)'; const exp = Math.max(4, Math.min(16, n.sec * 100 * .4)), r = Math.min(1, n.hG / exp); ctx.fillRect(x + 6, y - 4 - (hh - 14) * r, w - 12, (hh - 14) * r); } ctx.globalAlpha = 1; continue; }
     if(y < topY - 30 || y > H + 40) continue;
     const li = LORDER.indexOf(n.lane), cx = X0 + li * LW + LW / 2, w = LW * .72;
     let fill = '#f3fafe', edge = LC[n.lane], txt = LC[n.lane], al = 1, bw = 4, glow = LC[n.lane], gb = 9;
@@ -1378,6 +1395,7 @@ function draw(g, now){
     ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(cx - w / 2 + 8, y - nh / 2 + 6, w - 16, 3); ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(cx - w / 2 + 8, y + nh / 2 - 9, w - 16, 3);
     ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.fillText(n.tok, cx, y + 1); ctx.globalAlpha = 1; }
   ctx.restore();
+  if(g.pitch && g.dbg){ const d = g.dbg, nm = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']; const lab = d.m != null && d.conf < .36 ? nm[((Math.round(d.m) % 12) + 12) % 12] + ' ' + Math.round(d.f) + 'Hz' : (d.rms > 0.001 ? 'voix ? ' : '…'); ctx.font = '900 10px ' + RF; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.textAlign = 'right'; ctx.fillText('micro ' + lab + ' · ' + Math.round(Math.min(1, d.rms * 20) * 100) + '%', W - 8, topY - 6); ctx.textAlign = 'left'; }
   if(g.pitch && J.cur && (g.pr)){ const fresh = ac.currentTime - (g.lat || 0) - J.cur.t < .25; if(fresh){ let m = J.cur.m; while(m < g.pr.mid - 6) m += 12; while(m > g.pr.mid + 6) m -= 12; const act = B.notes.find(n => n.state === 0 && now >= n.tc && now <= n.tc + n.durB * spb + .1), ok = act && HERO.circ(J.cur.m, act.m) <= 1.1; const cx = Math.max(X0 + 8, Math.min(X0 + PW - 8, pX(m)));
       ctx.save(); ctx.shadowColor = ok ? V_OK : '#7fe9ff'; ctx.shadowBlur = 18; ctx.fillStyle = ok ? V_OK : '#7fe9ff'; ctx.beginPath(); ctx.moveTo(cx, lineY - 16); ctx.lineTo(cx + 14, lineY); ctx.lineTo(cx, lineY + 16); ctx.lineTo(cx - 14, lineY); ctx.closePath(); ctx.fill(); ctx.restore(); } }
   // effets : anneaux, textes
@@ -1507,7 +1525,7 @@ async function arcade(R){
   document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v22', CH = 600000;
+const VERSION = 'v24', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
