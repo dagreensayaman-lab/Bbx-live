@@ -75,7 +75,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 29 · 28 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 31 · 28 oct. 2026</span></p>
 
   <div class="card">
     <h2>1. Micro &amp; calibration</h2>
@@ -115,6 +115,7 @@ ul.l{margin:6px 0;padding-left:20px}ul.l li{margin:3px 0}
     </div>
     <details id="sndBox" style="margin-top:8px"><summary style="font-weight:800;cursor:pointer">🎛 Mes sons (changer de caisse claire / charley)</summary>
       <div class="row" style="margin-top:6px;gap:8px;flex-wrap:wrap"><label>Kick <select id="sKck"></select></label><label>Caisse claire <select id="sSnr"></select></label><label>Charley <select id="sHat"></select></label></div>
+      <label class="small" style="display:block;margin-top:6px"><input type="checkbox" id="cProf"> 🎓 Je suis prof : mes prises servent de référence pour apprendre à reconnaître les sons (kick, snares, charleys…)</label>
       <div class="small muted" style="margin-top:4px">Remplace le P, le K et le T des styles du jeu (pas « Ma phrase » ni les morceaux : là tu écris les sons toi-même). Le jeu juge la <b>famille</b> du son (grave / medium / aigu) ; les sons proches (Pch / Pf / Fsh / Spt) ne sont pas distingués entre eux par le micro.</div>
     </details>
     <details id="persoBox" style="margin-top:8px"><summary style="font-weight:800;cursor:pointer">✏️ Ma propre phrase (longue possible)</summary>
@@ -782,7 +783,10 @@ const HERO = (() => {
     if(cur) segs.push(cur);
     const spb = 60 / bpm, keep = segs.filter(g => g.n >= 6).map(g => ({ b:Math.max(0, Math.round((g.t0 - .045) / spb * 4) / 4), e:g.t1 / spb, m:g.m }));
     const out = []; keep.forEach((g, i) => { if(out.length && g.b <= out[out.length - 1].b) return; out.push({ beat:g.b, m:g.m, e:g.e, snd:Math.max(.1, g.e - g.b) }); });
-    out.forEach((g, i) => { const nx = out[i + 1] ? out[i + 1].beat : Math.max(g.beat + .25, Math.ceil(g.e * 4) / 4); g.dur = Math.max(.25, Math.min(nx - g.beat, g.e - g.beat + .3)); }); return out;
+    out.forEach((g, i) => { const nx = out[i + 1] ? out[i + 1].beat : Math.max(g.beat + .25, Math.ceil(g.e * 4) / 4); g.dur = Math.max(.25, Math.min(nx - g.beat, g.e - g.beat + .3)); });
+    // petites notes collées (doubles croches, glissés, ornements) = un seul geste : un seul bloc, qui accepte chacune des hauteurs qui le composent
+    const merged = []; out.forEach(g => { const p = merged[merged.length - 1]; if(p && g.dur <= .25 && p.last <= .25 && Math.abs(p.beat + p.dur - g.beat) < .01){ p.dur += g.dur; p.snd += g.snd; p.ms.push(g.m); p.last = g.dur; } else merged.push(Object.assign({}, g, { ms:[g.m], last:g.dur })); });
+    merged.forEach(p => { p.n = p.ms.length; if(p.n > 1) p.m = p.ms.reduce((a, b) => a + b, 0) / p.n; delete p.last; if(p.n === 1) delete p.ms; }); return merged;
   }
   // juge « hauteur » : même interface que Judge (score, vie, combo, barre électrique), mais une note est réussie si tu tiens la bonne hauteur (octave libre)
   class PitchJudge extends Judge {
@@ -791,7 +795,7 @@ const HERO = (() => {
     onset(z){ z.verdict = 'pitch'; this.log.push(z); return []; }
     frame(f){ this.fr++; const ok = f.m != null && f.conf < .36; if(ok){ this.cur = { m:f.m, t:f.t }; this.voiced.push([+f.t.toFixed(3), +f.m.toFixed(2), +f.rms.toFixed(4)]); }
       for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t - .05 > f.t) break; if(n.state !== 0) continue; const a = n.t - .05, b = n.t + n.sec + .08; if(f.t < a || f.t > b) continue; n.tot++;
-        if(ok){ let dv = ((f.m - n.m) % 12 + 12) % 12; if(dv > 6) dv -= 12; const d = Math.abs(dv); if(d <= this.tolG){ n.hG++; n.dsum += dv; n.dn++; if(n.first == null) n.first = f.t; n.lastHit = f.t; if(d <= this.tolP) n.hP++; } } n.cov = Math.min(1, n.hG / n.expF); } }
+        if(ok){ let dv = ((f.m - n.m) % 12 + 12) % 12; if(dv > 6) dv -= 12; if(n.ms){ for(const q of n.ms){ let e = ((f.m - q) % 12 + 12) % 12; if(e > 6) e -= 12; if(Math.abs(e) < Math.abs(dv)) dv = e; } } const d = Math.abs(dv); if(d <= this.tolG){ n.hG++; n.dsum += dv; n.dn++; if(n.first == null) n.first = f.t; n.lastHit = f.t; if(d <= this.tolP) n.hP++; } } n.cov = Math.min(1, n.hG / n.expF); } }
     advance(settled){ const ev = [];
       while(this.ip < this.notes.length && this.notes[this.ip].state !== 0) this.ip++;
       for(let j = this.ip; j < this.notes.length; j++){ const n = this.notes[j]; if(n.t + n.sec + .14 >= settled) break; if(n.state !== 0) continue;
@@ -805,7 +809,21 @@ const HERO = (() => {
       return ev; }
   }
 
-  return { PitchTracker, PitchJudge, stemNotes, circ, LEVELS, crossCheck, tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
+
+  // ---------- empreinte d'un son (forme d'onde) : 2 spectres en 16 bandes + enveloppe + durée. Sert à apprendre à distinguer les caisses claires (K / K~ / Pch / Pf / Fsh / Spt…) ----------
+  function soundVec(x, sr, i0){
+    const N = 1024, nb = 16, lo = 100, hi = Math.min(12000, sr / 2 * .95), edges = []; for(let i = 0; i <= nb; i++) edges.push(lo * Math.pow(hi / lo, i / nb));
+    const spec = st => { const re = new Float32Array(N), im = new Float32Array(N); for(let i = 0; i < N; i++){ const v = x[st + i] || 0; re[i] = v * (.5 - .5 * Math.cos(2 * Math.PI * i / N)); } RY.fft(re, im);
+      const e = new Float32Array(nb); for(let k = 1; k < N / 2; k++){ const f = k * sr / N; if(f < lo || f >= hi) continue; let b = 0; while(b < nb - 1 && f >= edges[b + 1]) b++; e[b] += re[k] * re[k] + im[k] * im[k]; } return Array.from(e, v => 10 * Math.log10(v + 1e-12)); };
+    const a0 = Math.max(0, i0 - Math.round(.004 * sr)), A = spec(a0), B = spec(i0 + Math.round(.03 * sr)), ref = Math.max.apply(null, A);
+    const rms = (s0, s1) => { let e = 0, n = 0; for(let i = Math.max(0, i0 + s0); i < Math.min(x.length, i0 + s1); i++){ e += x[i] * x[i]; n++; } return n ? Math.sqrt(e / n) : 0; };
+    const ms = v => Math.round(v * sr / 1000), pk = Math.max(1e-6, rms(0, ms(30))), db = v => 20 * Math.log10(Math.max(1e-6, v) / pk);
+    const env = [db(rms(0, ms(10))), db(rms(ms(10), ms(30))), db(rms(ms(30), ms(60))), db(rms(ms(60), ms(120)))];
+    let z = 0, n30 = ms(30); for(let i = 1; i < n30; i++){ const p = x[i0 + i - 1] || 0, q = x[i0 + i] || 0; if((p >= 0) !== (q >= 0)) z++; }
+    let dur = 300; for(let t = 5; t < 300; t += 5){ if(db(rms(ms(t), ms(t + 5))) < -20){ dur = t; break; } }
+    return A.map(v => v - ref).concat(B.map(v => v - ref), env, [z / n30 * 100, dur]).map(v => +v.toFixed(1)); }
+
+  return { soundVec, PitchTracker, PitchJudge, stemNotes, circ, LEVELS, crossCheck, tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
 })();
 
 </script>
@@ -1081,6 +1099,7 @@ function renderHome(){ stopHear(); setTimeout(() => { try{ marquee(); }catch(e){
   $('#styles').innerHTML = STYLES.map(s => `<button class="chip ${s.id === CFG.style ? 'on' : ''}" data-s="${s.id}">${s.n}</button>`).join('');
   $$('#nivs button').forEach(b => { const n = +b.dataset.n, ok = nivOpen(CFG.style, n); b.classList.toggle('on', n === CFG.niv); b.textContent = 'Niv ' + n + (ok ? (bestOf(CFG.style, n) >= 95 ? ' ★' : '') : ' 🔒'); b.style.opacity = ok ? '' : '.55'; }); const free = CFG.style === 'perso' || CFG.style === 'song'; $('#nivs').style.display = free ? 'none' : ''; $('#lenRow').style.display = free ? 'none' : ''; $('#songBox').style.display = CFG.style === 'song' ? '' : 'none'; if(CFG.style === 'song') songUI(); $$('#lens button').forEach(b => b.classList.toggle('on', b.dataset.l === CFG.len));
   [['sKck', 'kck'], ['sSnr', 'snr'], ['sHat', 'hat']].forEach(([id, k]) => { const e = $('#' + id); if(!e.options.length) e.innerHTML = SND_OPT[k].map(o => `<option value="${o[0]}">${o[1]}</option>`).join(''); e.value = CFG[k] || SND_OPT[k][0][0]; e.onchange = () => { CFG[k] = e.value; saveCfg(); renderPrev(); }; });
+  $('#cProf').checked = !!CFG.prof; $('#cProf').onchange = e => { CFG.prof = e.target.checked; saveCfg(); };
   $('#sndBox').open = ['kck', 'snr', 'hat'].some((k, i) => CFG[k] && CFG[k] !== ['P', 'K', 'T'][i]);
   $('#persoBox').open = CFG.style === 'perso'; $('#pTok').value = CFG.ptok; $('#pDiv').value = CFG.pdiv;
   const S = styleOf(); $('#speeds').innerHTML = ['Lent', 'Moyen', 'Rapide'].map((n, i) => `<button data-sp="${i}" class="${CFG.speed === i ? 'on' : ''}">${n} · ${S.bpm[i]}</button>`).join('') + `<button data-sp="3" class="${CFG.speed === 3 ? 'on' : ''}">Perso</button>`;
@@ -1287,7 +1306,7 @@ async function startGame(){
   const pat = patOf(), bpm = bpmOf(), cycles = CFG.boss ? Math.max(3, CFG.cycles) : CFG.cycles;
   let B;
   if(pitch){ const spb0 = 60 / bpm, base = STEMNOTES[sd.id + '|' + sp.id] || [], notes = [];
-    for(let c = 0; c < cycles; c++) base.forEach(n => { const beat = 4 + c * sd.loopBeats + n.beat; notes.push({ i:notes.length, cyc:c, cell:0, tok:'', lane:'medium', long:true, beat, rel:beat * spb0, W:.2, P:.1, durB:n.dur, spb:spb0, m:n.m, sndB:n.snd }); });
+    for(let c = 0; c < cycles; c++) base.forEach(n => { const beat = 4 + c * sd.loopBeats + n.beat; notes.push({ i:notes.length, cyc:c, cell:0, tok:'', lane:'medium', long:true, beat, rel:beat * spb0, W:.2, P:.1, durB:n.dur, spb:spb0, m:n.m, sndB:n.snd, ms:n.ms }); });
     B = { notes, cells:[], P:sd.loopBeats, spb:spb0, endBeat:4 + cycles * sd.loopBeats }; }
   else B = HERO.buildNotes(pat, bpm, cycles, CFG.niv);
   if(!B.notes.length){ alert('Phrase vide.'); return; }
@@ -1518,7 +1537,8 @@ function cellClass(c){ if(c.f > 0) return 'conf'; const t = c.h + c.m; if(!t) re
 function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
   return { style:CFG.style, niv:CFG.niv, bpm:g.bpm, cycles:g.cycles, pat:g.pat, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), sr:R.sr, strict:CFG.strict, live:{ cnt:J.cnt, score:J.score, combo:J.maxCombo, acc:J.accuracy() }, final:a ? RY.compact(a) : null,
     pitch:g.pitch ? { part:CFG.part, song:CFG.songId, tol:[J.tolP, J.tolG], gate:g.PT ? g.PT.gate : null, W:g.PT ? g.PT.W : null, D:g.PT ? g.PT.D : null, floor:(getCal() && getCal().refs) ? getCal().refs.floor : null, notes:g.B.notes.map(n => n.res || { m:+n.m.toFixed(2), sec:+n.sec.toFixed(2), g:n.grade || null, cov:+(n.cov || 0).toFixed(2) }), voiced:J.voiced.length > 2500 ? J.voiced.filter((_, i) => i % 2 === 0) : J.voiced, nvoiced:J.voiced.length } : null,
-    onsets:J.log.map(z => ({ t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db })), ua:navigator.userAgent.slice(0, 120) }; }
+    onsets:J.log.map(z => { const o = { t:+(z.t - g.T0).toFixed(3), v:z.verdict, c:z.c, lo:z.lo, hi:z.hi, db:z.db }; if(!g.pitch && z.note != null && g.B.notes[z.note]){ o.k = g.B.notes[z.note].tok; if(R.x && (z.verdict === 'hit' || z.verdict === 'wrong')){ try{ o.sv = HERO.soundVec(R.x, R.sr, Math.max(0, Math.round(z.t * R.sr - g.f0))); }catch(e){} } } return o; }),
+    prof:!!CFG.prof, snd:[CFG.kck || 'P', CFG.snr || 'K', CFG.hat || 'T'], ua:navigator.userAgent.slice(0, 120) }; }
 /* ---------- envoi automatique vers Firebase (bbx-live) : hero/takes/{uid}/{id} + hero/audio/{uid}/{id}/{k} ---------- */
 
 /* ---------- classement façon borne d'arcade ---------- */
@@ -1569,7 +1589,7 @@ async function arcade(R){
   document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v29', CH = 600000;
+const VERSION = 'v31', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
