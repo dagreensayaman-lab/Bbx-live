@@ -85,6 +85,9 @@ body.advon{overflow:hidden;background:#1b63c4}
 .advp{position:absolute;left:8px;right:8px;bottom:max(8px,env(safe-area-inset-bottom));background:#0d2033f2;color:#fff;border:3px solid #ffe27a;border-radius:6px;box-shadow:0 0 0 3px #0d2033,0 6px 0 3px #000;padding:8px 10px 6px;font-family:Nunito,system-ui,sans-serif}
 .advh{font:900 1rem 'Courier New',monospace;letter-spacing:.05em;color:#ffe27a}.advs{font-size:.78rem;font-weight:800;margin:1px 0}.advt{font-size:.78rem;line-height:1.3;margin:3px 0;opacity:.92}
 .advrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}.advstr{font-size:1.45rem;line-height:1;letter-spacing:3px}.advstr .g{color:#ffd23f;text-shadow:0 2px 0 #a56a00}.advstr .d{color:#3a4a66}.advstr .small{color:#fff;letter-spacing:0;font-weight:800}.advrow button{padding:9px 20px;font:900 1.05rem 'Courier New',monospace;border-radius:4px;box-shadow:0 4px 0 #a52a55}
+.advstr .b{color:#5ef0ff;text-shadow:0 0 10px #19b6ff,0 2px 0 #0a5a8a}#advBook{padding:4px 8px;background:#0d2033;border:2px solid #ffe27a;border-radius:4px;box-shadow:0 3px 0 #000;font-size:1rem}
+#advDlg{display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.5);align-items:flex-end;padding:0 8px max(14px,env(safe-area-inset-bottom));cursor:pointer}#advDlg.on{display:flex}
+.advdb{width:100%;background:#fff;color:#0d2033;border:4px solid #0d2033;border-radius:6px;box-shadow:0 0 0 3px #ffe27a,0 6px 0 3px #000;padding:10px 14px 10px;font:800 1rem 'Courier New',ui-monospace,monospace;min-height:130px;position:relative}.advdl{font-size:.78rem;color:#a52a55;letter-spacing:.08em;margin-bottom:5px}.advdt{line-height:1.45;min-height:5.8em}.advdn{position:absolute;right:12px;bottom:6px;color:#a52a55;animation:abl .9s steps(2,start) infinite}
 .advgoal{font-size:.64rem;color:#ffffffaa;margin-top:5px;text-align:center}
 .advend{text-align:center;background:linear-gradient(135deg,#17324a,#3b2f7a);border-radius:14px;padding:12px;margin-bottom:8px}.advk{font:900 1.15rem 'Courier New',monospace;letter-spacing:.08em;color:#ffe27a}
 </style></head><body>
@@ -177,9 +180,10 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="adv" class="scr">
   <div id="advCol">
     <canvas id="advCv" width="120" height="220"></canvas>
-    <div class="advbar"><button id="advBack">◀</button><div class="advtt">BEATBOX ADVENTURE</div><div class="advsc" id="advSc"></div></div>
+    <div class="advbar"><button id="advBack">◀</button><div class="advtt">BEATBOX ADVENTURE</div><button id="advBook" title="L'histoire">📖</button><div class="advsc" id="advSc"></div></div>
     <div id="advLv"></div>
     <div class="advp" id="advP"></div>
+    <div id="advDlg"></div>
   </div>
 </div>
 
@@ -571,7 +575,7 @@ const HERO = (() => {
 
   // Notes d'une phrase : pat = [{div, tok}], le décompte (4 temps) est inclus dans rel
   // fenêtres [Parfait, Bien] en secondes selon le niveau : plus on monte, plus c'est exigeant
-  const LEVELS = { 1:[.055, .11], 2:[.04, .09], 3:[.03, .07] };
+  const LEVELS = { 1:[.055, .11], 2:[.04, .09], 3:[.03, .07], 4:[.085, .17], 5:[.05, .11] }; // 4 et 5 : Beatbox Adventure niv 1 (débutant, très indulgent) et niv 2
   function buildNotes(pat, bpm, cycles, niv){
     const spb = 60 / bpm, G = RY.grid(pat), notes = [], L = LEVELS[niv] || LEVELS[1];
     for(let c = 0; c < cycles; c++) G.ev.forEach(e => {
@@ -676,7 +680,7 @@ const HERO = (() => {
     constructor(notes, T0, lat, o){
       o = o || {}; this.notes = notes; this.T0 = T0; this.lat = lat;
       notes.forEach(n => { n.tc = T0 + n.rel; n.t = n.tc + lat; n.state = 0; n.res = null; });
-      this.boss = !!o.boss; this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0; this.last = notes.length ? notes[notes.length - 1].t : 0;
+      this.boss = !!o.boss; this.lifeK = o.lifeK || 1; this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0; this.last = notes.length ? notes[notes.length - 1].t : 0;
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.life = 100; this.dead = false; this.ip = 0; this.charge = 0; this.zaps = 0; this.maxCharged = 0;
       this.cnt = { perfect:0, good:0, miss:0, wrong:0, extra:0 }; this.learned = {}; this.log = []; this.lastHit = null; this.hitDb = []; this.by = {};
       if(o.fp) Object.keys(o.fp).forEach(f => { this.by[f] = o.fp[f].slice(); });
@@ -699,7 +703,7 @@ const HERO = (() => {
       let sep = 1e9; fs.forEach(a => fs.forEach(b => { if(a < b) sep = Math.min(sep, dist(cen[a], cen[b])); }));
       return { fs, cen, dist, sep };
     }
-    _life(dv){ if(this.boss) dv = dv > 0 ? 0 : dv * 1.5; this.life = Math.max(0, Math.min(100, this.life + dv)); if(this.lifeDie && this.life <= 0) this.dead = true; }
+    _life(dv){ if(this.boss) dv = dv > 0 ? 0 : dv * 1.5; if(dv < 0 && this.lifeK) dv *= this.lifeK; this.life = Math.max(0, Math.min(100, this.life + dv)); if(this.lifeDie && this.life <= 0) this.dead = true; }
     // queue d'un son déjà compté (souffle d'un P, « h » d'un K, fin d'un Ts…) : à ignorer, comme dans RY.match
     _tail(z){
       const h = this.lastHit; if(!h || z.t - h.z.t > .4) return false; const dt = z.t - h.z.t;
@@ -899,7 +903,6 @@ const LONGP = {
    un style de musique par lieu (grooves originaux, synthé WebAudio), 3 niveaux de difficulté, 0 à 3 étoiles.
    ===================================================================== */
 let ADV = null; // niveau en cours (null = partie classique)
-const ADV_STAR1 = 60; // ★ : précision minimale (%). ★★ = aucune erreur. ★★★ = aucune erreur ET que des « Parfait »
 const MF = m => 440 * Math.pow(2, (m - 69) / 12);
 const CHQ = { maj:[0, 4, 7], min:[0, 3, 7], m7:[0, 3, 7, 10], dom7:[0, 4, 7, 10], maj7:[0, 4, 7, 11] };
 /* 3 difficultés : 1 = boucle de 4 mesures · 2 = 8 mesures qui évoluent · 3 = 16 mesures, plus de sons, tempo +6.
@@ -980,7 +983,7 @@ const ADV_W = [
 function advBuild(wi, lv){
   const w = ADV_W[wi], pat = ADV_SEQ[lv - 1].map(k => w.M[k]), order = ['P', 'K', 'T', 'Ts', 'Pch', 'L'];
   const ix = x => { const i = order.indexOf(x); return i < 0 ? 99 : i; }, sounds = [...new Set(pat.join(' ').split(' ').filter(x => x !== '.'))].sort((a, b) => ix(a) - ix(b));
-  return Object.assign({}, w, { wi, lv, pat, bpm:w.bpm + ADV_DBPM[lv - 1], cycles:ADV_CYC[lv - 1], niv:lv, clk:w.clk && lv < 3, boss:w.boss && lv >= 2, sounds:sounds.join(' '), mes:pat.length * ADV_CYC[lv - 1] }); }
+  return Object.assign({}, w, { wi, lv, pat, bpm:w.bpm + ADV_DBPM[lv - 1], cycles:ADV_CYC[lv - 1], niv:lv, win:ADV_ST[lv].win, lifeK:ADV_ST[lv].lifeK, clk:w.clk && lv < 3, boss:w.boss && lv >= 2, sounds:sounds.join(' '), mes:pat.length * ADV_CYC[lv - 1] }); }
 
 /* accompagnement : liste d'évènements (en temps) pour UN tour de phrase ; évolue avec les sections (tonalité, nappes) */
 function advEvents(w){
@@ -1011,16 +1014,24 @@ const advKey = (id, lv) => lv === 1 ? id : id + ':' + lv;
 let ADV_LV = +LS.get('bbx-adv-lv', 1) || 1;
 const advStarsOf = (i, lv) => advData().s[advKey(ADV_W[i].id, lv || ADV_LV)] || 0;
 const advOpen = (i, lv) => !!CFG.unlock || i === 0 || advStarsOf(i - 1, lv || ADV_LV) >= 1;
-const advTotal = lv => ADV_W.reduce((t, w, i) => t + advStarsOf(i, lv || ADV_LV), 0);
-function advStars(J, why){ if(why === 'dead') return 0; const cn = J.cnt, clean = cn.miss + cn.wrong + cn.extra === 0 && cn.perfect + cn.good > 0;
-  if(clean && cn.good === 0) return 3; if(clean) return 2; return J.accuracy() >= ADV_STAR1 ? 1 : 0; }
+const advTotal = lv => ADV_W.reduce((t, w, i) => t + Math.min(3, advStarsOf(i, lv || ADV_LV)), 0);
+const advMax = lv => ADV_W.reduce((t, w, i) => t + (advStarsOf(i, lv || ADV_LV) >= 4 ? 1 : 0), 0);
+/* seuils d'étoiles par difficulté : le niveau 1 est indulgent (débutants), le 3 exige d'être pile sur les temps.
+   ★ = précision ≥ t1 · ★★ = précision ≥ t2 · ★★★ = précision ≥ t3 ET au moins r3 de « Parfait » parmi les sons réussis.
+   win = fenêtres de timing (LEVELS du moteur : 4 = très large, 5 = moyen, 3 = strict) · lifeK = vie perdue par erreur (×) */
+const ADV_ST = { 1:{ t1:40, t2:75, t3:92, r3:.60, win:4, lifeK:.4 }, 2:{ t1:50, t2:85, t3:96, r3:.75, win:5, lifeK:.7 }, 3:{ t1:60, t2:92, t3:100, r3:.85, win:3, lifeK:1 } };
+function advStars(J, why, lv){ if(why === 'dead') return 0; const S = ADV_ST[lv || 1], cn = J.cnt, acc = J.accuracy(), h = cn.perfect + cn.good, pr = h ? cn.perfect / h : 0;
+  if(cn.perfect > 0 && cn.good === 0 && cn.miss + cn.wrong + cn.extra === 0) return 4; // PARFAIT MAX : rien de faux, tout « Parfait » → étoiles bleues
+  if(acc >= S.t3 && pr >= S.r3) return 3; if(acc >= S.t2) return 2; return acc >= S.t1 ? 1 : 0; }
 function advSave(a, stars, pct){ const d = advData(), k = advKey(a.id, a.lv), old = d.s[k] || 0; let unlocked = -1;
   if(stars > old){ if(old === 0 && stars >= 1 && a.wi + 1 < ADV_W.length && advStarsOf(a.wi + 1, a.lv) === 0) unlocked = a.wi + 1; d.s[k] = stars; }
   if(pct > (d.b[k] || 0)) d.b[k] = pct; LS.set(ADV_LS, d); return { old, unlocked }; }
 function advBanner(g, stars, why){
   const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = advSave(a, stars, g.J.accuracy()); }
-  const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:#ffd23f;text-shadow:0 3px 0 #a56a00">' + '★'.repeat(stars) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - stars) + '</span></span>';
-  const msg = why === 'dead' ? 'Plus de cœurs… retente, tu y es presque !' : stars === 3 ? '3 étoiles : chaque son pile dans le temps !' : stars === 2 ? 'Aucune erreur ! Vise maintenant « Parfait » sur chaque son.' : stars === 1 ? 'Passé ! Vise zéro erreur pour la 2e étoile.' : 'Il faut au moins ' + ADV_STAR1 + ' % de précision pour passer. Retente !';
+  const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00';
+  const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
+  const msg = why === 'dead' ? 'Plus de cœurs… retente, tu y es presque !' : blue ? 'Rien de faux, tout pile dans le temps : tu ne peux pas faire mieux !' : stars === 3 ? '3 étoiles : chaque son pile dans le temps !' : stars === 2 ? 'Super ! Vise maintenant « Parfait » sur presque tous les sons.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour passer. Retente !';
+  if(a.wi === ADV_W.length - 1 && stars >= 1 && !advSeen().end){ advSeenSet('end'); LS.set('bbx-adv-pend', 'end'); }
   const nx = ADV_W[a.wi + 1], nxt = r.unlocked >= 0 ? '<div class="res ok" style="font-weight:900;text-align:center">🔓 Nouveau lieu débloqué : ' + nx.ic + ' ' + nx.n + ' !</div>' : '';
   return `<div class="advend"><div class="advk">${a.ic} ${a.n.toUpperCase()} · NIV ${a.lv}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nxt}`; }
 
@@ -1084,9 +1095,9 @@ const AVLAND = [ // cercles de terre (dx, dy, rayon) + couleurs [ombre, terre, b
 ];
 const AV_DIG = ['111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001', '111100111001111', '111100111101111', '111001001010010', '111101111101111', '111101111001111'];
 const AV_STAR = ['00100', '01110', '11111', '01110', '01010'];
-const AV_HERO = ['..hhhhh..', '.hhhhhhh.', 'phhsssshp', 'p.seses.p', '..sssss..', '..ccccc..', '.sccccccs', '.sccccccs', '..ccccc..'];
-const AV_LEG = [['..jj.jj..', '..jj.jj..', '..bb.bb..'], ['.jj...jj.', '.jj...jj.', '.bb...bb.']];
-const AV_COL = { h:'#17324a', s:'#ffd9b3', p:'#f58bb0', c:'#7fe9ff', j:'#5b6bd6', b:'#f2f2f2', e:'#17324a' };
+const AV_HERO = ['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.RRRRRRRRRR', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn']; // casquette rouge, tee blanc, micro
+const AV_LEG = [['.bbbbbbbbb.', '.bbbb.bbbb.', '.bbbb.bbbb.', 'kkkk...kkkk'], ['.bbbbbbbbb.', 'bbbb...bbbb', 'bbb.....bbb', 'kkk.....kkk']]; // baggy bleu, baskets blanches
+const AV_COL = { r:'#e23a3a', R:'#a82424', h:'#1a1a2e', s:'#ffd9b3', e:'#1a1a2e', m:'#a8584a', w:'#f6f6f6', b:'#2f5fc4', k:'#ffffff', M:'#c9d1d9', n:'#3a3a46' };
 let AVr = null;
 function advInitUI(){
   const A = AVr = { cv:$('#advCv'), t0:performance.now(), sel:0, hx:AVN[0].x, hy:AVN[0].y - 5, raf:0, last:0, walk:false, cam:0, camT:0, hv:220, drag:null, free:false };
@@ -1099,18 +1110,19 @@ function advInitUI(){
   document.addEventListener('keydown', e => { if(!$('#adv').classList.contains('on')) return; if(e.key === 'ArrowDown' || e.key === 'ArrowLeft') advSelect(Math.max(0, A.sel - 1)); else if(e.key === 'ArrowUp' || e.key === 'ArrowRight') advSelect(Math.min(ADV_W.length - 1, A.sel + 1)); else if(e.key === 'Enter' && advOpen(A.sel)) advPlay(A.sel); });
   window.addEventListener('resize', () => { if($('#adv').classList.contains('on')) advResize(); });
   $('#advBack').onclick = () => { try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} renderHome(); show('home'); };
+  $('#advBook').onclick = () => advDialog(ADV_PROLOGUE, '📖 L\'HISTOIRE');
   $('#bAdv').onclick = () => { try{ const el = document.documentElement; if(!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({ navigationUI:'hide' }).catch(() => {}); }catch(e){} advShow(); };
   advHomeSt();
 }
-function advHomeSt(){ const e = $('#advHomeSt'); if(e) e.textContent = '★ ' + [1, 2, 3].map(l => advTotal(l)).join(' · ') + ' / ' + ADV_W.length * 3; }
+function advHomeSt(){ const e = $('#advHomeSt'); if(e) e.textContent = '★ ' + [1, 2, 3].map(l => advTotal(l)).join(' · ') + ' / ' + ADV_W.length * 3 + (advMax(1) + advMax(2) + advMax(3) ? ' · ✦ ' + (advMax(1) + advMax(2) + advMax(3)) : ''); }
 function advResize(){ const A = AVr, iw = window.innerWidth, ih = window.innerHeight, cw = Math.min(iw, Math.round(ih * .62)); const col = $('#advCol'); col.style.width = cw + 'px'; const hv = Math.round(ih * 120 / cw); A.hv = hv;
   if(A.cv.width !== 120 || A.cv.height !== hv){ A.cv.width = 120; A.cv.height = hv; } A.cv.style.width = cw + 'px'; A.cv.style.height = ih + 'px'; A.sc = cw / 120; }
 function advShow(sel){
   ADV = null; show('adv'); advResize(); const A = AVr; if(sel == null){ sel = 0; for(let i = 0; i < ADV_W.length; i++) if(advOpen(i)){ sel = i; if(advStarsOf(i) < 1) break; } }
   A.sel = sel; A.hx = AVN[sel].x; A.hy = AVN[sel].y - 5; A.walk = false; A.free = false; A.cam = A.camT = Math.max(0, Math.min(Math.max(0, AVWH + 90 - A.hv), A.hy - A.hv * .4));
-  advLvBar(); advPanel(); advHomeSt(); if(!A.raf){ A.last = 0; A.raf = requestAnimationFrame(advLoop); } }
+  advLvBar(); advPanel(); advHomeSt(); if(!A.raf){ A.last = 0; A.raf = requestAnimationFrame(advLoop); } setTimeout(advIntro, 350); }
 function advLvBar(){
-  $('#advLv').innerHTML = [1, 2, 3].map(l => `<button data-l="${l}" class="${ADV_LV === l ? 'on' : ''}">NIV ${l}<small>★ ${advTotal(l)}/${ADV_W.length * 3}</small></button>`).join('');
+  $('#advLv').innerHTML = [1, 2, 3].map(l => `<button data-l="${l}" class="${ADV_LV === l ? 'on' : ''}">NIV ${l}<small>★ ${advTotal(l)}/${ADV_W.length * 3}${advMax(l) ? ' ✦' + advMax(l) : ''}</small></button>`).join('');
   $$('#advLv button').forEach(b => b.onclick = () => { ADV_LV = +b.dataset.l; LS.set('bbx-adv-lv', ADV_LV); advLvBar(); advPanel(); advHomeSt(); });
   $('#advSc').textContent = '★ ' + advTotal() + '/' + ADV_W.length * 3; }
 function advSelect(i){ AVr.sel = i; AVr.walk = advOpen(i); AVr.free = false; advPanel(); }
@@ -1120,14 +1132,15 @@ function advPanel(){
     <div class="advs">${a.style} · ${a.bpm} BPM · ${a.mes} mesures (~${secs} s)${a.boss ? ' · 💀 BOSS' : ''}</div>
     <div class="advs" style="opacity:.85">Sons : <b>${a.sounds}</b></div>
     <div class="advt">${open ? a.teach : 'Termine le lieu précédent (niveau ' + ADV_LV + ') avec au moins 1 étoile pour ouvrir celui-ci.'}</div>
-    <div class="advrow"><div class="advstr"><span class="g">${'★'.repeat(st)}</span><span class="d">${'★'.repeat(3 - st)}</span>${best != null ? ' <span class="small">' + best + ' %</span>' : ''}</div>
+    <div class="advrow"><div class="advstr"><span class="${st >= 4 ? 'b' : 'g'}">${'★'.repeat(Math.min(3, st))}</span><span class="d">${'★'.repeat(3 - Math.min(3, st))}</span>${st >= 4 ? ' <span class="small" style="color:#5ef0ff">✦ PARFAIT</span>' : ''}${best != null ? ' <span class="small">' + best + ' %</span>' : ''}</div>
     <button class="b-pink" id="advGo" ${open ? '' : 'disabled'}>${open ? '▶ JOUER' : '🔒'}</button></div>
-    <div class="advgoal">★ ${ADV_STAR1} % · ★★ aucune erreur · ★★★ que des PARFAIT</div>`;
+    <div class="advgoal">★ ${ADV_ST[a.lv].t1} % · ★★ ${ADV_ST[a.lv].t2} % · ★★★ ${ADV_ST[a.lv].t3 >= 100 ? 'zéro erreur' : ADV_ST[a.lv].t3 + ' %'} et ${Math.round(ADV_ST[a.lv].r3 * 100)} % de PARFAIT</div>`;
   $('#advGo').onclick = () => advPlay(i); advPanelH(); }
 function advPanelH(){ const A = AVr; requestAnimationFrame(() => { const p = $('#advP'); A.panV = p ? p.offsetHeight / (A.sc || 3) : 60; }); }
 function advPlay(i){
   if(!advOpen(i)) return; if(!getCal()){ alert('Fais d\'abord la calibration (micro, latence, sons) : elle ne prend qu\'une minute.'); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} calStep = 0; renderCal(); show('cal'); return; }
-  ADV = advBuild(i, ADV_LV); startGame(); }
+  const go = () => { ADV = advBuild(i, ADV_LV); startGame(); }, id = ADV_W[i].id;
+  if(!advSeen()['w_' + id]){ advSeenSet('w_' + id); advDialog([ADV_STORY[id]], ADV_W[i].ic + ' ' + ADV_W[i].n.toUpperCase(), go); } else go(); }
 function advLoop(now){ const A = AVr; if(!$('#adv').classList.contains('on')){ A.raf = 0; return; }
   const dt = Math.min(.05, A.last ? (now - A.last) / 1000 : .016); A.last = now;
   if(A.walk){ const n = AVN[A.sel], tx = n.x, ty = n.y - 5, dx = tx - A.hx, dy = ty - A.hy, d = Math.hypot(dx, dy); if(d < 1){ A.hx = tx; A.hy = ty; A.walk = false; } else { const s = Math.min(d, 70 * dt); A.hx += dx / d * s; A.hy += dy / d * s; } }
@@ -1157,14 +1170,42 @@ function advDraw(t){
   // repères de niveau
   AVN.forEach((n, i) => { if(!vis(n)) return; const open = advOpen(i), st = advStarsOf(i), sel = A.sel === i, boss = ADV_W[i].boss;
     if(sel){ const rr = 8 + Math.floor(t * 4) % 2; for(let a = 0; a < 16; a += 2) R(n.x + Math.cos(a / 16 * 6.283) * rr - 1, n.y + Math.sin(a / 16 * 6.283) * rr - 1, 2, 2, '#fff'); }
-    circ(n.x, n.y, 6, '#0d2033'); circ(n.x, n.y, 5, !open ? '#6c7a92' : st >= 3 ? '#ffd23f' : st >= 1 ? '#7be28f' : boss ? '#ef5b6e' : '#f58bb0'); R(n.x - 3, n.y - 4, 2, 1, 'rgba(255,255,255,.7)');
+    circ(n.x, n.y, 6, '#0d2033'); circ(n.x, n.y, 5, !open ? '#6c7a92' : st >= 4 ? '#5ef0ff' : st >= 3 ? '#ffd23f' : st >= 1 ? '#7be28f' : boss ? '#ef5b6e' : '#f58bb0'); R(n.x - 3, n.y - 4, 2, 1, 'rgba(255,255,255,.7)');
     if(!open){ R(n.x - 2, n.y - 1, 5, 4, '#2a3550'); R(n.x - 1, n.y - 3, 3, 1, '#2a3550'); R(n.x - 1, n.y - 2, 1, 1, '#2a3550'); R(n.x + 1, n.y - 2, 1, 1, '#2a3550'); R(n.x, n.y + 1, 1, 1, '#9aa5b5'); }
     else if(i + 1 < 10) pat(AV_DIG[i + 1].match(/.{3}/g), n.x - 1, n.y - 2, '#0d2033'); else { const d1 = AV_DIG[1].match(/.{3}/g), d2 = AV_DIG[(i + 1) % 10].match(/.{3}/g); pat(d1, n.x - 3, n.y - 2, '#0d2033'); pat(d2, n.x + 1, n.y - 2, '#0d2033'); }
-    for(let s = 0; s < 3; s++){ const sx = n.x - 8 + s * 6, sy = n.y + 8; pat(AV_STAR, sx + 1, sy + 1, '#0d2033'); pat(AV_STAR, sx, sy, s < st ? '#ffd23f' : '#3a4a66'); } });
+    for(let s = 0; s < 3; s++){ const sx = n.x - 8 + s * 6, sy = n.y + 8; pat(AV_STAR, sx + 1, sy + 1, '#0d2033'); pat(AV_STAR, sx, sy, s < st ? (st >= 4 ? (Math.floor(t * 4 + s) % 4 ? '#5ef0ff' : '#fff') : '#ffd23f') : '#3a4a66'); } });
   // héros
-  { const walk = A.walk, f = walk ? Math.floor(performance.now() / 130) % 2 : 0, bob = walk ? 0 : Math.floor(t * 3) % 2, x = Math.round(A.hx) - 5, y = Math.round(A.hy) - 12 + bob;
-    R(x + 1, y + 13 - bob, 9, 2, 'rgba(0,0,0,.28)'); pat(AV_HERO, x, y, ch => AV_COL[ch] || '#fff'); pat(AV_LEG[f], x, y + 9, ch => AV_COL[ch] || '#fff'); }
+  { const walk = A.walk, f = walk ? Math.floor(performance.now() / 130) % 2 : 0, bob = walk ? 0 : Math.floor(t * 3) % 2, x = Math.round(A.hx) - 5, y = Math.round(A.hy) - 15 + bob;
+    R(x + 1, y + 15 - bob, 9, 2, 'rgba(0,0,0,.28)'); pat(AV_HERO, x, y, ch => AV_COL[ch] || '#fff'); pat(AV_LEG[f], x, y + 11, ch => AV_COL[ch] || '#fff'); }
 }
+
+/* ---------- l'histoire : prologue, une réplique à la première arrivée sur chaque île, épilogue ---------- */
+const ADV_PROLOGUE = ['Il était une fois un jeune beatboxer qui rêvait de devenir le beatboxer le plus complet du monde.', 'Une vieille légende raconte que, pour y arriver, il faut apprendre le rythme secret de chacune des douze îles de l\'archipel.', 'Casquette vissée sur la tête, micro en main, il lève l\'ancre. Première escale : la Plage Pixel…'];
+const ADV_EPILOGUE = ['Les douze rythmes secrets sont à lui. Reggae, afro, hip-hop, samba, électro, drum & bass… tout est dans sa bouche.', 'Le beatboxer le plus complet ? Presque. Au loin, une treizième île vient d\'apparaître sur l\'horizon…', 'À SUIVRE…'];
+const ADV_STORY = {
+  plage:'Ici, les vagues battent à contretemps. Écoute le charley : il tombe toujours entre les temps.',
+  foret:'Les tambours de la forêt ne dorment jamais. Un ancien du village t\'apprend à décaler tes kicks.',
+  neon:'La ville ne dort jamais. Un DJ te lance : « Montre-moi un vrai boom bap, petit ! »',
+  samba:'Le volcan fait la fête. Ici, on danse d\'abord et on réfléchit après.',
+  orbite:'En apesanteur, tout flotte… sauf le kick, qui bat comme un cœur.',
+  chateau:'Un dragon garde le premier sceau. Il crache des rafales de doubles croches. Tiens bon !',
+  desert:'Dans les dunes, un mirage chante : dum, tek, tek-a-dum. Suis-le !',
+  steppe:'Le froid mord, mais l\'accordéon réchauffe. Marche au pas : un-deux, un-deux.',
+  sakura:'Sous les cerisiers, le maître de taiko ne dit rien. Il frappe. Toi, tu écoutes.',
+  cantina:'La fête bat son plein sous les guirlandes. Quelqu\'un te tend une clave : « Joue ! »',
+  funk:'La boule à facettes tourne. Impossible de rester immobile.',
+  cime:'Tout en haut, le dernier boss t\'attend. Montre-lui tout ce que tu as appris.'
+};
+const advSeen = () => LS.get('bbx-adv-seen', {});
+const advSeenSet = k => { const d = advSeen(); d[k] = 1; LS.set('bbx-adv-seen', d); };
+function advDialog(pages, label, cb){
+  const d = $('#advDlg'); let i = 0, timer = 0, full = '';
+  const page = () => { full = pages[i]; let k = 0; d.innerHTML = `<div class="advdb"><div class="advdl">${label}</div><div class="advdt" id="advDt"></div><div class="advdn">${i + 1 < pages.length ? '▼' : 'OK ▶'}</div></div>`; d.classList.add('on'); const tx = $('#advDt'); clearInterval(timer); timer = setInterval(() => { k += 2; tx.textContent = full.slice(0, k); if(k >= full.length) clearInterval(timer); }, 22); };
+  d.onclick = () => { const tx = $('#advDt'); if(tx && tx.textContent.length < full.length){ clearInterval(timer); tx.textContent = full; return; } i++; if(i < pages.length) page(); else { clearInterval(timer); d.classList.remove('on'); d.innerHTML = ''; d.onclick = null; if(cb) cb(); } };
+  page(); }
+function advIntro(){ const seen = advSeen();
+  if(!seen.pro){ advSeenSet('pro'); advDialog(ADV_PROLOGUE, '📖 L\'HISTOIRE'); }
+  else if(LS.get('bbx-adv-pend', '') === 'end'){ LS.set('bbx-adv-pend', ''); advDialog(ADV_EPILOGUE, '📖 L\'HISTOIRE'); } }
 
 /* =====================================================================
    BEATBOX ADVENTURE — décors pixel art des 12 lieux, derrière la piste (façon Tetris : le centre reste sobre, le décor vit autour)
@@ -1710,7 +1751,7 @@ async function startGame0(){
   if(pitch){ const spb0 = 60 / bpm, base = STEMNOTES[sd.id + '|' + sp.id] || [], notes = [];
     for(let c = 0; c < cycles; c++) base.forEach(n => { const beat = 4 + c * sd.loopBeats + n.beat; notes.push({ i:notes.length, cyc:c, cell:0, tok:'', lane:'medium', long:true, beat, rel:beat * spb0, W:.2, P:.1, durB:n.dur, spb:spb0, m:n.m, sndB:n.snd, ms:n.ms }); });
     B = { notes, cells:[], P:sd.loopBeats, spb:spb0, endBeat:4 + cycles * sd.loopBeats }; }
-  else B = HERO.buildNotes(pat, bpm, cycles, ADV ? ADV.niv : CFG.niv);
+  else B = HERO.buildNotes(pat, bpm, cycles, ADV ? ADV.win : CFG.niv);
   if(!B.notes.length){ alert('Phrase vide.'); return; }
   ensure(); if(cal.sr && cal.sr !== ac.sampleRate){ alert('La fréquence audio a changé (' + cal.sr + ' → ' + ac.sampleRate + ' Hz) : refais le test de sons.'); return; }
   $('#game').classList.add('on'); fit(); $('#warn').style.display = 'none';
@@ -1735,7 +1776,7 @@ async function startGame0(){
   else if(CFG.style === 'song'){ const F = songFlat(); g.mus = ac.createGain(); g.mus.gain.value = CFG.mvol; g.mus.connect(ac.destination);
     if(CFG.mus && F.ev.length){ g.evs = []; for(let c = 0; c < cycles; c++) F.ev.forEach(e => g.evs.push({ trk:e.trk, fr:e.fr, dur:e.dur, beat:4 + c * B.P + e.beat })); }
     if(USERAUD && CFG.audOn){ const src = ac.createBufferSource(); const rate = CFG.audBpm > 0 ? bpm / CFG.audBpm : 1; src.buffer = stretched(USERAUD.buf, rate, false, 'user' + (USERAUD.name || USERAUD.buf.length)); src.connect(g.mus); const off = +CFG.audOff || 0, st = g.T0 + 4 * spb; if(off >= 0) src.start(st, off / rate); else src.start(st - off * -1 / rate, 0); g.src = src; } }
-  g.J = new (pitch ? HERO.PitchJudge : HERO.Judge)(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:ADV ? true : CFG.die || BOSS, boss:BOSS, fp:cal.fp, lvl:cal.lvl });
+  g.J = new (pitch ? HERO.PitchJudge : HERO.Judge)(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:ADV ? true : CFG.die || BOSS, boss:BOSS, lifeK:ADV ? ADV.lifeK : 1, fp:cal.fp, lvl:cal.lvl });
   g.endAt = g.T0 + B.endBeat * spb + lat + 1.6; g.last = null; musicSchedule(g);
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { g.wl = w; }).catch(() => {}); }catch(e){}
   g.raf = requestAnimationFrame(frame);
@@ -1987,7 +2028,7 @@ async function arcade(R){
   if(!sc || sc < 1) return; // pas de score → pas d'arcade
   const B = await fetchBoard(k), rank = B.rows.filter(r => r.s >= sc).length; // 0-based
   const qualifies = B.rows.length < 10 || sc > B.rows[B.rows.length - 1].s;
-  const head = `<h2>${R.why === 'dead' ? 'GAME OVER' : 'FIN DE PARTIE'}</h2><div class="sm">${boardName(k)}</div><div class="sc">${String(sc).padStart(6, '0')}</div><div class="sm">PRÉCISION ${acc}%</div><div style="font-size:1.6rem;color:#ffe27a;letter-spacing:4px">${(n => '★'.repeat(n) + '☆'.repeat(3 - n))(g.adv ? advStars(J, R.why) : R.why === 'dead' ? 0 : acc >= 95 ? 3 : acc >= 80 ? 2 : acc >= 60 ? 1 : 0)}</div>`;
+  const head = `<h2>${R.why === 'dead' ? 'GAME OVER' : 'FIN DE PARTIE'}</h2><div class="sm">${boardName(k)}</div><div class="sc">${String(sc).padStart(6, '0')}</div><div class="sm">PRÉCISION ${acc}%</div><div style="font-size:1.6rem;color:#ffe27a;letter-spacing:4px">${(n => '★'.repeat(n) + '☆'.repeat(3 - n))(g.adv ? Math.min(3, advStars(J, R.why, g.adv.lv)) : R.why === 'dead' ? 0 : acc >= 95 ? 3 : acc >= 80 ? 2 : acc >= 60 ? 1 : 0)}</div>`;
   if(!qualifies){ W.innerHTML = head + tableHtml(B.rows) + '<p class="sm">Il te faut ' + (B.rows[B.rows.length - 1].s + 1) + ' points pour entrer dans le top 10.</p><button class="bt" id="arcOk">VOIR MON BILAN</button><button class="bt s" id="arcAg">REJOUER</button>'; $('#arc').classList.add('on'); $('#arcOk').onclick = arcClose; $('#arcAg').onclick = () => { arcClose(); $('#bAgain') ? $('#bAgain').click() : $('#bMenu') && $('#bMenu').click(); }; return; }
   let ini = (String(LS.get('bbx-hero-ini', '') || LS.get('bbx-hero-name', '') || 'AAA').toUpperCase().replace(/[^A-Z0-9]/g, '') + 'AAA').slice(0, 3).split('');
   const AL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -2055,13 +2096,14 @@ function renderEnd(){
     if(bad && bad.length){ const per = {}; bad.forEach(b => { (per[b.cell] = per[b.cell] || { n:0, h:b.heard }).n++; });
       Object.keys(per).forEach(i => { const c = a.cells[i]; if(c && c.f < per[i].n){ c.f = per[i].n; c.fh = per[i].h; } });
       a.conf = a.cells.reduce((t, c) => t + (c.f || 0), 0); const tot = a.hits + a.miss + a.extra; a.pct = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, tot)); a.sons = Math.round(100 * Math.max(0, a.hits - a.conf) / Math.max(1, a.hits)); } }
-  const stars = g.adv ? advStars(J, why) : why === 'dead' ? 0 : J.accuracy() >= 95 ? 3 : J.accuracy() >= 80 ? 2 : J.accuracy() >= 60 ? 1 : 0;
+  const stars0 = g.adv ? advStars(J, why, g.adv.lv) : why === 'dead' ? 0 : J.accuracy() >= 95 ? 3 : J.accuracy() >= 80 ? 2 : J.accuracy() >= 60 ? 1 : 0;
+  const stars = Math.min(3, stars0);
   if(why !== 'dead' && !g.adv && !LASTRES.bst){ LASTRES.bst = 1; const bk = (g.board || '').split('_'); const key = CFG.style + '|' + g.board.split('_')[1].slice(1); const all = bestAll(); const old = all[key] || 0; const nowPct = J.accuracy(); if(nowPct > old && !CFG.boss){ all[key] = nowPct; LS.set('bbx-hero-best', all); if(old < 80 && nowPct >= 80 && key.endsWith('|1') || old < 90 && nowPct >= 90 && key.endsWith('|2')) LASTRES.unlocked = true; } }
   const pct = J.accuracy(), grade = pct >= 95 ? 'S' : pct >= 85 ? 'A' : pct >= 70 ? 'B' : pct >= 50 ? 'C' : 'D';
   const perfectRun = why !== 'dead' && cn.miss + cn.wrong + cn.extra === 0 && cn.perfect + cn.good > 0, allPerfect = perfectRun && cn.good === 0;
   if(perfectRun && !LASTRES.conf){ LASTRES.conf = 1; setTimeout(() => confetti(allPerfect), 250); }
   let h = (perfectRun ? `<div class="res ok" style="text-align:center;font-size:1.25rem;font-weight:900;background:linear-gradient(135deg,#fff3b0,#ffd36b);color:#7a4a00;border:0">${allPerfect ? '🏆 100 % PARFAIT !' : '🌟 100 % — AUCUNE ERREUR !'}<div class="small" style="font-weight:700">${allPerfect ? 'Chaque son pile dans le temps. Légendaire.' : 'Tous les sons joués. Vise maintenant que tout soit « Parfait » !'}</div></div>` : '') + `<div class="row" style="align-items:flex-end"><div><div class="pctbig">${pct}%</div><div class="small muted">précision (jugement en direct)</div></div><span class="sp"></span><div style="text-align:right"><div class="grade">${grade}</div><div style="font-size:1.7rem;letter-spacing:2px;color:#ffb02e;line-height:1">${'★'.repeat(stars)}<span style="color:#cbd9e3">${'★'.repeat(3 - stars)}</span></div></div></div>` + (LASTRES.unlocked ? '<div class="res ok" style="font-weight:900;text-align:center">🔓 Niveau suivant débloqué !</div>' : '');
-  if(g.adv) h = advBanner(g, stars, why) + h;
+  if(g.adv) h = advBanner(g, stars0, why) + h;
   if(!hasA && why !== 'dead' && !g.pitch) h += `<div class="res warn">L'analyse complète n'a pas pu placer ta prise (${err || 'trop peu de sons détectés'}). Je montre le jugement en direct.</div>`;
   h += `<div class="kpis"><div class="kpi"><b>${J.score}</b>score</div><div class="kpi"><b>${J.maxCombo}</b>combo max</div><div class="kpi"><b>${cn.perfect}</b>parfait</div><div class="kpi"><b>${cn.good}</b>bien</div></div>
     <div class="kpis"><div class="kpi"><b>${cn.miss}</b>ratés</div><div class="kpi"><b>${cn.extra}</b>en trop</div><div class="kpi"><b>${hasA ? a.conf : cn.wrong}</b>sons confondus</div><div class="kpi"><b>${hasA ? '±' + a.reg : '–'}</b>régularité ms</div></div>`;
