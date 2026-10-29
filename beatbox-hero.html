@@ -86,6 +86,13 @@ body.advon{overflow:hidden;background:#1b63c4}
 .advh{font:900 1rem 'Courier New',monospace;letter-spacing:.05em;color:#ffe27a}.advs{font-size:.78rem;font-weight:800;margin:1px 0}.advt{font-size:.78rem;line-height:1.3;margin:3px 0;opacity:.92}
 .advrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px}.advstr{font-size:1.45rem;line-height:1;letter-spacing:3px}.advstr .g{color:#ffd23f;text-shadow:0 2px 0 #a56a00}.advstr .d{color:#3a4a66}.advstr .small{color:#fff;letter-spacing:0;font-weight:800}.advrow button{padding:9px 20px;font:900 1.05rem 'Courier New',monospace;border-radius:4px;box-shadow:0 4px 0 #a52a55}
 .advstr .b{color:#5ef0ff;text-shadow:0 0 10px #19b6ff,0 2px 0 #0a5a8a}#advBook{padding:4px 8px;background:#0d2033;border:2px solid #ffe27a;border-radius:4px;box-shadow:0 3px 0 #000;font-size:1rem}
+#advSnd,#advCredBtn{padding:4px 8px;background:#0d2033;border:2px solid #ffe27a;border-radius:4px;box-shadow:0 3px 0 #000;font-size:1rem;color:#fff}.advtt{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:.78rem!important}
+#advCred{display:none;position:absolute;inset:0;z-index:60;background:#000;overflow:hidden;font-family:'Courier New',ui-monospace,monospace;cursor:pointer}#advCred.on{display:block}#advCredCv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+#advCredTx{position:absolute;left:50%;top:0;width:min(92vw,520px);transform:translate(-50%,100vh);text-align:center;color:#fff;will-change:transform;padding:0 10px;background:linear-gradient(90deg,#0000,#0006 18%,#0006 82%,#0000)}
+#advCredTx .cs{margin:0 0 56px;text-shadow:2px 2px 0 #000,0 0 8px #000}#advCredTx h1{font:900 2.5rem 'Courier New',monospace;color:#ffe27a;text-shadow:3px 3px 0 #a52a55,0 0 14px #000;line-height:1.05;margin:0 0 8px;letter-spacing:.05em}#advCredTx h2{font:900 1.05rem 'Courier New',monospace;color:#ffe27a;letter-spacing:.14em;margin:0 0 12px}
+#advCredTx p{margin:4px 0;font-weight:800;font-size:.98rem;line-height:1.35}#advCredTx small{opacity:.85;font-size:.8rem}#advCredTx .cst{color:#ffd23f}
+#advCredX{position:absolute;top:max(10px,env(safe-area-inset-top));right:10px;padding:6px 10px;background:#0d2033cc;color:#fff;border:2px solid #fff8;border-radius:4px;font:900 .8rem 'Courier New',monospace}
+#advCredEnd{position:absolute;left:0;right:0;bottom:max(24px,env(safe-area-inset-bottom));text-align:center;color:#fff;font:900 1rem 'Courier New',monospace;text-shadow:2px 2px 0 #000;animation:abl .9s steps(2,start) infinite;display:none}
 #advDlg{display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.5);align-items:flex-end;padding:0 8px max(14px,env(safe-area-inset-bottom));cursor:pointer}#advDlg.on{display:flex}
 .advdb{width:100%;background:#fff;color:#0d2033;border:4px solid #0d2033;border-radius:6px;box-shadow:0 0 0 3px #ffe27a,0 6px 0 3px #000;padding:10px 14px 10px;font:800 1rem 'Courier New',ui-monospace,monospace;min-height:130px;position:relative}.advdl{font-size:.78rem;color:#a52a55;letter-spacing:.08em;margin-bottom:5px}.advdt{line-height:1.45;min-height:5.8em}.advdn{position:absolute;right:12px;bottom:6px;color:#a52a55;animation:abl .9s steps(2,start) infinite}
 .advgoal{font-size:.64rem;color:#ffffffaa;margin-top:5px;text-align:center}
@@ -97,7 +104,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 37 · 29 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 40 · 29 oct. 2026</span></p>
 
   <div class="card advcard">
     <h2>🗺 BEATBOX ADVENTURE</h2>
@@ -180,11 +187,12 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="adv" class="scr">
   <div id="advCol">
     <canvas id="advCv" width="120" height="220"></canvas>
-    <div class="advbar"><button id="advBack">◀</button><div class="advtt">BEATBOX ADVENTURE</div><button id="advBook" title="L'histoire">📖</button><div class="advsc" id="advSc"></div></div>
+    <div class="advbar"><button id="advBack">◀</button><div class="advtt">BEATBOX ADVENTURE</div><button id="advSnd" title="Son">🔊</button><button id="advBook" title="L'histoire">📖</button><button id="advCredBtn" title="Générique" style="display:none">🎬</button><div class="advsc" id="advSc"></div></div>
     <div id="advLv"></div>
     <div class="advp" id="advP"></div>
     <div id="advDlg"></div>
   </div>
+  <div id="advCred"><canvas id="advCredCv" width="160" height="200"></canvas><div id="advCredTx"></div><button id="advCredX">PASSER ▶▶</button><div id="advCredEnd">▼ touche l'écran pour revenir à la carte</div></div>
 </div>
 
 <!-- ================= CALIBRATION ================= -->
@@ -680,7 +688,7 @@ const HERO = (() => {
     constructor(notes, T0, lat, o){
       o = o || {}; this.notes = notes; this.T0 = T0; this.lat = lat;
       notes.forEach(n => { n.tc = T0 + n.rel; n.t = n.tc + lat; n.state = 0; n.res = null; });
-      this.boss = !!o.boss; this.lifeK = o.lifeK || 1; this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0; this.last = notes.length ? notes[notes.length - 1].t : 0;
+      this.boss = !!o.boss; this.lifeK = o.lifeK || 1; this.soft = !!o.soft; this.strict = !!o.strict; this.lifeDie = !!o.lifeDie; this.first = notes.length ? notes[0].t : 0; this.last = notes.length ? notes[notes.length - 1].t : 0;
       this.score = 0; this.combo = 0; this.maxCombo = 0; this.life = 100; this.dead = false; this.ip = 0; this.charge = 0; this.zaps = 0; this.maxCharged = 0;
       this.cnt = { perfect:0, good:0, miss:0, wrong:0, extra:0 }; this.learned = {}; this.log = []; this.lastHit = null; this.hitDb = []; this.by = {};
       if(o.fp) Object.keys(o.fp).forEach(f => { this.by[f] = o.fp[f].slice(); });
@@ -740,6 +748,7 @@ const HERO = (() => {
         }
       } else if(this._tail(z)) z.verdict = 'tail';
       else if(this._noise(z)) z.verdict = 'noise';
+      else if(this.soft && z.db < this.ref() - 9) z.verdict = 'noise'; // niveau débutant : un son faible hors case (souffle, queue de son) n'est pas une erreur
       else { z.verdict = 'extra'; this.cnt.extra++; this._life(-5); this._err(); ev.push({ type:'extra', z }); }
       this.log.push(z); return ev;
     }
@@ -905,15 +914,15 @@ const LONGP = {
 let ADV = null; // niveau en cours (null = partie classique)
 const MF = m => 440 * Math.pow(2, (m - 69) / 12);
 const CHQ = { maj:[0, 4, 7], min:[0, 3, 7], m7:[0, 3, 7, 10], dom7:[0, 4, 7, 10], maj7:[0, 4, 7, 11] };
-/* 3 difficultés : 1 = boucle de 4 mesures · 2 = 8 mesures qui évoluent · 3 = 16 mesures, plus de sons, tempo +6.
+/* 3 difficultés : 1 = boucle de 4 mesures (a a b b : on installe le groove avant la variation, tempo −12) · 2 = 8 mesures qui évoluent · 3 = 16 mesures, plus de sons, tempo +6.
    Chaque lieu écrit 7 mesures : a b (le groove) c d f (variations, nouveaux sons) h i (les plus dures). */
-const ADV_SEQ = [['a', 'b', 'a', 'c'], ['a', 'b', 'a', 'c', 'a', 'b', 'd', 'f'], ['a', 'b', 'a', 'c', 'a', 'b', 'd', 'f', 'b', 'c', 'a', 'h', 'd', 'f', 'h', 'i']];
-const ADV_CYC = [3, 3, 2], ADV_DBPM = [-6, 0, 6], ADV_SHIFT = [0, 5, 0, 7]; // décalage de tonalité par section de 4 mesures
+const ADV_SEQ = [['a', 'a', 'b', 'b'], ['a', 'b', 'a', 'c', 'a', 'b', 'd', 'f'], ['a', 'b', 'a', 'c', 'a', 'b', 'd', 'f', 'b', 'c', 'a', 'h', 'd', 'f', 'h', 'i']];
+const ADV_CYC = [3, 3, 2], ADV_DBPM = [-12, 0, 6], ADV_SHIFT = [0, 5, 0, 7]; // décalage de tonalité par section de 4 mesures
 /* prog = [fondamentale MIDI, accord] par mesure (4) · bass/stab = [temps, durée, (demi-tons)] · lead = [mesure, temps, durée, note MIDI]
    perc(m) = [[temps, 'c' claves | 's' shaker | 'g' conga/tom]] */
 const ADV_W = [
   { id:'plage', ic:'🏝', n:'Plage Pixel', style:'Reggae', bpm:76, clk:true, div:2, boss:false,
-    teach:'Le départ tranquille : le charley tombe entre les temps, la caisse claire marque le milieu de la mesure.',
+    teach:'Le reggae, c\'est le contretemps : le charley tombe entre les temps, la caisse claire marque le milieu de la mesure. Prends ton temps pour l\'écouter.',
     M:{ a:'. T . T K . . T', b:'. T . T K . P T', c:'. T . T K . . Ts', d:'P T . T K . P T', f:'. T . Ts K . . Ts', h:'P T . T K . P Ts', i:'P T . Ts K P . Ts' },
     prog:[[36, 'maj'], [33, 'min'], [29, 'maj'], [31, 'dom7']], bass:[[0, .9, 0], [1.5, .4, 0], [2.5, .9, 7], [3.5, .4, 0]], stab:[[.5, .3], [1.5, .3], [2.5, .3], [3.5, .3]],
     lead:[[0, 0, 1, 76], [0, 1, .5, 79], [0, 1.5, .5, 76], [0, 2, 1.5, 72], [1, 0, 1, 72], [1, 1, .5, 76], [1, 1.5, .5, 79], [1, 2.5, 1, 76], [2, 0, 1.5, 77], [2, 2, 1, 76], [2, 3, .5, 72], [3, 0, 1, 74], [3, 1, .5, 76], [3, 1.5, 2, 79]],
@@ -927,6 +936,7 @@ const ADV_W = [
   { id:'neon', ic:'🌃', n:'Cité Néon', style:'Boom bap', bpm:85, clk:false, div:2, boss:false,
     teach:'Le hip-hop des années 90 : kick lourd, caisse claire sur le 2 et le 4. Le Pch (snare brossée) vient colorer les fins de mesure.',
     M:{ a:'P . T . K . T P', b:'. P T . K . T .', c:'P . T P K . T .', d:'P . T . Pch P T K', f:'P . T P K . T Pch', h:'P P T . K . T Pch', i:'P . T P Pch P T K' },
+    M1:{ a:'P . T . K . T .', b:'P . T . K . T P' }, // niveau 1 : version plus simple (on installe le groove avant les contretemps)
     prog:[[33, 'm7'], [38, 'm7'], [31, 'dom7'], [36, 'maj7']], bass:[[0, 1, 0], [1.5, .4, 0], [2.5, .5, 7], [3, .9, 5]], stab:[[0, 1.5], [2.5, 1.2]],
     lead:[[0, 2, 1, 72], [0, 3, .5, 76], [1, 2, 1, 74], [1, 3, .5, 77], [2, 2, 1.5, 71], [2, 3.5, .5, 74], [3, 0, 2, 76]], perc:m => [] },
   { id:'samba', ic:'🌋', n:'Pic du Carnaval', style:'Samba / bossa', bpm:100, clk:false, div:2, boss:false,
@@ -942,12 +952,14 @@ const ADV_W = [
   { id:'chateau', ic:'🏰', n:'Château du Dragon', style:'Drum & bass', bpm:86, clk:false, div:4, boss:true,
     teach:'Le premier boss : des rafales de doubles croches. Aux niveaux 2 et 3, aucun cœur n\'est récupéré et les erreurs comptent ×1,5.',
     M:{ a:'P . T P K . T . . P P T K . T T', b:'P . T P K . T . P P . T K . T T', c:'P . T P K . T . . P P T K T T T', d:'P T T P K . T . . P P T K . T .', f:'P . T P K . T T . P P T K . T Pch', h:'P . T P K . T . P P P T K . T T', i:'P T T P K . T T . P P T K T T Ts' },
+    M1:{ a:'P . . . K . . . P . . . K . T .', b:'P . T . K . T . P . T . K . T T' }, // niveau 1 : version plus simple (on installe le groove avant les contretemps)
     prog:[[40, 'min'], [36, 'maj'], [38, 'maj'], [35, 'dom7']], pad:true, bass:[[0, 1.4, 0], [1.5, .45, 0], [2.5, 1, 0], [3.5, .4, 7]],
     lead:[[0, 0, 2, 83], [0, 2, 1, 81], [0, 3, 1, 79], [1, 0, 2, 84], [1, 2, 1, 83], [1, 3, 1, 79], [2, 0, 2, 86], [2, 2, 1, 83], [2, 3, 1, 81], [3, 0, 1, 83], [3, 1, 1, 81], [3, 2, 2, 78]],
     perc:m => [[0, 'g'], [2, 'g']].concat(m === 3 ? [[3, 'g'], [3.5, 'g']] : []) },
   { id:'desert', ic:'🏜', n:'Désert des Mirages', style:'Oriental · maqsum', bpm:95, clk:false, div:2, boss:false,
     teach:'Le rythme des tambours du désert : dum, tek, tek-a-dum. Le silence compte autant que les sons.',
     M:{ a:'P T . T P . T .', b:'P T . T P K T .', c:'P T . T P . T K', d:'P T . T P K . T', f:'P T K T P . T K', h:'P T K T P K T K', i:'P K . T P K T Pch' },
+    M1:{ a:'P . T . P . T .', b:'P . T . P . T T' }, // niveau 1 : version plus simple (on installe le groove avant les contretemps)
     prog:[[38, 'min'], [38, 'min'], [39, 'maj'], [38, 'min']], bass:[[0, .8, 0], [1.5, .4, 0], [2, .8, 7], [3.5, .4, 0]], stab:[[.5, .2], [2.5, .2]],
     lead:[[0, 0, .5, 74], [0, .5, .5, 75], [0, 1, 1, 78], [0, 2, .5, 79], [0, 2.5, .5, 78], [0, 3, 1, 75], [1, 0, .5, 78], [1, .5, .5, 79], [1, 1, 1, 81], [1, 2, .5, 79], [1, 2.5, .5, 78], [1, 3, 1, 75], [2, 0, 1, 75], [2, 1, .5, 74], [2, 1.5, .5, 75], [2, 2, 2, 78], [3, 0, .5, 79], [3, .5, .5, 78], [3, 1, .5, 75], [3, 1.5, .5, 74], [3, 2, 2, 74]],
     perc:m => [[0, 'g'], [1, 'c'], [1.5, 'c'], [2.5, 'c'], [3, 'g']] },
@@ -957,7 +969,7 @@ const ADV_W = [
     prog:[[33, 'min'], [40, 'maj'], [33, 'min'], [40, 'dom7']], bass:[[0, .8, 0], [2, .8, 7]], stab:[[1, .4], [3, .4]],
     lead:[[0, 0, .5, 81], [0, .5, .5, 83], [0, 1, 1, 84], [0, 2, .5, 83], [0, 2.5, .5, 81], [0, 3, 1, 88], [1, 0, 1, 88], [1, 1, .5, 86], [1, 1.5, .5, 84], [1, 2, 2, 83], [2, 0, .5, 81], [2, .5, .5, 83], [2, 1, 1, 84], [2, 2, .5, 86], [2, 2.5, .5, 84], [2, 3, 1, 83], [3, 0, 1, 84], [3, 1, 1, 83], [3, 2, 2, 81]], perc:m => [] },
   { id:'sakura', ic:'🌸', n:'Vallée des Cerisiers', style:'Japon · taiko', bpm:100, clk:false, div:2, boss:false,
-    teach:'Le taiko et les cerisiers : des frappes nettes, beaucoup d\'espace. Le L revient pour piquer comme un grelot.',
+    teach:'Le départ en douceur : un son sur chaque temps, beaucoup d\'espace. Kick, charley, kick, caisse claire : rien de plus. Respire.',
     M:{ a:'P . T . P . K .', b:'P . T . P . K T', c:'P . T K P . T K', d:'P . . T P . K .', f:'P T . K P . T K', h:'P . T K P T K T', i:'P L T K P T K L' },
     prog:[[40, 'min'], [41, 'maj'], [40, 'min'], [33, 'min']], bass:[[0, 1.5, 0], [2, 1.5, 7]], stab:[[0, .5], [1, .5], [2, .5], [3, .5]],
     lead:[[0, 0, 1, 76], [0, 1, .5, 77], [0, 1.5, .5, 81], [0, 2, 2, 83], [1, 0, 1, 84], [1, 1, 1, 83], [1, 2, .5, 81], [1, 2.5, .5, 77], [1, 3, 1, 76], [2, 0, 1, 76], [2, 1, .5, 81], [2, 1.5, .5, 83], [2, 2, 2, 84], [3, 0, 1, 83], [3, 1, .5, 81], [3, 1.5, .5, 77], [3, 2, 2, 76]],
@@ -977,11 +989,15 @@ const ADV_W = [
   { id:'cime', ic:'👑', n:'Cime des Légendes', style:'Trap · boss final', bpm:70, clk:false, div:4, boss:true,
     teach:'Le boss final : kick sec, charleys en rafales, snare au centre. Aux niveaux 2 et 3, pas un cœur de rabais. Montre ce que tu sais faire.',
     M:{ a:'P . T T . T T . K . T T . T P .', b:'P . T T . T T T K . T T . T P .', c:'P . T T . T T . K . T T T T P P', d:'P . . P . T T . K . T T . T P T', f:'P . T T . T T T K . T T . P P K', h:'P . T T . T T T K . T T T T T P', i:'P T T T . T T T K . T T T T P P' },
+    M1:{ a:'P . . . . . T T K . . . . . T .', b:'P . T . . . T T K . . . T . T .' }, // niveau 1 : version plus simple (on installe le groove avant les contretemps)
     prog:[[41, 'min'], [41, 'min'], [37, 'maj'], [39, 'maj']], pad:true, bass:[[0, 2, 0], [2.5, 1.2, 0]],
     lead:[[0, 0, 2, 84], [0, 2, 2, 80], [1, 0, 2, 87], [1, 2, 2, 84], [2, 0, 2, 89], [2, 2, 2, 84], [3, 0, 1, 87], [3, 1, 1, 84], [3, 2, 2, 80]], perc:m => [[2, 'g'], [3, 'g']] }
 ];
+/* ordre de la carte : on commence par des rythmes SUR les temps (taiko, polka, boom bap, house), le reggae à contretemps (Plage Pixel) arrive en 7e position */
+const ADV_OLD = ADV_W.map(w => w.id), ADV_ORDER = ['sakura', 'steppe', 'neon', 'orbite', 'desert', 'chateau', 'plage', 'foret', 'cantina', 'samba', 'funk', 'cime'];
+{ const o = ADV_W.slice(); ADV_ORDER.forEach((id, i) => { ADV_W[i] = o[ADV_OLD.indexOf(id)]; }); }
 function advBuild(wi, lv){
-  const w = ADV_W[wi], pat = ADV_SEQ[lv - 1].map(k => w.M[k]), order = ['P', 'K', 'T', 'Ts', 'Pch', 'L'];
+  const w = ADV_W[wi], src = (lv === 1 && w.M1) ? Object.assign({}, w.M, w.M1) : w.M, pat = ADV_SEQ[lv - 1].map(k => src[k]), order = ['P', 'K', 'T', 'Ts', 'Pch', 'L'];
   const ix = x => { const i = order.indexOf(x); return i < 0 ? 99 : i; }, sounds = [...new Set(pat.join(' ').split(' ').filter(x => x !== '.'))].sort((a, b) => ix(a) - ix(b));
   return Object.assign({}, w, { wi, lv, pat, bpm:w.bpm + ADV_DBPM[lv - 1], cycles:ADV_CYC[lv - 1], niv:lv, win:ADV_ST[lv].win, lifeK:ADV_ST[lv].lifeK, clk:w.clk && lv < 3, boss:w.boss && lv >= 2, sounds:sounds.join(' '), mes:pat.length * ADV_CYC[lv - 1] }); }
 
@@ -1027,7 +1043,7 @@ function advSave(a, stars, pct){ const d = advData(), k = advKey(a.id, a.lv), ol
   if(stars > old){ if(old === 0 && stars >= 1 && a.wi + 1 < ADV_W.length && advStarsOf(a.wi + 1, a.lv) === 0) unlocked = a.wi + 1; d.s[k] = stars; }
   if(pct > (d.b[k] || 0)) d.b[k] = pct; LS.set(ADV_LS, d); return { old, unlocked }; }
 function advBanner(g, stars, why){
-  const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = advSave(a, stars, g.J.accuracy()); }
+  const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = advSave(a, stars, g.J.accuracy()); setTimeout(() => advFan(stars, r.unlocked >= 0), 450); }
   const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00';
   const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
   const msg = why === 'dead' ? 'Plus de cœurs… retente, tu y es presque !' : blue ? 'Rien de faux, tout pile dans le temps : tu ne peux pas faire mieux !' : stars === 3 ? '3 étoiles : chaque son pile dans le temps !' : stars === 2 ? 'Super ! Vise maintenant « Parfait » sur presque tous les sons.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour passer. Retente !';
@@ -1082,6 +1098,7 @@ const ADV_DECOR = [
     R(x - 18, y + 4, 4, 3, '#7a1f3a'); }
 ];
 
+{ const o = ADV_DECOR.slice(); ADV_ORDER.forEach((id, i) => { ADV_DECOR[i] = o[ADV_OLD.indexOf(id)]; }); }
 /* ---------- carte plein écran : caméra verticale, 12 îles ---------- */
 const AVX = [32, 86, 30, 88, 34, 84, 30, 88, 32, 86, 30, 76], AVWH = 40 + 11 * 34 + 74;
 const AVN = ADV_W.map((w, i) => ({ x:AVX[i], y:AVWH - 40 - i * 34 }));
@@ -1093,6 +1110,7 @@ const AVLAND = [ // cercles de terre (dx, dy, rayon) + couleurs [ombre, terre, b
   [[[0, 0, 19], [10, 4, 12], [-11, -4, 11]], ['#4a8a3a', '#8fd36e', '#d7f5b8']], [[[0, 0, 19], [-10, -4, 12], [10, 5, 11]], ['#8a3a14', '#d98a4a', '#f0c07a']],
   [[[0, 0, 19], [10, 5, 12], [-11, -3, 11]], ['#1c0a3a', '#4a1c80', '#ff5ec4']], [[[0, 0, 19], [-10, 4, 12], [11, -4, 12]], ['#1c1428', '#5a4a72', '#ffd23f']]
 ];
+{ const o = AVLAND.slice(); ADV_ORDER.forEach((id, i) => { AVLAND[i] = o[ADV_OLD.indexOf(id)]; }); }
 const AV_DIG = ['111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001', '111100111001111', '111100111101111', '111001001010010', '111101111101111', '111101111001111'];
 const AV_STAR = ['00100', '01110', '11111', '01110', '01010'];
 const AV_HERO = ['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.RRRRRRRRRR', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn']; // casquette rouge, tee blanc, micro
@@ -1109,8 +1127,9 @@ function advInitUI(){
   A.cv.addEventListener('wheel', ev => { A.free = true; A.cam = Math.max(0, Math.min(Math.max(0, AVWH + 90 - A.hv), A.cam + ev.deltaY / 4)); ev.preventDefault(); }, { passive:false });
   document.addEventListener('keydown', e => { if(!$('#adv').classList.contains('on')) return; if(e.key === 'ArrowDown' || e.key === 'ArrowLeft') advSelect(Math.max(0, A.sel - 1)); else if(e.key === 'ArrowUp' || e.key === 'ArrowRight') advSelect(Math.min(ADV_W.length - 1, A.sel + 1)); else if(e.key === 'Enter' && advOpen(A.sel)) advPlay(A.sel); });
   window.addEventListener('resize', () => { if($('#adv').classList.contains('on')) advResize(); });
-  $('#advBack').onclick = () => { try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} renderHome(); show('home'); };
-  $('#advBook').onclick = () => advDialog(ADV_PROLOGUE, '📖 L\'HISTOIRE');
+  $('#advBack').onclick = () => { advMusic(null); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} renderHome(); show('home'); };
+  $('#advBook').onclick = () => { advSfx('ui'); advDialog(ADV_PROLOGUE, '📖 L\'HISTOIRE'); };
+  $('#advSnd').onclick = advSndToggle; $('#advCredBtn').onclick = () => { advSfx('ui'); advCredits(); }; advSndBtn();
   $('#bAdv').onclick = () => { try{ const el = document.documentElement; if(!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({ navigationUI:'hide' }).catch(() => {}); }catch(e){} advShow(); };
   advHomeSt();
 }
@@ -1120,12 +1139,12 @@ function advResize(){ const A = AVr, iw = window.innerWidth, ih = window.innerHe
 function advShow(sel){
   ADV = null; show('adv'); advResize(); const A = AVr; if(sel == null){ sel = 0; for(let i = 0; i < ADV_W.length; i++) if(advOpen(i)){ sel = i; if(advStarsOf(i) < 1) break; } }
   A.sel = sel; A.hx = AVN[sel].x; A.hy = AVN[sel].y - 5; A.walk = false; A.free = false; A.cam = A.camT = Math.max(0, Math.min(Math.max(0, AVWH + 90 - A.hv), A.hy - A.hv * .4));
-  advLvBar(); advPanel(); advHomeSt(); if(!A.raf){ A.last = 0; A.raf = requestAnimationFrame(advLoop); } setTimeout(advIntro, 350); }
+  advLvBar(); advPanel(); advHomeSt(); $('#advCredBtn').style.display = advSeen().end ? '' : 'none'; advSndBtn(); if(!AVCR) advMusic('map'); A.starting = false; if(!A.raf){ A.last = 0; A.raf = requestAnimationFrame(advLoop); } setTimeout(advIntro, 350); }
 function advLvBar(){
   $('#advLv').innerHTML = [1, 2, 3].map(l => `<button data-l="${l}" class="${ADV_LV === l ? 'on' : ''}">NIV ${l}<small>★ ${advTotal(l)}/${ADV_W.length * 3}${advMax(l) ? ' ✦' + advMax(l) : ''}</small></button>`).join('');
-  $$('#advLv button').forEach(b => b.onclick = () => { ADV_LV = +b.dataset.l; LS.set('bbx-adv-lv', ADV_LV); advLvBar(); advPanel(); advHomeSt(); });
+  $$('#advLv button').forEach(b => b.onclick = () => { advSfx('ui'); ADV_LV = +b.dataset.l; LS.set('bbx-adv-lv', ADV_LV); advLvBar(); advPanel(); advHomeSt(); });
   $('#advSc').textContent = '★ ' + advTotal() + '/' + ADV_W.length * 3; }
-function advSelect(i){ AVr.sel = i; AVr.walk = advOpen(i); AVr.free = false; advPanel(); }
+function advSelect(i){ advSfx(advOpen(i) ? 'sel' : 'lock'); AVr.sel = i; AVr.walk = advOpen(i); AVr.free = false; advPanel(); }
 function advPanel(){
   const i = AVr.sel, a = advBuild(i, ADV_LV), open = advOpen(i), st = advStarsOf(i), best = advData().b[advKey(a.id, a.lv)], secs = Math.round(a.mes * 4 * 60 / a.bpm);
   $('#advP').innerHTML = `<div class="advh">${open ? a.ic : '🔒'} ${i + 1}/${ADV_W.length} · ${a.n.toUpperCase()}</div>
@@ -1139,10 +1158,12 @@ function advPanel(){
 function advPanelH(){ const A = AVr; requestAnimationFrame(() => { const p = $('#advP'); A.panV = p ? p.offsetHeight / (A.sc || 3) : 60; }); }
 function advPlay(i){
   if(!advOpen(i)) return; if(!getCal()){ alert('Fais d\'abord la calibration (micro, latence, sons) : elle ne prend qu\'une minute.'); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} calStep = 0; renderCal(); show('cal'); return; }
-  const go = () => { ADV = advBuild(i, ADV_LV); startGame(); }, id = ADV_W[i].id;
+  const go = () => { if(AVr.starting) return; AVr.starting = true; advMusic(null); advSfx('go'); setTimeout(() => { ADV = advBuild(i, ADV_LV); startGame(); }, 420); }, id = ADV_W[i].id;
   if(!advSeen()['w_' + id]){ advSeenSet('w_' + id); advDialog([ADV_STORY[id]], ADV_W[i].ic + ' ' + ADV_W[i].n.toUpperCase(), go); } else go(); }
 function advLoop(now){ const A = AVr; if(!$('#adv').classList.contains('on')){ A.raf = 0; return; }
+  if(AVCR){ A.raf = requestAnimationFrame(advLoop); return; }
   const dt = Math.min(.05, A.last ? (now - A.last) / 1000 : .016); A.last = now;
+  if(A.walk){ const sk = Math.floor(performance.now() / 130); if(sk !== A.stepK){ A.stepK = sk; advSfx('step'); } }
   if(A.walk){ const n = AVN[A.sel], tx = n.x, ty = n.y - 5, dx = tx - A.hx, dy = ty - A.hy, d = Math.hypot(dx, dy); if(d < 1){ A.hx = tx; A.hy = ty; A.walk = false; } else { const s = Math.min(d, 70 * dt); A.hx += dx / d * s; A.hy += dy / d * s; } }
   if(!A.free && !A.drag){ const vis = A.hv - (A.panV || 60), tgt = Math.max(0, Math.min(Math.max(0, AVWH + 90 - A.hv), A.hy - vis * .5 - 6)); A.cam += (tgt - A.cam) * Math.min(1, dt * 5); }
   advDraw((now - A.t0) / 1000); A.raf = requestAnimationFrame(advLoop); }
@@ -1180,7 +1201,7 @@ function advDraw(t){
 }
 
 /* ---------- l'histoire : prologue, une réplique à la première arrivée sur chaque île, épilogue ---------- */
-const ADV_PROLOGUE = ['Il était une fois un jeune beatboxer qui rêvait de devenir le beatboxer le plus complet du monde.', 'Une vieille légende raconte que, pour y arriver, il faut apprendre le rythme secret de chacune des douze îles de l\'archipel.', 'Casquette vissée sur la tête, micro en main, il lève l\'ancre. Première escale : la Plage Pixel…'];
+const ADV_PROLOGUE = ['Il était une fois un jeune beatboxer qui rêvait de devenir le beatboxer le plus complet du monde.', 'Une vieille légende raconte que, pour y arriver, il faut apprendre le rythme secret de chacune des douze îles de l\'archipel.', 'Casquette vissée sur la tête, micro en main, il lève l\'ancre. Première escale : la Vallée des Cerisiers…'];
 const ADV_EPILOGUE = ['Les douze rythmes secrets sont à lui. Reggae, afro, hip-hop, samba, électro, drum & bass… tout est dans sa bouche.', 'Le beatboxer le plus complet ? Presque. Au loin, une treizième île vient d\'apparaître sur l\'horizon…', 'À SUIVRE…'];
 const ADV_STORY = {
   plage:'Ici, les vagues battent à contretemps. Écoute le charley : il tombe toujours entre les temps.',
@@ -1200,12 +1221,12 @@ const advSeen = () => LS.get('bbx-adv-seen', {});
 const advSeenSet = k => { const d = advSeen(); d[k] = 1; LS.set('bbx-adv-seen', d); };
 function advDialog(pages, label, cb){
   const d = $('#advDlg'); let i = 0, timer = 0, full = '';
-  const page = () => { full = pages[i]; let k = 0; d.innerHTML = `<div class="advdb"><div class="advdl">${label}</div><div class="advdt" id="advDt"></div><div class="advdn">${i + 1 < pages.length ? '▼' : 'OK ▶'}</div></div>`; d.classList.add('on'); const tx = $('#advDt'); clearInterval(timer); timer = setInterval(() => { k += 2; tx.textContent = full.slice(0, k); if(k >= full.length) clearInterval(timer); }, 22); };
+  const page = () => { full = pages[i]; let k = 0; d.innerHTML = `<div class="advdb"><div class="advdl">${label}</div><div class="advdt" id="advDt"></div><div class="advdn">${i + 1 < pages.length ? '▼' : 'OK ▶'}</div></div>`; d.classList.add('on'); const tx = $('#advDt'); clearInterval(timer); timer = setInterval(() => { k += 2; tx.textContent = full.slice(0, k); if((k / 2) % 2 === 1 && full[k - 1] !== ' ') advSfx('talk'); if(k >= full.length) clearInterval(timer); }, 22); };
   d.onclick = () => { const tx = $('#advDt'); if(tx && tx.textContent.length < full.length){ clearInterval(timer); tx.textContent = full; return; } i++; if(i < pages.length) page(); else { clearInterval(timer); d.classList.remove('on'); d.innerHTML = ''; d.onclick = null; if(cb) cb(); } };
   page(); }
 function advIntro(){ const seen = advSeen();
   if(!seen.pro){ advSeenSet('pro'); advDialog(ADV_PROLOGUE, '📖 L\'HISTOIRE'); }
-  else if(LS.get('bbx-adv-pend', '') === 'end'){ LS.set('bbx-adv-pend', ''); advDialog(ADV_EPILOGUE, '📖 L\'HISTOIRE'); } }
+  else if(LS.get('bbx-adv-pend', '') === 'end'){ LS.set('bbx-adv-pend', ''); advCredits(); } }
 
 /* =====================================================================
    BEATBOX ADVENTURE — décors pixel art des 12 lieux, derrière la piste (façon Tetris : le centre reste sobre, le décor vit autour)
@@ -1290,6 +1311,145 @@ function advBackdrop(g, c, W, H, t, X0, PW, topY){
   c.fillStyle = F[0]; c.fillRect(X0 - e, topY - 10 - e, PW + e * 2, e); c.fillStyle = 'rgba(0,0,0,.4)'; c.fillRect(X0 - e, topY - 10 - 1, PW + e * 2, 1);
 }
 const advSide = H => 5 * Math.max(3, Math.round(Math.max(3, Math.round(H / 200)) * .9)) + 1;
+
+/* =====================================================================
+   BEATBOX ADVENTURE — son de la carte (musique d'ouverture en boucle, bruitages 8 bits) et générique de fin
+   Tout est synthétisé en WebAudio : aucun fichier audio. Musiques originales (progressions simples en do majeur).
+   ===================================================================== */
+const ADVA = { on:LS.get('bbx-adv-snd', 1) !== 0, bus:null, mg:null, timer:0, want:null, nx:0, bar:0, th:null, sf:0 };
+function advBus(){ const T = ensure(); if(!ADVA.bus || ADVA.bus.context !== T){ ADVA.bus = T.createGain(); ADVA.bus.connect(T.destination); } ADVA.bus.gain.value = ADVA.on ? .85 : 0; return ADVA.bus; }
+/* une note : oscillateur + enveloppe (a = attaque, f2 = glissando final) */
+function advTone(f, t, d, type, v, out, f2, a){
+  const T = ac, o = T.createOscillator(), e = T.createGain(), at = a || .008; o.type = type || 'square'; o.frequency.setValueAtTime(f, t); if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+  e.gain.setValueAtTime(.0001, t); e.gain.exponentialRampToValueAtTime(v, t + at); e.gain.exponentialRampToValueAtTime(.0001, t + Math.max(d, at + .02)); o.connect(e); e.connect(out); o.start(t); o.stop(t + Math.max(d, at + .02) + .03); }
+
+/* ---------- bruitages ---------- */
+function advSfx(k){
+  if(!ADVA.on) return;
+  try{ const T = ensure(), t = T.currentTime + .005, o = advBus(), N = (arr, step, type, v, d) => arr.forEach((f, i) => advTone(f, t + i * step, d || step * 1.4, type || 'square', v || .06, o));
+    if(k === 'step'){ ADVA.sf ^= 1; advTone(ADVA.sf ? 330 : 262, t, .05, 'square', .035, o, ADVA.sf ? 300 : 240); }
+    else if(k === 'sel') N([660, 990], .055, 'square', .05);
+    else if(k === 'lock'){ advTone(150, t, .14, 'sawtooth', .06, o, 100); advTone(110, t + .14, .2, 'sawtooth', .06, o, 70); }
+    else if(k === 'ui') advTone(520, t, .05, 'square', .045, o);
+    else if(k === 'talk') advTone(430 + Math.random() * 170, t, .035, 'square', .028, o);
+    else if(k === 'go'){ N([523, 659, 784, 1047], .07, 'square', .06, .14); advTone(1047, t + .3, .34, 'square', .05, o); advTone(262, t, .5, 'triangle', .08, o); }
+  }catch(e){} }
+/* fanfare de fin de niveau : plus il y a d'étoiles, plus elle est longue ; PARFAIT (4) ajoute des étincelles ; déblocage = petit carillon */
+function advFan(stars, unlocked){
+  if(!ADVA.on) return;
+  try{ const T = ensure(), t = T.currentTime + .02, o = advBus(), s = Math.min(4, stars), N = (arr, step, type, v, d, t0) => arr.forEach((f, i) => advTone(f, (t0 || t) + i * step, d || step * 1.5, type || 'square', v || .06, o));
+    if(s <= 0){ N([392, 349, 330, 262], .22, 'triangle', .1, .35); return; }
+    const seqs = { 1:[523, 659, 784], 2:[523, 659, 784, 1047, 784, 1047], 3:[523, 659, 784, 1047, 1319, 1047, 1319, 1568], 4:[523, 659, 784, 1047, 1319, 1568, 1319, 1568, 2093] };
+    const sq = seqs[s], st = s >= 3 ? .09 : .11; N(sq, st, 'square', .055, st * 1.6); advTone(262, t, sq.length * st + .3, 'triangle', .09, o); if(s >= 2) advTone(392, t + .1, sq.length * st + .2, 'triangle', .05, o);
+    if(s >= 4) for(let i = 0; i < 10; i++) advTone(2093 + i * 180, t + sq.length * st + i * .05, .12, 'sine', .035, o);
+    if(unlocked) N([784, 988, 1175, 1568], .09, 'square', .045, .16, t + sq.length * st + (s >= 4 ? .7 : .25));
+  }catch(e){} }
+
+/* ---------- musiques ----------
+   bar = { r: fondamentale MIDI de la basse, q: 'maj'|'min', m: [[temps, durée (temps), note MIDI]] } */
+const ADV_TH = {
+  map:{ bpm:104, loop:true, lead:.066, bass:.19, hat:.9, bars:[
+    { r:48, q:'maj', m:[[0, .5, 76], [.5, .5, 79], [1, .5, 76], [1.5, .5, 72], [2, 1, 79], [3, 1, 76]] },
+    { r:45, q:'min', m:[[0, .5, 81], [.5, .5, 76], [1, .5, 72], [1.5, .5, 76], [2, 2, 81]] },
+    { r:41, q:'maj', m:[[0, .5, 77], [.5, .5, 81], [1, .5, 84], [1.5, .5, 81], [2, 1, 77], [3, 1, 81]] },
+    { r:43, q:'maj', m:[[0, .5, 79], [.5, .5, 83], [1, .5, 86], [1.5, .5, 83], [2, 2, 79]] },
+    { r:48, q:'maj', m:[[0, .5, 84], [.5, .5, 79], [1, .5, 76], [1.5, .5, 79], [2, 1, 84], [3, 1, 79]] },
+    { r:40, q:'min', m:[[0, .5, 83], [.5, .5, 79], [1, .5, 76], [1.5, .5, 79], [2, 2, 83]] },
+    { r:41, q:'maj', m:[[0, .5, 81], [.5, .5, 77], [1, .5, 81], [1.5, .5, 84], [2, 1, 81], [3, 1, 77]] },
+    { r:43, q:'maj', m:[[0, .5, 79], [.5, .5, 83], [1, .5, 79], [1.5, .5, 74], [2, 1.5, 79], [3.5, .5, 83]] }] },
+  credits:{ bpm:84, loop:false, lead:.072, bass:.17, arp:.055, pad:.04, bars:[
+    { r:48, q:'maj', m:[] }, { r:43, q:'maj', m:[] }, { r:45, q:'min', m:[] }, { r:41, q:'maj', m:[] },
+    { r:48, q:'maj', m:[[0, 1.5, 76], [1.5, .5, 79], [2, 2, 84]] }, { r:43, q:'maj', m:[[0, 1, 83], [1, 1, 79], [2, 2, 74]] }, { r:45, q:'min', m:[[0, 1.5, 81], [1.5, .5, 79], [2, 1, 76], [3, 1, 72]] }, { r:41, q:'maj', m:[[0, 2, 77], [2, 1, 79], [3, 1, 81]] },
+    { r:41, q:'maj', m:[[0, 1.5, 84], [1.5, .5, 81], [2, 2, 77]], perc:1 }, { r:48, q:'maj', m:[[0, 1.5, 79], [1.5, .5, 76], [2, 2, 79]], perc:1 }, { r:43, q:'maj', m:[[0, 1, 83], [1, 1, 86], [2, 2, 83]], perc:1 }, { r:45, q:'min', m:[[0, 2, 84], [2, 1, 81], [3, 1, 76]], perc:1 },
+    { r:41, q:'maj', m:[[0, 1, 81], [1, 1, 84], [2, 2, 89]], perc:1 }, { r:43, q:'maj', m:[[0, 1, 86], [1, 1, 83], [2, 2, 79]], perc:1 }, { r:48, q:'maj', m:[[0, 2, 88], [2, 2, 84]], perc:1 }, { r:48, q:'maj', m:[[0, 4, 84]], last:1 }] }
+};
+function advBarPlay(th, b, t0, spb, out, idx){
+  const ch = CHQ[b.q], root = b.r;
+  b.m.forEach(([bt, d, n]) => advTone(MF(n), t0 + bt * spb, Math.max(.09, d * spb * .92), 'square', th.lead, out, 0, d >= 2 ? .02 : .008));
+  if(b.last){ ch.forEach(i => advTone(MF(root + 12 + i), t0, spb * 5, 'triangle', .05, out, 0, .05)); advTone(MF(root), t0, spb * 5, 'triangle', .12, out, 0, .02); return; }
+  [0, 1, 2, 3].forEach(k => advTone(MF(root + (k % 2 ? ch[2] : 0)), t0 + k * spb, spb * .8, 'triangle', th.bass, out));
+  if(th.hat) [.5, 1.5, 2.5, 3.5].forEach(x => percHit('s', t0 + x * spb, out, th.hat));
+  if(th.arp){ const sq = [0, 1, 2, 1, 2, 1, 0, 1]; for(let i = 0; i < 8; i++) advTone(MF(root + 24 + ch[sq[i]]), t0 + i * spb * .5, spb * .45, 'triangle', th.arp * (idx < 4 ? .8 : 1), out); }
+  if(th.pad && idx >= 4) ch.forEach(i => advTone(MF(root + 12 + i), t0, spb * 3.8, 'triangle', th.pad, out, 0, .35));
+  if(b.perc){ percHit('g', t0, out, .5); percHit('g', t0 + 2 * spb, out, .4); percHit('g', t0 + 3.5 * spb, out, .3); } }
+function advMusicStop(){
+  clearInterval(ADVA.timer); ADVA.timer = 0;
+  if(ADVA.mg){ const m = ADVA.mg; ADVA.mg = null; try{ m.gain.cancelScheduledValues(ac.currentTime); m.gain.setTargetAtTime(0, ac.currentTime, .06); }catch(e){} setTimeout(() => { try{ m.disconnect(); }catch(e){} }, 500); } }
+function advMusic(name){
+  ADVA.want = name; advMusicStop(); if(!name || !ADVA.on) return;
+  try{ const T = ensure(), th = ADV_TH[name]; ADVA.mg = T.createGain(); ADVA.mg.gain.value = 1; ADVA.mg.connect(advBus()); ADVA.th = th; ADVA.nx = T.currentTime + .15; ADVA.bar = 0;
+    const tick = () => {
+      if(ADVA.want === 'map' && !$('#adv').classList.contains('on')){ advMusic(null); return; }
+      const spb = 60 / th.bpm; while(ADVA.nx < ac.currentTime + .7){
+        if(ADVA.bar >= th.bars.length){ if(th.loop) ADVA.bar = 0; else { clearInterval(ADVA.timer); ADVA.timer = 0; return; } }
+        advBarPlay(th, th.bars[ADVA.bar], ADVA.nx, spb, ADVA.mg, ADVA.bar); ADVA.nx += 4 * spb; ADVA.bar++; } };
+    tick(); ADVA.timer = setInterval(tick, 150);
+  }catch(e){} }
+function advSndToggle(){ ADVA.on = !ADVA.on; LS.set('bbx-adv-snd', ADVA.on ? 1 : 0); advSndBtn(); if(ADVA.on){ try{ advBus(); }catch(e){} advMusic(ADVA.want); advSfx('ui'); } else { advMusicStop(); try{ if(ADVA.bus) ADVA.bus.gain.value = 0; }catch(e){} } }
+function advSndBtn(){ const b = $('#advSnd'); if(b) b.textContent = ADVA.on ? '🔊' : '🔇'; }
+document.addEventListener('visibilitychange', () => { try{ if(!ac || !$('#adv').classList.contains('on') || G) return; if(document.hidden) ac.suspend(); else ac.resume(); }catch(e){} });
+
+/* ---------- générique de fin : le bateau, les îles qui défilent à l'horizon, le texte qui monte, la musique ---------- */
+const ADV_CRED_TEAM = [['Idée, rythmes & pédagogie', 'Marc · PTK Beatbox'], ['Pixels, musique & programmation', 'Claude'], ['Moteur d\'écoute du rythme', 'BBX · RY engine']];
+const ADV_CRED_D = 48; // secondes de défilement (≈ durée de la musique)
+let AVCR = null;
+const mixA = (A, B, k) => A.map((v, i) => v + (B[i] - v) * k), rgb = A => 'rgb(' + A.map(Math.round).join(',') + ')';
+function advCredHTML(){
+  const best = i => Math.max(0, ...[1, 2, 3].map(l => advStarsOf(i, l))), stars = i => { const b = best(i); return b >= 4 ? '<span style="color:#5ef0ff">★★★ ✦</span>' : '<span class="cst">' + '★'.repeat(b) + '</span><span style="opacity:.3">' + '★'.repeat(3 - b) + '</span>'; };
+  const tot = [1, 2, 3].reduce((t, l) => t + advTotal(l), 0), mx = [1, 2, 3].reduce((t, l) => t + advMax(l), 0);
+  return [
+    '<div class="cs"><h1>BEATBOX<br>ADVENTURE</h1><p>— GÉNÉRIQUE —</p></div>',
+    '<div class="cs"><h2>LE HÉROS</h2><p>Un jeune beatboxer</p><p>Casquette rouge · micro en main</p><p>Parti de la Vallée des Cerisiers avec un rêve :</p><p>devenir le plus complet.</p></div>',
+    '<div class="cs"><h2>LES 12 RYTHMES SECRETS</h2>' + ADV_W.map((w, i) => `<p>${w.ic} ${w.n}<br><small>${w.style} &nbsp; ${stars(i)}</small></p>`).join('') + `<p style="margin-top:12px">Tes étoiles : <span class="cst">★ ${tot}</span> / ${ADV_W.length * 9}${mx ? ' &nbsp;<span style="color:#5ef0ff">✦ ' + mx + '</span>' : ''}</p></div>`,
+    '<div class="cs"><h2>LES SONS APPRIS</h2><p>P · le kick</p><p>K · la caisse claire</p><p>T · le charley fermé</p><p>Ts · le charley ouvert</p><p>Pch · la snare brossée</p><p>L · le clic de langue</p></div>',
+    '<div class="cs"><h2>L\'ÉQUIPE</h2>' + ADV_CRED_TEAM.map(([a, b]) => `<p><small>${a}</small><br><b>${b}</b></p>`).join('') + '</div>',
+    '<div class="cs"><h2>MERCI</h2><p>Aux élèves de beatbox,</p><p>au métronome qui ne se trompe jamais,</p><p>et à toi, qui as tenu le tempo</p><p>jusqu\'au bout.</p></div>',
+    '<div class="cs"><p>' + ADV_EPILOGUE[0] + '</p><p style="margin-top:14px">' + ADV_EPILOGUE[1] + '</p></div>',
+    '<div class="cs" id="advCredLast"><h1 style="font-size:2rem">À SUIVRE…</h1><p><small>Merci d\'avoir joué !</small></p></div>'].join(''); }
+function advCredits(){
+  if(AVCR) return; const el = $('#advCred'), cv = $('#advCredCv'), tx = $('#advCredTx'), end = $('#advCredEnd'); if(!el) return;
+  advSeenSet('cred'); advMusicStop(); ADVA.want = 'credits'; tx.innerHTML = advCredHTML(); el.classList.add('on'); end.style.display = 'none';
+  const iw = window.innerWidth, ih = window.innerHeight, k = Math.max(3, Math.round(ih / 200)), W = Math.ceil(iw / k), H = Math.ceil(ih / k); cv.width = W; cv.height = H;
+  const X = cv.getContext('2d'), hor = Math.round(H * .56), gap = 72, last = $('#advCredLast'), contentH = tx.offsetHeight, y0 = ih, y1 = ih * .46 - contentH + (last ? last.offsetHeight / 2 : 40) ;
+  const vIsl = (W * .28 + 12 * gap) / (ADV_CRED_D - 3);  const C = { t0:performance.now(), raf:0, done:false };
+  AVCR = C; advMusic('credits');
+  const R = (x, y, w, h, c) => { X.fillStyle = c; X.fillRect(Math.round(x), Math.round(y), w, h); };
+  const circ = (cx, cy, r, c) => { X.fillStyle = c; for(let dy = -r; dy <= r; dy++){ const w = Math.floor(Math.sqrt(r * r - dy * dy + .5)); X.fillRect(Math.round(cx - w), Math.round(cy + dy), 2 * w + 1, 1); } };
+  const pat = (rows, x, y, col) => rows.forEach((row, j) => { for(let i = 0; i < row.length; i++){ const ch = row[i]; if(ch !== '.') R(x + i, y + j, 1, 1, col(ch)); } });
+  const close = () => { if(!AVCR) return; cancelAnimationFrame(C.raf); AVCR = null; el.classList.remove('on'); advMusic('map'); const A = AVr; if(A && !A.raf){ A.last = 0; A.raf = requestAnimationFrame(advLoop); } };
+  $('#advCredX').onclick = e => { e.stopPropagation(); close(); }; el.onclick = () => { if(C.done) close(); };
+  const frame = now => {
+    const t = (now - C.t0) / 1000, p = Math.min(1, t / (ADV_CRED_D * .85)); C.done = t > ADV_CRED_D + 1.5;
+    // ciel : du coucher de soleil à la nuit
+    const top = mixA(sRG('#6a3f9a'), sRG('#070b24'), p), bot = mixA(sRG('#ff9a5a'), sRG('#2a3a7a'), Math.min(1, p * 1.2)); for(let y = 0; y < hor; y += 2){ X.fillStyle = rgb(mixA(top, bot, y / hor)); X.fillRect(0, y, W, 2); }
+    X.fillStyle = rgb(bot); X.fillRect(0, hor - 1, W, 2);
+    for(let i = 0; i < 60; i++){ if((i + Math.floor(t * 1.7)) % 5 === 0) continue; X.globalAlpha = Math.max(0, p * 1.4 - .3); R(sRn(i) * W, sRn(i + 50) * hor * .85, 1, 1, '#fff'); } X.globalAlpha = 1;
+    const sunY = hor - 4 + p * 30; if(sunY < hor + 8) circ(W * .72, sunY, 9, rgb(mixA(sRG('#ffd27a'), sRG('#ff7a4a'), p)));
+    const mY = hor - 6 - p * hor * .34; X.globalAlpha = Math.min(1, p * 1.5); circ(W * .76, mY, 5, '#fff7d0'); X.globalAlpha = 1;
+    for(let c = 0; c < 5; c++){ const cx = ((t * (1.6 + c % 3 * .6) + c * 53) % (W + 60)) - 30, cy = 8 + (c * 17) % Math.max(10, Math.round(hor * .45)); X.globalAlpha = .22 + (1 - p) * .35; R(cx, cy + 2, 26, 4, '#fff'); R(cx + 5, cy, 14, 3, '#fff'); X.globalAlpha = 1; }
+    // mer
+    const s0 = mixA(sRG('#2f7fd8'), sRG('#0a2a66'), p), s1 = mixA(sRG('#1b63c4'), sRG('#06173d'), p); for(let y = hor; y < H; y += 2){ X.fillStyle = rgb(mixA(s0, s1, (y - hor) / (H - hor))); X.fillRect(0, y, W, 2); }
+    // les 12 îles + la treizième (?) passent à l'horizon
+    for(let i = 0; i < 13; i++){ const tt = Math.min(t, ADV_CRED_D - 2), x = W + 40 + i * gap - tt * vIsl; if(x < -50 || x > W + 50) continue;
+      if(i < 12){ const cs = AVLAND[i][0], col = AVLAND[i][1], y = hor + 4; cs.forEach(c => circ(x + c[0], y + c[1] + 3, c[2] + 2, '#e8f7ff')); cs.forEach(c => circ(x + c[0], y + c[1] + 3, c[2], col[0])); cs.forEach(c => circ(x + c[0], y + c[1], c[2], col[2])); cs.forEach(c => circ(x + c[0], y + c[1], c[2] - 2, col[1])); ADV_DECOR[i](R, circ, x, y, t, X); }
+      else { const y = hor + 4, g = .6 + .4 * Math.sin(t * 3); circ(x, y + 3, 21, '#e8f7ff'); circ(x, y, 19, '#2a1c4a'); circ(x, y, 17, '#4a3a7a'); X.globalAlpha = g; for(let s = 0; s < 10; s++) R(x - 16 + (s * 7 + Math.floor(t * 5)) % 32, y - 26 + (s * 11) % 30, 2, 2, s % 2 ? '#ffe27a' : '#5ef0ff'); X.globalAlpha = 1; R(x - 4, y - 14, 3, 3, '#ffe27a'); R(x - 1, y - 17, 4, 3, '#ffe27a'); R(x + 1, y - 11, 3, 5, '#ffe27a'); R(x - 1, y - 7, 3, 2, '#ffe27a'); R(x, y - 2, 3, 3, '#ffe27a'); } }
+    // vagues
+    for(let y = hor + 3; y < H; y += 5) for(let x = ((y * 7) % 19) + Math.floor(t * 6 * (1 + (y - hor) / H)) % 19 - 19; x < W; x += 19){ X.globalAlpha = .35; R(x, y, 3, 1, '#9fd0ff'); R(x + 1, y + 1, 1, 1, '#9fd0ff'); X.globalAlpha = 1; }
+    // reflet de la lune
+    X.globalAlpha = .4 * Math.min(1, p * 1.5); for(let y = hor + 3; y < H; y += 3) R(W * .76 - 4 + Math.sin(t * 2 + y) * 2, y, 8 - (y - hor) / (H - hor) * 5, 1, '#fff7d0'); X.globalAlpha = 1;
+    // le bateau + le héros
+    const bx = Math.round(W * .36), by = Math.round(hor + (H - hor) * .5 + Math.sin(t * 1.3) * 1.5), tilt = Math.round(Math.sin(t * 1.3 + 1));
+    R(bx - 15, by + 6 + tilt, 34, 3, 'rgba(255,255,255,.35)'); R(bx - 17, by + 2 + tilt, 38, 4, '#8a5a2b'); R(bx - 15, by + 6 + tilt, 34, 2, '#6b4420'); R(bx - 17, by + 1 + tilt, 38, 1, '#c98a4a'); R(bx + 20, by - 1 + tilt, 2, 3, '#8a5a2b');
+    R(bx + 3, by - 36, 1, 38, '#3a2a1a'); const fl = Math.floor(t * 4) % 2; R(bx + 4, by - 36, 7 + fl, 3, '#e23a3a');
+    for(let r = 0; r < 26; r++){ const w = 2 + Math.round(r * .62); R(bx + 4, by - 33 + r, w, 1, r % 6 < 3 ? '#fff' : '#e9eef7'); }
+    const hb = Math.floor(t * 3) % 2; pat(AV_HERO, bx - 12, by - 14 + hb + tilt, ch => AV_COL[ch] || '#fff'); pat(AV_LEG[0], bx - 12, by - 3 + hb + tilt, ch => AV_COL[ch] || '#fff');
+    for(let s = 0; s < 4; s++){ X.globalAlpha = .5 - s * .1; R(bx - 24 - s * 7 - (Math.floor(t * 4) + s) % 3, by + 4 + s, 6, 1, '#fff'); } X.globalAlpha = 1;
+    // fondu d'ouverture
+    if(t < 1.5){ X.globalAlpha = 1 - t / 1.5; R(0, 0, W, H, '#000'); X.globalAlpha = 1; }
+    // texte qui monte
+    const u = Math.min(1, t / ADV_CRED_D); tx.style.transform = 'translate(-50%,' + Math.round(y0 + (y1 - y0) * u) + 'px)'; end.style.display = C.done ? 'block' : 'none';
+    if(AVCR === C) C.raf = requestAnimationFrame(frame); };
+  C.raf = requestAnimationFrame(frame); }
 
 const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, songId:'bj120', kck:'P', snr:'K', hat:'T', part:'beat', guide:true, mus:true, clk:true, mvol:.55, audOff:0, audBpm:0, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
 const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
@@ -1776,7 +1936,7 @@ async function startGame0(){
   else if(CFG.style === 'song'){ const F = songFlat(); g.mus = ac.createGain(); g.mus.gain.value = CFG.mvol; g.mus.connect(ac.destination);
     if(CFG.mus && F.ev.length){ g.evs = []; for(let c = 0; c < cycles; c++) F.ev.forEach(e => g.evs.push({ trk:e.trk, fr:e.fr, dur:e.dur, beat:4 + c * B.P + e.beat })); }
     if(USERAUD && CFG.audOn){ const src = ac.createBufferSource(); const rate = CFG.audBpm > 0 ? bpm / CFG.audBpm : 1; src.buffer = stretched(USERAUD.buf, rate, false, 'user' + (USERAUD.name || USERAUD.buf.length)); src.connect(g.mus); const off = +CFG.audOff || 0, st = g.T0 + 4 * spb; if(off >= 0) src.start(st, off / rate); else src.start(st - off * -1 / rate, 0); g.src = src; } }
-  g.J = new (pitch ? HERO.PitchJudge : HERO.Judge)(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2, lifeDie:ADV ? true : CFG.die || BOSS, boss:BOSS, lifeK:ADV ? ADV.lifeK : 1, fp:cal.fp, lvl:cal.lvl });
+  g.J = new (pitch ? HERO.PitchJudge : HERO.Judge)(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2 && !(ADV && ADV.lv === 1), soft:!!(ADV && ADV.lv === 1), lifeDie:ADV ? true : CFG.die || BOSS, boss:BOSS, lifeK:ADV ? ADV.lifeK : 1, fp:cal.fp, lvl:cal.lvl });
   g.endAt = g.T0 + B.endBeat * spb + lat + 1.6; g.last = null; musicSchedule(g);
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { g.wl = w; }).catch(() => {}); }catch(e){}
   g.raf = requestAnimationFrame(frame);
@@ -1856,10 +2016,10 @@ function draw(g, now){
   const pX = g.pitch ? (m => X0 + PW * ((m - g.pr.lo + 1.5) / (g.pr.span + 3))) : null, pW = g.pitch ? PW / (g.pr.span + 3) : 0;
   // vie : détecte une perte pour l'animation du cœur
   if(g.lifePrev == null) g.lifePrev = J.life;
-  if(J.life < g.lifePrev - .01){ g.heartAt = t; g.heartIdx = Math.max(0, Math.min(4, Math.ceil(g.lifePrev / 20 - 1e-6) - 1)); g.shakeAt = t; g.hurtAt = t; const hx = W / 2 - 3.5 * 28 + g.heartIdx * 28 + 14; spark(g, hx, lineY + 74, '#ff4d6d', 10, .8); }
+  if(J.life < g.lifePrev - .01){ g.heartAt = t; g.heartIdx = Math.max(0, Math.min(4, Math.ceil(g.lifePrev / 20 - 1e-6) - 1)); g.shakeAt = t; g.hurtAt = t; g.shakeK = g.adv ? [0, .5, 1][g.adv.lv - 1] : 1; g.hurtK = g.adv ? [.3, .7, 1][g.adv.lv - 1] : 1; const hx = W / 2 - 3.5 * 28 + g.heartIdx * 28 + 14; spark(g, hx, lineY + 74, '#ff4d6d', 10, .8); }
   g.lifePrev = J.life;
   const dying = g.dyingAt ? Math.min(1, (t - g.dyingAt) / 1200) : 0;
-  const sk = g.shakeAt && t - g.shakeAt < 260 ? (1 - (t - g.shakeAt) / 260) * 7 : 0;
+  const sk = g.shakeAt && t - g.shakeAt < 260 ? (1 - (t - g.shakeAt) / 260) * 7 * (g.shakeK == null ? 1 : g.shakeK) : 0;
   ctx.save(); if(sk) ctx.translate((Math.random() - .5) * sk, (Math.random() - .5) * sk);
   // fond
   if(g.adv) advBackdrop(g, ctx, W, H, t, X0, PW, topY);
@@ -1965,7 +2125,7 @@ function draw(g, now){
   { const v = ctx.createRadialGradient(W / 2, H * .55, Math.min(W, H) * .35, W / 2, H * .55, Math.max(W, H) * .8); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.45)'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
   // rouge sur une erreur / vie faible ; game over
   const hurt = g.hurtAt && t - g.hurtAt < 350 ? 1 - (t - g.hurtAt) / 350 : 0, low = J.life < 30 && !dying ? .10 + .06 * Math.sin(t / 160) : 0;
-  if(hurt || low){ const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.max(W, H) * .75); v.addColorStop(0, 'rgba(255,40,70,0)'); v.addColorStop(1, 'rgba(255,40,70,' + Math.max(.55 * hurt, low) + ')'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
+  if(hurt || low){ const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.max(W, H) * .75); v.addColorStop(0, 'rgba(255,40,70,0)'); v.addColorStop(1, 'rgba(255,40,70,' + Math.max(.55 * hurt * (g.hurtK == null ? 1 : g.hurtK), low) + ')'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
   if(dying){ ctx.fillStyle = 'rgba(40,0,10,' + (.7 * dying) + ')'; ctx.fillRect(0, 0, W, H); ctx.save(); ctx.globalAlpha = Math.min(1, dying * 2); ctx.translate(W / 2, H * .42); const sc = 1.5 - .5 * Math.min(1, dying * 2.5); ctx.scale(sc, sc); ctx.fillStyle = '#ff4d5e'; ctx.shadowColor = '#ff0033'; ctx.shadowBlur = 30; ctx.font = '900 54px ' + RF; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('GAME OVER', 0, 0); ctx.restore(); }
 }
 function quitGame(silent){
@@ -2046,7 +2206,7 @@ async function arcade(R){
   document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v37', CH = 600000;
+const VERSION = 'v40', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
