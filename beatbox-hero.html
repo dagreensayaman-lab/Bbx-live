@@ -97,6 +97,22 @@ body.advon{overflow:hidden;background:#1b63c4}
 .advdb{width:100%;background:#fff;color:#0d2033;border:4px solid #0d2033;border-radius:6px;box-shadow:0 0 0 3px #ffe27a,0 6px 0 3px #000;padding:10px 14px 10px;font:800 1rem 'Courier New',ui-monospace,monospace;min-height:130px;position:relative}.advdl{font-size:.78rem;color:#a52a55;letter-spacing:.08em;margin-bottom:5px}.advdt{line-height:1.45;min-height:5.8em}.advdn{position:absolute;right:12px;bottom:6px;color:#a52a55;animation:abl .9s steps(2,start) infinite}
 .advgoal{font-size:.64rem;color:#ffffffaa;margin-top:5px;text-align:center}
 .advend{text-align:center;background:linear-gradient(135deg,#17324a,#3b2f7a);border-radius:14px;padding:12px;margin-bottom:8px}.advk{font:900 1.15rem 'Courier New',monospace;letter-spacing:.08em;color:#ffe27a}
+
+/* tableau 1 : les îles des sons */
+#lrn.on{display:flex;justify-content:center;position:fixed;inset:0;z-index:40;background:#0d2033}
+#lrnCol{position:relative;height:100%;max-width:100%;overflow:hidden;overflow:clip}
+#lrnCv{display:block;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;background:#1b63c4}
+#lrnBack,#lrnSnd{padding:6px 12px;background:#0d2033;color:#ffe27a;border:2px solid #ffe27a;border-radius:4px;box-shadow:0 3px 0 #000;font:900 1rem 'Courier New',monospace}
+#lrnDlg{display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.5);align-items:flex-end;padding:0 8px max(14px,env(safe-area-inset-bottom));cursor:pointer}#lrnDlg.on{display:flex}
+#lrnIsl{display:none;position:absolute;inset:0;z-index:4;background:linear-gradient(#0d2033,#17324a);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:max(8px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom));color:#fff}#lrnIsl.on{display:block}
+#lrnIslX{position:sticky;top:6px;display:block;margin:0 0 8px;padding:6px 12px;background:#0d2033;color:#ffe27a;border:2px solid #ffe27a;border-radius:4px;box-shadow:0 3px 0 #000;font:900 1rem 'Courier New',monospace;z-index:6}
+.lrh{display:flex;align-items:center;gap:12px;margin-bottom:6px}.lri{font-size:2.6rem;background:#ffffff18;border:3px solid #ffe27a;border-radius:8px;padding:2px 10px}
+.lrl{display:block;width:100%;margin:8px 0 4px;padding:10px;border-radius:6px;border:3px solid #5ef0ff;background:#0d2033;color:#5ef0ff;font:900 1rem 'Courier New',monospace;box-shadow:0 4px 0 #000}
+.lrg{font:900 .8rem 'Courier New',monospace;letter-spacing:.2em;color:#ffe27a;margin:14px 0 6px;text-align:center}
+.lrx{display:flex;align-items:center;gap:10px;background:#ffffff14;border:2px solid #ffffff44;border-radius:8px;padding:8px 10px;margin:6px 0}.lrx.lk{opacity:.5}
+.lrxn{font:900 1.4rem 'Courier New',monospace;color:#ffe27a;min-width:26px;text-align:center}.lrxb{flex:1;min-width:0}.lrxt{font:900 .98rem 'Courier New',monospace}.lrxd{font-size:.78rem;opacity:.9;margin:1px 0}
+.lrxs{font-size:1.05rem;letter-spacing:2px}.lrxs .g{color:#ffd23f}.lrxs .b{color:#5ef0ff}.lrxs .d{color:#3a4a66}.lrxs small{font-size:.66rem;letter-spacing:0;opacity:.8;font-weight:800}
+.lrx button{padding:8px 14px;font-size:1.1rem}
 </style></head><body>
 <div class="wrap">
 
@@ -104,10 +120,16 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 42 · 29 oct. 2026</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 43 · 30 oct. 2026 · démo Tableau 1</span></p>
 
   <div class="card advcard">
-    <h2>🗺 BEATBOX ADVENTURE</h2>
+    <h2>🌱 LES SONS · TABLEAU 1</h2>
+    <div class="small" style="opacity:.92">Le parcours des débutants : une île par son (kick, charleys, snare, clic). Écoute, comprends, puis joue en rythme. Ramasse les étoiles pour ouvrir la suite.</div>
+    <div class="row" style="margin-top:10px"><button class="b-yel big" id="bLrn">▶ LES SONS</button><span id="lrnHomeSt" class="small" style="font-weight:800"></span></div>
+  </div>
+
+  <div class="card advcard">
+    <h2>🗺 BEATBOX ADVENTURE · TABLEAU 2</h2>
     <div class="small" style="opacity:.92">Un voyage en 6 lieux imaginaires, un style de musique par lieu. Gagne jusqu'à 3 étoiles par niveau pour ouvrir la suite.</div>
     <div class="row" style="margin-top:10px"><button class="b-yel big" id="bAdv">▶ AVENTURE</button><span id="advHomeSt" class="small" style="font-weight:800"></span></div>
   </div>
@@ -193,6 +215,17 @@ body.advon{overflow:hidden;background:#1b63c4}
     <div id="advDlg"></div>
   </div>
   <div id="advCred"><canvas id="advCredCv" width="160" height="200"></canvas><div id="advCredTx"></div><button id="advCredX">PASSER ▶▶</button><div id="advCredEnd">▼ touche l'écran pour revenir à la carte</div></div>
+</div>
+
+<!-- ================= TABLEAU 1 : LES SONS ================= -->
+<div id="lrn" class="scr">
+  <div id="lrnCol">
+    <canvas id="lrnCv" width="120" height="310"></canvas>
+    <div class="advbar"><button id="lrnBack">◀</button><div class="advtt">LES SONS</div><button id="lrnSnd" title="Son">🔊</button><div class="advsc" id="lrnSc"></div></div>
+    <div class="advp" id="lrnP"></div>
+    <div id="lrnIsl"><button id="lrnIslX">◀ Carte</button><div id="lrnIslB"></div></div>
+    <div id="lrnDlg"></div>
+  </div>
 </div>
 
 <!-- ================= CALIBRATION ================= -->
@@ -1047,6 +1080,7 @@ function advSave(a, stars, pct){ const d = advData(), k = advKey(a.id, a.lv), ol
   if(stars > old){ if(old === 0 && stars >= 1 && a.wi + 1 < ADV_W.length && advStarsOf(a.wi + 1, a.lv) === 0) unlocked = a.wi + 1; d.s[k] = stars; }
   if(pct > (d.b[k] || 0)) d.b[k] = pct; LS.set(ADV_LS, d); return { old, unlocked }; }
 function advBanner(g, stars, why){
+  if(g.adv.lrn) return lrnBanner(g, stars, why);
   const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = advSave(a, stars, g.J.accuracy()); setTimeout(() => advFan(stars, r.unlocked >= 0), 450); }
   const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00';
   const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
@@ -1227,8 +1261,8 @@ const ADV_STORY = {
 };
 const advSeen = () => LS.get('bbx-adv-seen', {});
 const advSeenSet = k => { const d = advSeen(); d[k] = 1; LS.set('bbx-adv-seen', d); };
-function advDialog(pages, label, cb){
-  const d = $('#advDlg'); let i = 0, timer = 0, full = '';
+function advDialog(pages, label, cb, sel){
+  const d = $(sel || '#advDlg'); let i = 0, timer = 0, full = '';
   const page = () => { full = pages[i]; let k = 0; d.innerHTML = `<div class="advdb"><div class="advdl">${label}</div><div class="advdt" id="advDt"></div><div class="advdn">${i + 1 < pages.length ? '▼' : 'OK ▶'}</div></div>`; d.classList.add('on'); const tx = $('#advDt'); clearInterval(timer); timer = setInterval(() => { k += 2; tx.textContent = full.slice(0, k); if((k / 2) % 2 === 1 && full[k - 1] !== ' ') advSfx('talk'); if(k >= full.length) clearInterval(timer); }, 22); };
   d.onclick = () => { const tx = $('#advDt'); if(tx && tx.textContent.length < full.length){ clearInterval(timer); tx.textContent = full; return; } i++; if(i < pages.length) page(); else { clearInterval(timer); d.classList.remove('on'); d.innerHTML = ''; d.onclick = null; if(cb) cb(); } };
   page(); }
@@ -1396,7 +1430,7 @@ function advMusic(name){
   ADVA.want = name; advMusicStop(); if(!name || !ADVA.on) return;
   try{ const T = ensure(), th = ADV_TH[name]; ADVA.mg = T.createGain(); ADVA.mg.gain.value = 1; ADVA.mg.connect(advBus()); ADVA.th = th; ADVA.nx = T.currentTime + .15; ADVA.bar = 0;
     const tick = () => {
-      if(ADVA.want === 'map' && !$('#adv').classList.contains('on')){ advMusic(null); return; }
+      if(ADVA.want === 'map' && !$('#adv').classList.contains('on') && !$('#lrn').classList.contains('on')){ advMusic(null); return; }
       const spb = 60 / th.bpm; while(ADVA.nx < ac.currentTime + .7){
         if(ADVA.bar >= th.bars.length){ if(th.loop) ADVA.bar = 0; else { clearInterval(ADVA.timer); ADVA.timer = 0; return; } }
         advBarPlay(th, th.bars[ADVA.bar], ADVA.nx, spb, ADVA.mg, ADVA.bar); ADVA.nx += 4 * spb; ADVA.bar++; } };
@@ -1467,6 +1501,195 @@ function advCredits(){
     const u = Math.min(1, t / ADV_CRED_D); tx.style.transform = 'translate(-50%,' + Math.round(y0 + (y1 - y0) * u) + 'px)'; end.style.display = C.done ? 'block' : 'none';
     if(AVCR === C) C.raf = requestAnimationFrame(frame); };
   C.raf = requestAnimationFrame(frame); }
+
+/* =====================================================================
+   TABLEAU 1 — LES SONS : le parcours d'apprentissage des débutants.
+   Une île par son (P, T, Ts, K, L). On clique une île → l'écran de l'île : écouter le son, comment le faire, 4 exercices.
+   Chaque exercice = une partie du moteur de jeu (ADV avec lrn:true). Tout réussi → la 6e île mène au Tableau 2 (les styles de musique = Beatbox Adventure).
+   ===================================================================== */
+const LRN_LS = 'bbx-lrn';
+/* tok = le son · smp = sample à écouter · zone = muscle sollicité · how = comment le faire (BROUILLON à corriger par le prof) · ex = les exercices
+   ex : { n: nom, t: consigne, div: cases par temps (1 = noires, 2 = croches), bpm, lv: difficulté (1 indulgente, 2 moyenne), pat: mesures (« . » = silence), cyc: tours, mus: accompagnement } */
+const LRN_I = [
+  { id:'lp', tok:'P', ic:'🥁', n:'Île du Kick', zone:'Lèvres', col:['#7a1f3a', '#ef5b6e', '#ffb3c0'],
+    how:'Lèvres fermées, un peu d\'air derrière, puis tu les ouvres d\'un coup : « P ». C\'est la grosse caisse. Pas besoin de souffler fort : ce qui compte, c\'est qu\'il sonne pareil à chaque fois.',
+    ex:[
+      { n:'Le battement', t:'Un kick sur chaque temps. Régulier comme un cœur.', div:1, bpm:62, lv:1, pat:['P P P P', 'P P P P'], cyc:3 },
+      { n:'Kick et silence', t:'Un temps sur deux, puis un silence : écoute le vide.', div:1, bpm:66, lv:1, pat:['P . P .', 'P . P P'], cyc:3, mus:1 },
+      { n:'Kick en croches', t:'Les kicks tombent aussi entre les temps.', div:2, bpm:70, lv:1, pat:['P . P . P . P .', 'P . P P P . P .'], cyc:3, mus:1 },
+      { n:'Kick qui danse', t:'Les kicks se décalent : c\'est le début du groove.', div:2, bpm:74, lv:2, pat:['P . . P . . P .', 'P . . P . P . .'], cyc:3, mus:1 }] },
+  { id:'lt', tok:'T', ic:'🔔', n:'Île du Charley', zone:'Langue (avant)', col:['#12506a', '#2fb4d8', '#a8ecff'],
+    how:'Pointe de la langue juste derrière les dents du haut, comme pour dire « T » : un petit coup sec et court. C\'est le charley fermé. Garde la bouche détendue, c\'est un son léger.',
+    ex:[
+      { n:'Tic tic tic tic', t:'Un charley sur chaque temps.', div:1, bpm:62, lv:1, pat:['T T T T', 'T T T T'], cyc:3 },
+      { n:'Charley en croches', t:'Deux charleys par temps : régularité avant tout.', div:2, bpm:66, lv:1, pat:['T T T T T T T T', 'T T T T T T T T'], cyc:3, mus:1 },
+      { n:'Kick + charley', t:'Ton premier vrai beat : kick sur le temps, charley entre les deux.', div:2, bpm:70, lv:1, pat:['P . T . P . T .', 'P . T . P . T T'], cyc:3, mus:1 },
+      { n:'Charley en rafale', t:'Le charley remplit tout, le kick marque les temps.', div:2, bpm:74, lv:2, pat:['P T T T P T T T', 'P T T T P T P T'], cyc:3, mus:1 }] },
+  { id:'lts', tok:'Ts', ic:'💨', n:'Île du Charley ouvert', zone:'Langue (avant)', col:['#5a4a12', '#e8b83a', '#fff0a8'],
+    how:'Comme le T, mais tu laisses l\'air s\'échapper : « tsss ». Le son dure un peu, comme un charley qui reste ouvert. Coupe-le avant le coup suivant pour que ça reste net.',
+    ex:[
+      { n:'Tsss… tsss', t:'Un charley ouvert un temps sur deux. Laisse-le respirer.', div:1, bpm:60, lv:1, pat:['Ts . Ts .', 'Ts . Ts .'], cyc:3 },
+      { n:'Le contretemps', t:'Le Ts tombe entre les temps. Compte « et » dans ta tête.', div:2, bpm:64, lv:1, pat:['. Ts . Ts . Ts . Ts', '. Ts . Ts . Ts . Ts'], cyc:3, mus:1 },
+      { n:'Kick + Ts', t:'Le kick tient les temps, le Ts répond.', div:2, bpm:68, lv:1, pat:['P . Ts . P . Ts .', 'P . Ts . P . Ts Ts'], cyc:3, mus:1 },
+      { n:'T et Ts', t:'Le charley ferme, le charley ouvre : alterne les deux.', div:2, bpm:72, lv:2, pat:['P T Ts T P T Ts T', 'P T Ts T P Ts T Ts'], cyc:3, mus:1 }] },
+  { id:'lk', tok:'K', ic:'🪘', n:'Île de la Snare', zone:'Langue (arrière)', col:['#3a2a6e', '#8a6af0', '#d8c8ff'],
+    how:'Le fond de la langue claque contre le palais : « K ». C\'est la caisse claire. Elle tombe en général sur les temps 2 et 4 : c\'est elle qui fait « claquer » le beat.',
+    ex:[
+      { n:'Le claquement', t:'Une snare sur les temps 2 et 4 : le « clap » du beat.', div:1, bpm:62, lv:1, pat:['. K . K', '. K . K'], cyc:3 },
+      { n:'Kick – Snare', t:'Kick, snare, kick, snare : le battement de base de tout le beatbox.', div:1, bpm:66, lv:1, pat:['P . K .', 'P P K .'], cyc:3, mus:1 },
+      { n:'Kick, charley, snare', t:'Trois sons ensemble : ton premier beat complet.', div:2, bpm:70, lv:1, pat:['P . T . K . T .', 'P . T . K . T T'], cyc:3, mus:1 },
+      { n:'Le beat qui bouge', t:'Un kick ajouté, la snare reste pile sur le 2 et le 4.', div:2, bpm:74, lv:2, pat:['P . T P K . T .', 'P . T P K P T .'], cyc:3, mus:1 }] },
+  { id:'ll', tok:'L', ic:'👅', n:'Île du Clic', zone:'Langue (arrière)', col:['#1f5a3a', '#3fbf6f', '#b8f5c8'],
+    how:'Colle la langue contre le palais, puis décolle-la d\'un coup : « tic ». C\'est le clic de langue : un son sec et aigu, comme un petit bloc de bois.',
+    ex:[
+      { n:'Tic… tic', t:'Un clic un temps sur deux.', div:1, bpm:60, lv:1, pat:['L . L .', 'L . L .'], cyc:3 },
+      { n:'Clic en croches', t:'Un clic, un silence : le silence compte autant que le son.', div:2, bpm:64, lv:1, pat:['L . L . L . L .', 'L . L . L . L L'], cyc:3, mus:1 },
+      { n:'Kick, clic, snare', t:'Le clic prend la place du charley dans le beat.', div:2, bpm:68, lv:1, pat:['P . L . K . L .', 'P . L . K . L L'], cyc:3, mus:1 },
+      { n:'Tous ensemble', t:'Kick, charley, clic, snare : tout ce que tu as appris.', div:2, bpm:72, lv:2, pat:['P T L T K T L T', 'P T L P K T L T'], cyc:3, mus:1 }] }
+];
+const LRN_N = LRN_I.length;
+/* positions des îles sur la carte (120 px de large, la dernière « ? » est l'île du Tableau 2) */
+const LRX = [34, 86, 32, 86, 36, 78], LRH = 310, LRY = i => 210 - i * 36;
+const LRNN = LRX.map((x, i) => ({ x, y:LRY(i) }));
+
+const lrnData = () => { const d = LS.get(LRN_LS, null); return d && d.s ? d : { s:{}, b:{} }; };
+const lrnKey = (i, e) => LRN_I[i].id + ':' + e;
+const lrnStars = (i, e) => lrnData().s[lrnKey(i, e)] || 0;
+const lrnExOpen = (i, e) => !!CFG.unlock || (lrnIslOpen(i) && (e === 0 || lrnStars(i, e - 1) >= 1));
+const lrnIslDone = i => LRN_I[i].ex.every((_, e) => lrnStars(i, e) >= 1);
+const lrnIslOpen = i => !!CFG.unlock || i === 0 || lrnIslDone(i - 1);
+const lrnAllDone = () => LRN_I.every((_, i) => lrnIslDone(i));
+const lrnIslStars = i => LRN_I[i].ex.reduce((t, _, e) => t + Math.min(3, lrnStars(i, e)), 0);
+const lrnTotal = () => LRN_I.reduce((t, _, i) => t + lrnIslStars(i), 0), lrnMax = LRN_N * 4 * 3;
+
+/* un exercice → un « niveau » pour le moteur de jeu (même forme que advBuild) */
+function lrnBuild(i, e){
+  const I = LRN_I[i], X = I.ex[e], lv = X.lv, sounds = [...new Set(X.pat.join(' ').split(' ').filter(x => x !== '.'))],
+    order = ['P', 'K', 'T', 'Ts', 'Pch', 'L'], ix = x => { const k = order.indexOf(x); return k < 0 ? 99 : k; };
+  return { id:I.id, ic:I.ic, n:I.n, style:X.n, wi:i, isl:i, ex:e, lv, niv:e + 1, lrn:true, pat:X.pat, div:X.div, bpm:X.bpm, cycles:X.cyc, win:ADV_ST[lv].win, lifeK:ADV_ST[lv].lifeK,
+    clk:true, boss:false, sounds:sounds.sort((a, b) => ix(a) - ix(b)).join(' '), mes:X.pat.length * X.cyc, teach:X.t,
+    prog:[[36, 'maj'], [36, 'maj'], [43, 'maj'], [36, 'maj']], bass:X.mus ? [[0, .9, 0], [2, .9, 0]] : null, perc:X.mus ? () => [0, 1, 2, 3].map(b => [b + .5, 's']) : null };
+}
+/* exercice suivant dans le parcours (même île, sinon la première de l'île suivante) */
+function lrnNextOf(a){
+  const I = LRN_I[a.isl]; if(a.ex + 1 < I.ex.length) return lrnExOpen(a.isl, a.ex + 1) ? { i:a.isl, e:a.ex + 1 } : null;
+  return a.isl + 1 < LRN_N && lrnExOpen(a.isl + 1, 0) ? { i:a.isl + 1, e:0 } : null; }
+function lrnSave(a, stars, pct){
+  const d = lrnData(), k = lrnKey(a.isl, a.ex), old = d.s[k] || 0, doneBefore = lrnIslDone(a.isl), allBefore = lrnAllDone();
+  if(stars > old) d.s[k] = stars; if(pct > (d.b[k] || 0)) d.b[k] = pct; LS.set(LRN_LS, d);
+  return { old, newEx:old === 0 && stars >= 1 && a.ex + 1 < LRN_I[a.isl].ex.length, islDone:!doneBefore && lrnIslDone(a.isl), all:!allBefore && lrnAllDone() }; }
+function lrnBanner(g, stars, why){
+  const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = lrnSave(a, stars, g.J.accuracy()); setTimeout(() => advFan(stars, r.newEx || r.islDone), 450); }
+  const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00';
+  const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
+  const msg = why === 'dead' ? 'Plus de cœurs… respire, écoute le clic et retente !' : blue ? 'Rien de faux, tout pile : tu maîtrises !' : stars === 3 ? '3 étoiles : tout est bien dans le temps !' : stars === 2 ? 'Bravo ! Vise maintenant « Parfait » sur chaque son.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour passer. Retente !';
+  const nx = r.all ? '<div class="res ok" style="font-weight:900;text-align:center">🌊 Tous les sons sont à toi ! Une nouvelle île apparaît à l\'horizon…</div>' : r.islDone ? '<div class="res ok" style="font-weight:900;text-align:center">🏝 ' + a.n + ' terminée !' + (a.isl + 1 < LRN_N ? ' 🔓 ' + LRN_I[a.isl + 1].ic + ' ' + LRN_I[a.isl + 1].n : '') + '</div>' : r.newEx ? '<div class="res ok" style="font-weight:900;text-align:center">🔓 Exercice suivant débloqué : ' + LRN_I[a.isl].ex[a.ex + 1].n + '</div>' : '';
+  return `<div class="advend"><div class="advk">${a.ic} ${a.n.toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">Exercice ${a.ex + 1}/4 · ${a.style}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nx}`; }
+
+/* ---------- écran : la carte du Tableau 1 + l'écran d'île ---------- */
+let LR = null;
+function lrnInit(){
+  const cv = $('#lrnCv'); if(!cv) return; const A = LR = { cv, x:cv.getContext('2d'), t0:performance.now(), sel:0, hx:LRNN[0].x, hy:LRNN[0].y - 5, raf:0, last:0, isl:-1 };
+  cv.addEventListener('pointerup', ev => { if($('#lrnIsl').classList.contains('on')) return; const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * 120, y = (ev.clientY - r.top) / r.height * LRH; let bi = -1, bd = 1e9;
+    LRNN.forEach((n, i) => { const dd = Math.hypot(n.x - x, n.y - y); if(dd < bd){ bd = dd; bi = i; } }); if(bi >= 0 && bd < 24) lrnSelect(bi); });
+  $('#lrnBack').onclick = () => { advMusic(null); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} renderHome(); show('home'); };
+  $('#lrnSnd').onclick = () => { advSndToggle(); lrnSndBtn(); };
+  $('#lrnIslX').onclick = () => { advSfx('ui'); lrnCloseIsl(); };
+  $('#bLrn').onclick = () => { try{ const el = document.documentElement; if(!document.fullscreenElement && el.requestFullscreen) el.requestFullscreen({ navigationUI:'hide' }).catch(() => {}); }catch(e){} lrnShow(); };
+  window.addEventListener('resize', () => { if($('#lrn').classList.contains('on')) lrnResize(); });
+  document.addEventListener('keydown', e => { if(!$('#lrn').classList.contains('on') || $('#lrnIsl').classList.contains('on')) return; if(e.key === 'ArrowDown' || e.key === 'ArrowLeft') lrnSelect(Math.max(0, A.sel - 1), true); else if(e.key === 'ArrowUp' || e.key === 'ArrowRight') lrnSelect(Math.min(LRN_N, A.sel + 1), true); else if(e.key === 'Enter') lrnSelect(A.sel); });
+  lrnHomeSt();
+}
+function lrnHomeSt(){ const e = $('#lrnHomeSt'); if(e) e.textContent = '★ ' + lrnTotal() + ' / ' + lrnMax; }
+function lrnSndBtn(){ const b = $('#lrnSnd'); if(b) b.textContent = ADVA.on ? '🔊' : '🔇'; }
+function lrnResize(){ const A = LR, iw = window.innerWidth, ih = window.innerHeight, w = Math.min(iw, Math.round(ih * 120 / LRH)); $('#lrnCol').style.width = w + 'px';
+  A.hv = Math.max(LRH, Math.round(ih * 120 / w)); if(A.cv.width !== 120 || A.cv.height !== A.hv){ A.cv.width = 120; A.cv.height = A.hv; } A.cv.style.width = w + 'px'; A.cv.style.height = ih + 'px'; A.sc = w / 120; }
+function lrnShow(isl){
+  ADV = null; show('lrn'); lrnResize(); const A = LR; if(isl == null){ isl = 0; for(let i = 0; i < LRN_N; i++) if(lrnIslOpen(i)){ isl = i; if(!lrnIslDone(i)) break; } if(lrnAllDone()) isl = LRN_N; }
+  A.sel = isl; { const q = LRNN[Math.min(isl, LRN_N)]; A.hx = q.x; A.hy = q.y - 5; } lrnCloseIsl(true); lrnSndBtn(); lrnHomeSt(); $('#lrnSc').textContent = '★ ' + lrnTotal() + '/' + lrnMax;
+  if(!AVCR) advMusic('map'); lrnPanel();
+  if(!A.raf){ A.last = 0; A.raf = requestAnimationFrame(lrnLoop); }
+  if(!LS.get('bbx-lrn-seen', 0)){ LS.set('bbx-lrn-seen', 1); setTimeout(() => advDialog(LRN_INTRO, '🌱 LE PARCOURS', null, '#lrnDlg'), 350); } }
+const LRN_INTRO = ['Avant de voyager dans tous les styles de musique, il faut apprendre les sons de base du beatbox.', 'Chaque île t\'en apprend un : le kick, le charley, la snare… Écoute-le, essaie-le, puis joue-le en rythme avec les exercices.', 'Quand tu auras ramassé toutes les étoiles, une nouvelle île apparaîtra à l\'horizon…'];
+function lrnSelect(i, quiet){ const A = LR, open = i >= LRN_N ? lrnAllDone() || !!CFG.unlock : lrnIslOpen(i); advSfx(open ? 'sel' : 'lock'); A.sel = i; lrnPanel();
+  if(!quiet && open){ if(i >= LRN_N) lrnToT2(); else lrnOpenIsl(i); } }
+function lrnToT2(){ advSfx('go'); advMusic(null); setTimeout(() => advShow(), 300); }
+/* petit panneau du bas de la carte */
+function lrnPanel(){
+  const A = LR, i = A.sel, p = $('#lrnP');
+  if(i >= LRN_N){ const open = lrnAllDone() || !!CFG.unlock;
+    p.innerHTML = `<div class="advh">${open ? '🌊' : '🔒'} ${LRN_N + 1}/${LRN_N + 1} · TABLEAU 2</div><div class="advs">Les styles de musique · Beatbox Adventure</div><div class="advt">${open ? 'Tu connais tous les sons de base ! Pars à la découverte des douze îles des styles : reggae, afro, hip-hop, samba…' : 'Une île mystérieuse brille à l\'horizon. Termine les ' + LRN_N + ' îles des sons (au moins 1 étoile à chaque exercice) pour t\'y rendre.'}</div><div class="advrow"><div class="advstr"></div><button class="b-pink" id="lrnGo" ${open ? '' : 'disabled'}>${open ? '▶ PARTIR' : '🔒'}</button></div>`;
+    $('#lrnGo').onclick = lrnToT2; return; }
+  const I = LRN_I[i], open = lrnIslOpen(i), st = lrnIslStars(i), done = I.ex.filter((_, e) => lrnStars(i, e) >= 1).length;
+  p.innerHTML = `<div class="advh">${open ? I.ic : '🔒'} ${i + 1}/${LRN_N + 1} · ${I.n.toUpperCase()}</div><div class="advs">Le son : <b>${I.tok}</b> · ${I.zone} · ${done}/4 exercices</div>
+    <div class="advt">${open ? I.how : 'Termine l\'île précédente (au moins 1 étoile à chaque exercice) pour ouvrir celle-ci.'}</div>
+    <div class="advrow"><div class="advstr" style="font-size:1.25rem;letter-spacing:0"><span class="g">★ ${st}</span><span class="d"> / 12</span></div><button class="b-pink" id="lrnGo" ${open ? '' : 'disabled'}>${open ? '▶ ENTRER' : '🔒'}</button></div>`;
+  $('#lrnGo').onclick = () => lrnOpenIsl(i); }
+/* l'intérieur de l'île : écouter, comprendre, 4 exercices */
+function lrnOpenIsl(i){
+  if(!lrnIslOpen(i)) return; const I = LRN_I[i], el = $('#lrnIsl'); LR.isl = i; advSfx('sel');
+  const rows = I.ex.map((X, e) => { const open = lrnExOpen(i, e), st = lrnStars(i, e), best = lrnData().b[lrnKey(i, e)], sn = [...new Set(X.pat.join(' ').split(' ').filter(x => x !== '.'))].join(' ');
+    return `<div class="lrx ${open ? '' : 'lk'}" data-e="${e}"><div class="lrxn">${open ? e + 1 : '🔒'}</div><div class="lrxb"><div class="lrxt">${X.n}</div><div class="lrxd">${open ? X.t : 'Réussis l\'exercice précédent.'}</div><div class="lrxs"><span class="${st >= 4 ? 'b' : 'g'}">${'★'.repeat(Math.min(3, st))}</span><span class="d">${'★'.repeat(3 - Math.min(3, st))}</span> <small>${sn} · ${X.bpm} BPM${best != null ? ' · ' + best + ' %' : ''}</small></div></div><button class="b-pink" ${open ? '' : 'disabled'}>▶</button></div>`; }).join('');
+  el.querySelector('#lrnIslB').innerHTML = `<div class="lrh"><span class="lri">${I.ic}</span><div><div class="advh" style="font-size:1.15rem">${I.n.toUpperCase()}</div><div class="advs">Le son : <b>${I.tok}</b> · ${I.zone}</div></div></div>
+    <div class="advt" style="font-size:.88rem">${I.how}</div><button class="lrl" id="lrnHear">🔊 Écouter le ${I.tok}</button>
+    <div class="lrg">LES EXERCICES</div>${rows}`;
+  el.classList.add('on'); $('#lrnHear').onclick = () => lrnHear(I.tok);
+  $$('#lrnIslB .lrx').forEach(r => { const e = +r.dataset.e; r.querySelector('button').onclick = () => lrnPlay(i, e); }); el.scrollTop = 0; }
+function lrnCloseIsl(quiet){ const el = $('#lrnIsl'); if(el) el.classList.remove('on'); if(LR) LR.isl = -1; if(!quiet && LR) lrnPanel(); }
+/* écouter le son : 4 coups du vrai sample, à 80 BPM */
+async function lrnHear(tok){
+  try{ await hearLoad(); const T = ensure(), bus = T.createGain(); bus.gain.value = 1; bus.connect(T.destination); const t0 = T.currentTime + .08; for(let k = 0; k < 4; k++) sampleAt(t0 + k * .75, tok, tok === 'P' ? 'grave' : tok === 'K' ? 'medium' : 'aigu', bus); setTimeout(() => { try{ bus.disconnect(); }catch(e){} }, 4000); }catch(e){} }
+function lrnPlay(i, e){
+  if(!lrnExOpen(i, e)) return; if(!getCal()){ alert('Fais d\'abord la calibration (micro, latence, sons) : elle ne prend qu\'une minute.'); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(er){} calStep = 0; renderCal(); show('cal'); return; }
+  if(LR.starting) return; LR.starting = true; advMusic(null); advSfx('go'); setTimeout(() => { LR.starting = false; ADV = lrnBuild(i, e); startGame(); }, 420); }
+
+/* ---------- dessin de la carte ---------- */
+function lrnLoop(now){ const A = LR; if(!$('#lrn').classList.contains('on')){ A.raf = 0; return; }
+  const dt = Math.min(.05, A.last ? (now - A.last) / 1000 : .016); A.last = now; const tg = LRNN[Math.min(A.sel, LRN_N)], dx = tg.x - A.hx, dy = tg.y - 5 - A.hy, d = Math.hypot(dx, dy);
+  A.walk = d > .8; if(A.walk){ const sk = Math.floor(performance.now() / 130); if(sk !== A.stepK){ A.stepK = sk; advSfx('step'); } const s = Math.min(d, 60 * dt); A.hx += dx / d * s; A.hy += dy / d * s; } else { A.hx = tg.x; A.hy = tg.y - 5; }
+  lrnDraw((now - A.t0) / 1000); A.raf = requestAnimationFrame(lrnLoop); }
+function lrnDraw(t){
+  const A = LR, X = A.x, W = 120, H = A.hv, off = Math.max(0, H - LRH), R = (x, y, w, h, c) => { X.fillStyle = c; X.fillRect(Math.round(x), Math.round(y + off), w, h); };
+  const circ = (cx, cy, r, c) => { X.fillStyle = c; for(let dy = -r; dy <= r; dy++){ const w = Math.floor(Math.sqrt(r * r - dy * dy + .5)); X.fillRect(Math.round(cx - w), Math.round(cy + dy + off), 2 * w + 1, 1); } };
+  const pat = (rows, x, y, col) => rows.forEach((row, j) => { for(let i = 0; i < row.length; i++){ const ch = row[i]; if(ch !== '.' && ch !== '0') R(x + i, y + j, 1, 1, typeof col === 'function' ? col(ch) : col); } });
+  X.fillStyle = '#1b63c4'; X.fillRect(0, 0, W, H); for(let y = 0; y < LRH; y += 7) for(let x = ((y * 5) % 17) + Math.floor(t * 5) % 17 - 17; x < W; x += 17){ R(x, y + 3, 3, 1, '#4e9bec'); R(x + 1, y + 4, 1, 1, '#4e9bec'); }
+  for(let k = 0; k < 4; k++){ const cx = ((t * (2.5 + k % 3) + k * 53) % 170) - 25, cy = 20 + k * 62; X.globalAlpha = .13; R(cx, cy + 4, 22, 5, '#000'); R(cx + 4, cy + 1, 14, 5, '#000'); X.globalAlpha = 1; }
+  // chemins
+  for(let i = 0; i < LRNN.length - 1; i++){ const a = LRNN[i], b = LRNN[i + 1], mx = (a.x + b.x) / 2 + (i % 2 ? 12 : -12), my = (a.y + b.y) / 2, on = i + 1 < LRN_N ? lrnIslOpen(i + 1) : lrnAllDone() || !!CFG.unlock;
+    for(let s = .12; s < 1; s += .09){ const u = 1 - s, px = u * u * a.x + 2 * u * s * mx + s * s * b.x, py = u * u * a.y + 2 * u * s * my + s * s * b.y; R(px - 1, py, 3, 3, '#0d2033'); R(px - 1, py - 1, 3, 3, on ? '#ffe27a' : '#7a93b8'); } }
+  // îles
+  LRNN.forEach((n, i) => { const last = i >= LRN_N, cs = [[0, 0, 17], [-9, 4, 10], [10, -2, 10]], col = last ? ['#1c1428', '#4a3a7a', '#b58cff'] : LRN_I[i].col;
+    cs.forEach(c => circ(n.x + c[0], n.y + c[1] + 3, c[2] + 2, Math.floor(t * 2 + i) % 2 ? '#cdeeff' : '#e8f7ff')); cs.forEach(c => circ(n.x + c[0], n.y + c[1] + 3, c[2], col[0])); cs.forEach(c => circ(n.x + c[0], n.y + c[1], c[2], col[2])); cs.forEach(c => circ(n.x + c[0], n.y + c[1], c[2] - 2, col[1]));
+    if(last){ const g = .6 + .4 * Math.sin(t * 3); X.globalAlpha = g; for(let s = 0; s < 8; s++) R(n.x - 14 + (s * 7 + Math.floor(t * 5)) % 28, n.y - 22 + (s * 11) % 26, 2, 2, s % 2 ? '#ffe27a' : '#5ef0ff'); X.globalAlpha = 1; R(n.x - 3, n.y - 14, 3, 3, '#ffe27a'); R(n.x, n.y - 17, 4, 3, '#ffe27a'); R(n.x + 1, n.y - 11, 3, 5, '#ffe27a'); R(n.x, n.y - 7, 3, 2, '#ffe27a'); R(n.x, n.y - 2, 3, 3, '#ffe27a'); }
+    else lrnDecor(i, R, circ, n.x, n.y, t); });
+  // repères
+  LRNN.forEach((n, i) => { const last = i >= LRN_N, open = last ? lrnAllDone() || !!CFG.unlock : lrnIslOpen(i), done = !last && lrnIslDone(i), sel = A.sel === i;
+    if(sel){ const rr = 8 + Math.floor(t * 4) % 2; for(let a = 0; a < 16; a += 2) R(n.x + Math.cos(a / 16 * 6.283) * rr - 1, n.y + Math.sin(a / 16 * 6.283) * rr - 1, 2, 2, '#fff'); }
+    circ(n.x, n.y + 14, 5, '#0d2033'); circ(n.x, n.y + 14, 4, !open ? '#6c7a92' : done ? '#7be28f' : '#f58bb0');
+    if(!open){ R(n.x - 2, n.y + 13, 5, 4, '#2a3550'); R(n.x - 1, n.y + 11, 3, 1, '#2a3550'); R(n.x - 1, n.y + 12, 1, 1, '#2a3550'); R(n.x + 1, n.y + 12, 1, 1, '#2a3550'); }
+    else if(!last) pat((AV_DIG[i + 1] || '').match(/.{3}/g) || [], n.x - 1, n.y + 12, '#0d2033');
+    if(!last){ const st = lrnIslStars(i); for(let s = 0; s < 4; s++){ const full = st >= (s + 1) * 3 ? 2 : st > s * 3 ? 1 : 0, sx = n.x - 11 + s * 6, sy = n.y + 21; pat(AV_STAR, sx + 1, sy + 1, '#0d2033'); pat(AV_STAR, sx, sy, full === 2 ? '#ffd23f' : full === 1 ? '#c9a73a' : '#3a4a66'); } } });
+  // héros
+  { const walk = A.walk, f = walk ? Math.floor(performance.now() / 130) % 2 : 0, bob = walk ? 0 : Math.floor(t * 3) % 2, x = Math.round(A.hx) - 5 + 11, y = Math.round(A.hy) - 15 + bob - 2;
+    R(x + 1, y + 15 - bob, 9, 2, 'rgba(0,0,0,.28)'); pat(AV_HERO, x, y, ch => AV_COL[ch] || '#fff'); pat(AV_LEG[f], x, y + 11, ch => AV_COL[ch] || '#fff'); }
+}
+/* décor de chaque île : un petit objet pixel art du son */
+function lrnDecor(i, R, circ, x, y, t){
+  const bump = Math.floor(t * 3) % 2;
+  if(i === 0){ // grosse caisse
+    circ(x, y - 2 + bump * 0, 9, '#2a1020'); circ(x, y - 2, 8, '#ef5b6e'); circ(x, y - 2, 5, '#fff3f5'); circ(x, y - 2, 2, '#ef5b6e'); R(x - 11, y + 5, 3, 3, '#5a3a2a'); R(x + 9, y + 5, 3, 3, '#5a3a2a'); }
+  else if(i === 1){ // charley fermé : deux cymbales
+    R(x, y - 14, 1, 20, '#9aa5b5'); R(x - 9, y - 12 + bump, 19, 2, '#ffd23f'); R(x - 8, y - 9, 17, 2, '#e8b83a'); R(x - 10, y + 5, 21, 1, '#6c7a92'); }
+  else if(i === 2){ // charley ouvert : cymbales écartées + souffle
+    R(x, y - 14, 1, 20, '#9aa5b5'); R(x - 9, y - 15, 19, 2, '#ffd23f'); R(x - 8, y - 8 + bump, 17, 2, '#e8b83a'); for(let k = 0; k < 4; k++) R(x - 9 + ((t * 18 + k * 7) % 22), y - 12 + k % 2 * 2, 2, 1, 'rgba(255,255,255,.8)'); }
+  else if(i === 3){ // caisse claire
+    R(x - 10, y - 6, 20, 10, '#e8e8f4'); R(x - 10, y - 8, 20, 3, '#c9d1d9'); R(x - 10, y - 8, 20, 1, '#fff'); for(let k = 0; k < 5; k++) R(x - 8 + k * 4, y - 4, 1, 7, '#8a6af0'); R(x - 12 + bump * 2, y - 14, 1, 10, '#5a3a2a'); R(x + 11 - bump * 2, y - 14, 1, 10, '#5a3a2a'); }
+  else { // bouche / langue
+    R(x - 10, y - 8, 20, 12, '#8a2a3a'); R(x - 8, y - 6, 16, 8, '#2a0a14'); R(x - 6, y - 2 + bump, 12, 5, '#ef6a7a'); R(x - 1, y - 1 + bump, 1, 3, '#b8404f'); R(x - 8, y - 6, 3, 2, '#fff'); R(x + 5, y - 6, 3, 2, '#fff'); }
+}
+/* décors derrière la piste (réutilise les scènes existantes) */
+ADV_SCENE.lp = ADV_SCENE.cantina; ADV_SCENE.lt = ADV_SCENE.neon; ADV_SCENE.lts = ADV_SCENE.desert; ADV_SCENE.lk = ADV_SCENE.orbite; ADV_SCENE.ll = ADV_SCENE.foret;
+ADV_FRAME.lp = ADV_FRAME.cantina; ADV_FRAME.lt = ADV_FRAME.neon; ADV_FRAME.lts = ADV_FRAME.desert; ADV_FRAME.lk = ADV_FRAME.orbite; ADV_FRAME.ll = ADV_FRAME.foret;
 
 const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, songId:'bj120', kck:'P', snr:'K', hat:'T', part:'beat', guide:true, mus:true, clk:true, mvol:.55, audOff:0, audBpm:0, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
 const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
@@ -1764,7 +1987,7 @@ $('#bSeeAdm').onclick = () => admInit();
 $('#oName').value = LS.get('bbx-hero-name', ''); $('#oName').oninput = e => LS.set('bbx-hero-name', e.target.value.slice(0, 30));
 $('#pTok').oninput = e => { CFG.ptok = e.target.value; saveCfg(); renderPrev(); };
 $('#pDiv').onchange = e => { CFG.pdiv = +e.target.value; saveCfg(); renderPrev(); };
-const show = id => { try{ if(G && !G.done) quitGame(false); }catch(e){} try{ stopHear(); }catch(e){} $$('.scr').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('advon', id === 'adv'); window.scrollTo(0, 0); };
+const show = id => { try{ if(G && !G.done) quitGame(false); }catch(e){} try{ stopHear(); }catch(e){} $$('.scr').forEach(s => s.classList.toggle('on', s.id === id)); document.body.classList.toggle('advon', id === 'adv' || id === 'lrn'); window.scrollTo(0, 0); };
 
 /* ---------- calibration (micro → latence → sons → synchro casque) ---------- */
 let calStep = 0, calBusy = false;
@@ -2148,7 +2371,7 @@ function draw(g, now){
 function quitGame(silent){
   const g = G; if(!g) return; g.done = true; cancelAnimationFrame(g.raf); killAudio(); if(g.paused){ g.paused = false; $('#pauseov').classList.remove('on'); try{ ac.resume(); }catch(e){} }
   try{ if(g.bus){ g.bus.gain.value = 0; g.bus.disconnect(); } if(g.mus){ g.mus.gain.value = 0; g.mus.disconnect(); } if(g.src) g.src.stop(); (g.srcs || []).forEach(x => { try{ x.stop(); }catch(e){} }); }catch(e){} try{ if(g.mic) g.mic.close(); }catch(e){} try{ if(g.wl) g.wl.release(); }catch(e){}
-  $('#game').classList.remove('on'); if(silent !== false){ if(g.adv){ ADV_LV = g.adv.lv; advShow(g.adv.wi); } else { renderHome(); show('home'); } } G = null;
+  $('#game').classList.remove('on'); if(silent !== false){ if(g.adv && g.adv.lrn){ lrnShow(g.adv.isl); } else if(g.adv){ ADV_LV = g.adv.lv; advShow(g.adv.wi); } else { renderHome(); show('home'); } } G = null;
 }
 $('#quit').onclick = () => quitGame();
 
@@ -2179,7 +2402,7 @@ function takeObj(){ const R = LASTRES, g = R.g, J = g.J, a = R.a;
 const hash = t => { let h = 0; for(const c of t) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h.toString(36); };
 const SONGNAME = {};
 const boardKey = () => ADV ? 'adv-' + ADV.id + '_n' + ADV.niv + '_long_' + ADV.bpm : [CFG.style === 'perso' ? 'perso' + hash(CFG.ptok + '|' + CFG.pdiv) : CFG.style === 'song' ? (() => { const F = songFlat(), k = 'song' + hash(F.pat.map(b => b.div + b.tok).join('|') + (stemSong() ? '|' + CFG.songId + CFG.part : '')); SONGNAME[k] = F.S.title + (stemSong() ? ' · ' + stemPart().n.replace(/^\S+\s/, '') : ''); return k; })() : CFG.style, 'n' + CFG.niv, CFG.len, bpmOf()].concat(CFG.boss ? ['boss'] : []).concat(CFG.style !== 'perso' && CFG.style !== 'song' && ((CFG.kck || 'P') !== 'P' || (CFG.snr || 'K') !== 'K' || (CFG.hat || 'T') !== 'T') ? ['s' + (CFG.kck || 'P') + (CFG.snr || 'K') + (CFG.hat || 'T')] : []).join('_').replace(/[.#$\[\]\/]/g, '-');
-const boardName = k => { const q = k.split('_'); if(q[0].startsWith('adv-')){ const w = ADV_W.find(x => 'adv-' + x.id === q[0]); return ('🗺 ADVENTURE · ' + (w ? w.n : q[0]) + ' · NIV ' + q[1].slice(1) + ' · ' + q[3] + ' BPM').toUpperCase(); } const st = (STYLES.find(x => x.id === q[0]) || {}).n || (q[0].startsWith('song') ? '🎵 ' + (SONGNAME[q[0]] || 'MORCEAU') : q[0].startsWith('perso') ? '✏️ Ma phrase' : q[0]); return (st + (q[0].startsWith('song') ? ' · ' : ' · niv ' + q[1].slice(1) + ' · ' + (q[2] === 'long' ? 'longue' : 'courte') + ' · ') + q[3] + ' BPM' + (q[4] === 'boss' ? ' · 💀 BOSS' : '')).toUpperCase(); };
+const boardName = k => { const q = k.split('_'); if(q[0].startsWith('adv-')){ const li = LRN_I.find(x => 'adv-' + x.id === q[0]); if(li) return ('🌱 LES SONS · ' + li.n + ' · EX ' + q[1].slice(1) + ' · ' + q[3] + ' BPM').toUpperCase(); const w = ADV_W.find(x => 'adv-' + x.id === q[0]); return ('🗺 ADVENTURE · ' + (w ? w.n : q[0]) + ' · NIV ' + q[1].slice(1) + ' · ' + q[3] + ' BPM').toUpperCase(); } const st = (STYLES.find(x => x.id === q[0]) || {}).n || (q[0].startsWith('song') ? '🎵 ' + (SONGNAME[q[0]] || 'MORCEAU') : q[0].startsWith('perso') ? '✏️ Ma phrase' : q[0]); return (st + (q[0].startsWith('song') ? ' · ' : ' · niv ' + q[1].slice(1) + ' · ' + (q[2] === 'long' ? 'longue' : 'courte') + ' · ') + q[3] + ' BPM' + (q[4] === 'boss' ? ' · 💀 BOSS' : '')).toUpperCase(); };
 const locBoard = k => LS.get('bbx-hero-hs-' + k, []);
 async function fetchBoard(k){ // top 10 partagé (si Firebase répond), sinon scores de cet appareil
   const loc = locBoard(k).map(r => Object.assign({ loc:1 }, r));
@@ -2223,7 +2446,7 @@ async function arcade(R){
   document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v42', CH = 600000;
+const VERSION = 'v43', CH = 600000;
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -2306,7 +2529,7 @@ function renderEnd(){
     if(conf.length) h += '<h2 style="margin:12px 0 2px">Sons confondus</h2><ul class="l">' + conf.map(z => `<li>Case ${z.c.i + 1} (<b>${z.c.tok}</b>, ${LNAME[HERO.laneOf(z.c.tok)]}) : entendu plutôt « ${LNAME[z.r.fh] || '?'} » ${z.r.f} fois</li>`).join('') + '</ul><div class="small muted">Fiable entre familles différentes (P / K / Ts), pas entre sons proches (Pch / Pf, K / K~).</div>'; }
   h += `<div class="row" style="margin-top:12px"><button id="bCopy">📋 Copier le résultat</button><button id="bWav">💾 Prise (.wav)</button></div><div id="sendSt" class="res" style="margin-top:8px;display:none"></div><div class="row" id="sendRow" style="display:none;margin-top:6px"><button id="bSend" class="b-cyan">📤 Envoyer cette partie pour analyse</button></div>`;
   $('#endBody').innerHTML = h;
-  { const i = g.adv ? g.adv.wi : -1; $('#bMenu').textContent = g.adv ? '🗺 Carte' : 'Menu'; const nx = $('#bNext'); nx.style.display = g.adv && i + 1 < ADV_W.length && advOpen(i + 1, g.adv.lv) && why !== 'dead' ? '' : 'none'; if(g.adv) nx.textContent = 'Lieu suivant ▶'; }
+  { const i = g.adv ? g.adv.wi : -1; $('#bMenu').textContent = g.adv ? '🗺 Carte' : 'Menu'; const nx = $('#bNext'); if(g.adv && g.adv.lrn){ nx.style.display = why !== 'dead' && (LASTRES.advRes ? lrnNextOf(g.adv) : null) ? '' : 'none'; nx.textContent = 'Exercice suivant ▶'; } else { nx.style.display = g.adv && i + 1 < ADV_W.length && advOpen(i + 1, g.adv.lv) && why !== 'dead' ? '' : 'none'; if(g.adv) nx.textContent = 'Lieu suivant ▶'; } }
   if(!LASTRES.arc){ LASTRES.arc = 1; setTimeout(() => arcade(LASTRES), perfectRun ? 2600 : 900); }
   { const R = LASTRES, auto = !!LS.get('bbx-hero-send', false);
     if(R.stHtml){ $('#sendSt').style.display = ''; sendMsg(R, R.stHtml, R.stCls); }
@@ -2339,9 +2562,9 @@ async function admLoad(){ const B = $('#admBody'); B.innerHTML = '<p class="smal
 $('#admMenu').onclick = () => { renderHome(); show('home'); };
 $('#bPlay').onclick = () => { ADV = null; startGame(); };
 $('#bAgain').onclick = () => { const a = LASTRES && LASTRES.g.adv; show('home'); ADV = a || null; startGame(); };
-$('#bNext').onclick = () => { const a = LASTRES.g.adv; show('home'); ADV = advBuild(a.wi + 1, a.lv); startGame(); };
-$('#bMenu').onclick = () => { const a = LASTRES && LASTRES.g.adv; if(a){ ADV_LV = a.lv; advShow(a.wi); } else { renderHome(); show('home'); } };
-advInitUI();
+$('#bNext').onclick = () => { const a = LASTRES.g.adv; show('home'); if(a.lrn){ const n = lrnNextOf(a); if(!n){ lrnShow(a.isl); return; } ADV = lrnBuild(n.i, n.e); } else ADV = advBuild(a.wi + 1, a.lv); startGame(); };
+$('#bMenu').onclick = () => { const a = LASTRES && LASTRES.g.adv; if(a && a.lrn){ lrnShow(a.isl); } else if(a){ ADV_LV = a.lv; advShow(a.wi); } else { renderHome(); show('home'); } };
+advInitUI(); lrnInit();
 renderHome();
 if(/[?&]admin\b/.test(location.search)) admInit();
 </script>
