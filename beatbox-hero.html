@@ -2693,7 +2693,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v47', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v47b', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -2711,7 +2711,8 @@ async function gSync(){ const st = $('#gSt'), app = await fbApp(false), u = app.
 function gShow(){ const m = LS.get('bbx-hero-g', ''), st = $('#gSt'); if(st) st.textContent = m ? '✅ Lié à ' + m + ' — même code sur tous tes appareils' : 'Non lié'; }
 async function gInit(){ gShow(); $('#bGoogle').onclick = gLink;
   if(LS.get('bbx-hero-gpend', false)){ LS.set('bbx-hero-gpend', 0); try{ const app = await fbApp(false); await app.auth().getRedirectResult(); await gSync(); }catch(e){ $('#gSt').textContent = '⚠ ' + (e.message || e); } } }
-async function fbApp(anon){ if(!window.firebase) throw new Error('Firebase non chargé (hors ligne ?)');
+async function fbApp(anon){ for(let i = 0; i < 100 && !window.firebase; i++) await new Promise(r => setTimeout(r, 100)); // scripts Firebase en defer : attendre leur chargement
+  if(!window.firebase) throw new Error('Firebase non chargé (hors ligne ?)');
   const app = (firebase.apps || []).find(a => a.name === 'hero') || firebase.initializeApp(FB_CFG, 'hero'), au = app.auth();
   if(anon && !au.currentUser) await au.signInAnonymously(); return app; }
 function b64(buf){ const u = new Uint8Array(buf); let s = ''; for(let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
@@ -2792,7 +2793,14 @@ let ADM = { db:null, rows:[] };
 const admDl = (name, blob) => { const u = URL.createObjectURL(blob), l = document.createElement('a'); l.href = u; l.download = name; l.click(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
 async function admWav(r){ let w = ''; for(let k = 0; k < (r.audioChunks || 0); k++) w += (await ADM.db.ref((r._p || 'analyse/' + getCode()) + '/audio/' + r.id + '/' + k).once('value')).val() || ''; return w; }
 const admB64Blob = (w, type) => { const bin = atob(w), u = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type }); };
-async function admInit(){ ADM.ami = /[?&]admin=ami/.test(location.search); show('admin'); try{ ADM.db = (await fbApp(true)).database(); await admLoad(); }catch(e){ $('#admBody').innerHTML = '<div class="res warn">⚠ ' + escH(e.message || e) + '</div>'; } }
+async function admInit(){ ADM.ami = /[?&]admin=ami/.test(location.search); show('admin'); const B = $('#admBody'); B.innerHTML = '<p class="small muted">Connexion…</p>';
+  try{ if(ADM.ami){ const app = await fbApp(false), au = app.auth(); try{ await au.getRedirectResult(); }catch(e){}
+      const u = await new Promise(r => { const off = au.onAuthStateChanged(x => { off(); r(x); }); });
+      if(!u || u.isAnonymous){ B.innerHTML = '<div class="res">Pour voir les parties des amis, connecte-toi avec ton compte Google (celui de Marc).</div><button id="admG" class="b-pink">Se connecter avec Google</button><div id="admGm" class="small"></div>';
+        $('#admG').onclick = async () => { const prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt:'select_account' }); try{ await au.signInWithPopup(prov); admInit(); }catch(e){ if(/popup|operation-not-supported|cancelled/.test(e.code || '')) return au.signInWithRedirect(prov); $('#admGm').textContent = '⚠ ' + (e.message || e); } }; return; }
+      ADM.db = app.database(); }
+    else ADM.db = (await fbApp(true)).database();
+    await admLoad(); }catch(e){ B.innerHTML = '<div class="res warn">⚠ ' + escH(e.message || e) + '</div>'; } }
 async function admLoad(){ const B = $('#admBody'); B.innerHTML = '<p class="small muted">Chargement…</p>'; const code = getCode();
   try{ let rows = []; if(ADM.ami){ const inv = (await ADM.db.ref('invitations').once('value')).val() || {}; for(const k of Object.keys(inv)){ const v = (await ADM.db.ref('ami/' + k + '/takes').once('value')).val() || {}; Object.keys(v).forEach(id => rows.push(Object.assign({}, v[id], { id, _p:'ami/' + k, _l:(inv[k] && inv[k].label) || k }))); } } else { const v = (await ADM.db.ref('analyse/' + code + '/takes').once('value')).val() || {}; rows = Object.keys(v).map(id => Object.assign({}, v[id], { id, _p:'analyse/' + code })); } rows.sort((a, b) => b.t - a.t); ADM.rows = rows;
     const done = LS.get('bbx-hero-dl', []);
