@@ -127,6 +127,10 @@ body.advon{overflow:hidden;background:#1b63c4}
 .lrlg{font-size:.7rem;opacity:.9;text-align:center;margin:0 0 6px}.lrlg i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin:0 3px 0 6px;background:#fff}.lrlg i.b{background:#ffb02e}.lrlg i.c{background:#ff7ac0}
 .lrx .lrs{padding:8px 10px;font-size:1.05rem;background:#0d2033;color:#5ef0ff;border:2px solid #5ef0ff;border-radius:6px;box-shadow:0 3px 0 #000}.lrx .lrs.on{background:#5ef0ff;color:#0d2033}
 
+/* défi amis */
+.amiS{display:flex;gap:10px;align-items:center;background:#f2f8fc;border-radius:14px;padding:8px 10px;margin:6px 0}.amiS.next{outline:3px solid #ffd23f}
+.amiS .n{font-weight:900;font-size:1.2rem;width:26px;text-align:center;color:var(--mut)}.amiS .b{flex:1;min-width:0}.amiS .t{font-weight:900}.amiS .d{font-size:.8rem;color:var(--mut)}.amiS .s{color:#ffb02e;letter-spacing:2px;font-size:1.1rem}
+#ami .card h2{font-size:1.15rem}
 </style></head><body>
 <div class="wrap">
 
@@ -134,7 +138,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 45c · 30 oct. 2026 · grille de contretemps, lecteurs corrigés, tout débloqué (test)</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 47 · 31 oct. 2026 · Défi amis (lien d'invitation, envoi automatique)</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
@@ -240,6 +244,13 @@ body.advon{overflow:hidden;background:#1b63c4}
     <div id="lrnIsl"><button id="lrnIslX">◀ Carte</button><div id="lrnIslB"></div></div>
     <div id="lrnDlg"></div>
   </div>
+</div>
+
+<!-- ================= DÉFI AMIS ================= -->
+<div id="ami" class="scr">
+  <h1>🎮 BBX Hero</h1>
+  <p class="sub">Le jeu de beatbox qui t'écoute</p>
+  <div id="amiB"></div>
 </div>
 
 <!-- ================= CALIBRATION ================= -->
@@ -1526,7 +1537,7 @@ function advCredits(){
    Dans les mesures : « $ » = le son de l'île, « . » = silence. Une mesure = 4 temps (div 1 → 4 cases, 2 → 8, 4 → 16, 8 → 32).
    ===================================================================== */
 const LRN_LS = 'bbx-lrn';
-const LRN_OPEN = true; // TEMPORAIRE (phase de vérification) : tout est débloqué. Remettre à `!!CFG.unlock` pour réactiver la progression.
+const lrnOpenAll = () => !!CFG.unlock; // progression réelle ; la case « Tout débloquer » (CFG.unlock) ouvre tout pour les tests. Fonction : CFG n'existe pas encore au chargement de ce fichier.
 const lrnSub = (e, S) => Object.assign({}, e, { m:e.m.map(([d, s]) => [d, s.replace(/\$/g, S)]) });
 const E = (n, t, bpm, lv, m, o) => Object.assign({ n, t, bpm, lv, m, cyc:2, mus:1 }, o || {});
 
@@ -1626,8 +1637,8 @@ const LRG = 36, LRWH = 40 + LRN_N * LRG + 130, LRNN = Array.from({ length:LRN_N 
 const lrnData = () => { const d = LS.get(LRN_LS, null); return d && d.s ? d : { s:{}, b:{} }; };
 const lrnKey = (i, e) => LRN_I[i].id + ':' + e;
 const lrnStars = (i, e) => lrnData().s[lrnKey(i, e)] || 0;
-const lrnIslOpen = i => LRN_OPEN || i === 0 || lrnIslDone(i - 1);
-const lrnExOpen = (i, e) => LRN_OPEN || (lrnIslOpen(i) && (e === 0 || lrnStars(i, e - 1) >= 1));
+const lrnIslOpen = i => lrnOpenAll() || i === 0 || lrnIslDone(i - 1);
+const lrnExOpen = (i, e) => lrnOpenAll() || (lrnIslOpen(i) && (e === 0 || lrnStars(i, e - 1) >= 1));
 const lrnIslDone = i => LRN_I[i].ex.every((_, e) => lrnStars(i, e) >= 1);
 const lrnAllDone = () => LRN_I.every((_, i) => lrnIslDone(i));
 const lrnIslStars = i => LRN_I[i].ex.reduce((t, _, e) => t + Math.min(3, lrnStars(i, e)), 0), lrnIslMax = i => LRN_I[i].ex.length * 3;
@@ -1649,6 +1660,7 @@ function lrnSave(a, stars, pct){
   if(stars > old) d.s[k] = stars; if(pct > (d.b[k] || 0)) d.b[k] = pct; LS.set(LRN_LS, d);
   return { old, newEx:old === 0 && stars >= 1 && a.ex + 1 < LRN_I[a.isl].ex.length, islDone:!doneBefore && lrnIslDone(a.isl), all:!allBefore && lrnAllDone() }; }
 function lrnBanner(g, stars, why){
+  if(g.adv.ami != null) return amiBanner(g, stars, why);
   const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = lrnSave(a, stars, g.J.accuracy()); later(() => advFan(stars, r.newEx || r.islDone), 450); }
   const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00';
   const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
@@ -1685,13 +1697,13 @@ function lrnShow(isl){ if(LR) LR.starting = false;
   if(!A.raf){ A.last = 0; A.raf = requestAnimationFrame(lrnLoop); }
   if(!LS.get('bbx-lrn-seen', 0)){ LS.set('bbx-lrn-seen', 1); later(() => advDialog(LRN_INTRO, '🌱 LE PARCOURS', null, '#lrnDlg'), 350); } }
 const LRN_INTRO = ['Avant de voyager dans tous les styles de musique, il faut apprendre les sons de base du beatbox.', 'Chaque île t\'en apprend un : le kick, les charleys, les caisses claires… Écoute-le, essaie-le, puis joue-le en rythme avec les exercices.', 'Quand tu auras ramassé toutes les étoiles, une nouvelle île apparaîtra à l\'horizon…'];
-function lrnSelect(i, quiet){ const A = LR, open = i >= LRN_N ? lrnAllDone() || LRN_OPEN : lrnIslOpen(i); advSfx(open ? 'sel' : 'lock'); A.sel = i; A.free = false; lrnPanel();
+function lrnSelect(i, quiet){ const A = LR, open = i >= LRN_N ? lrnAllDone() || lrnOpenAll() : lrnIslOpen(i); advSfx(open ? 'sel' : 'lock'); A.sel = i; A.free = false; lrnPanel();
   if(!quiet && open){ if(i >= LRN_N) lrnToT2(); else lrnOpenIsl(i); } }
 function lrnToT2(){ advSfx('go'); advMusic(null); later(() => advShow(), 300); }
 /* petit panneau du bas de la carte */
 function lrnPanel(){
   const A = LR, i = A.sel, p = $('#lrnP');
-  if(i >= LRN_N){ const open = lrnAllDone() || LRN_OPEN;
+  if(i >= LRN_N){ const open = lrnAllDone() || lrnOpenAll();
     p.innerHTML = `<div class="advh">${open ? '🌊' : '🔒'} TABLEAU 2</div><div class="advs">Les styles de musique · Beatbox Adventure</div><div class="advt">${open ? 'Tu connais tous les sons de base ! Pars à la découverte des douze îles des styles : reggae, afro, hip-hop, samba…' : 'Une île mystérieuse brille à l\'horizon. Termine les ' + LRN_N + ' îles des sons (au moins 1 étoile à chaque exercice) pour t\'y rendre.'}</div><div class="advrow"><div class="advstr"></div><button class="b-pink" id="lrnGo" ${open ? '' : 'disabled'}>${open ? '▶ PARTIR' : '🔒'}</button></div>`;
     $('#lrnGo').onclick = lrnToT2; lrnPanelH(); return; }
   const I = LRN_I[i], open = lrnIslOpen(i), st = lrnIslStars(i), done = I.ex.filter((_, e) => lrnStars(i, e) >= 1).length;
@@ -1765,13 +1777,13 @@ function lrnDraw(t){
   const vis = n => n.y > cam - 40 && n.y < cam + H + 40;
   X.fillStyle = '#1b63c4'; X.fillRect(0, 0, W, H); for(let y = cam - cam % 7; y < cam + H; y += 7) for(let x = ((y * 5) % 17) + Math.floor(t * 5) % 17 - 17; x < W; x += 17){ R(x, y + 3, 3, 1, '#4e9bec'); R(x + 1, y + 4, 1, 1, '#4e9bec'); }
   for(let k = 0; k < 8; k++){ const cx = ((t * (2.5 + k % 3) + k * 53) % 170) - 25, cy = 24 + k * 70; X.globalAlpha = .13; R(cx, cy + 4, 22, 5, '#000'); R(cx + 4, cy + 1, 14, 5, '#000'); X.globalAlpha = 1; }
-  for(let i = 0; i < LRNN.length - 1; i++){ const a = LRNN[i], b = LRNN[i + 1]; if(!vis(a) && !vis(b)) continue; const mx = (a.x + b.x) / 2 + (i % 2 ? 12 : -12), my = (a.y + b.y) / 2, on = i + 1 < LRN_N ? lrnIslOpen(i + 1) : lrnAllDone() || LRN_OPEN;
+  for(let i = 0; i < LRNN.length - 1; i++){ const a = LRNN[i], b = LRNN[i + 1]; if(!vis(a) && !vis(b)) continue; const mx = (a.x + b.x) / 2 + (i % 2 ? 12 : -12), my = (a.y + b.y) / 2, on = i + 1 < LRN_N ? lrnIslOpen(i + 1) : lrnAllDone() || lrnOpenAll();
     for(let s = .12; s < 1; s += .09){ const u = 1 - s, px = u * u * a.x + 2 * u * s * mx + s * s * b.x, py = u * u * a.y + 2 * u * s * my + s * s * b.y; R(px - 1, py, 3, 3, '#0d2033'); R(px - 1, py - 1, 3, 3, on ? '#ffe27a' : '#7a93b8'); } }
   LRNN.forEach((n, i) => { if(!vis(n)) return; const last = i >= LRN_N, cs = [[0, 0, 17], [-9, 4, 10], [10, -2, 10]], col = last ? ['#1c1428', '#4a3a7a', '#b58cff'] : LRN_I[i].col;
     cs.forEach(c => circ(n.x + c[0], n.y + c[1] + 3, c[2] + 2, Math.floor(t * 2 + i) % 2 ? '#cdeeff' : '#e8f7ff')); cs.forEach(c => circ(n.x + c[0], n.y + c[1] + 3, c[2], col[0])); cs.forEach(c => circ(n.x + c[0], n.y + c[1], c[2], col[2])); cs.forEach(c => circ(n.x + c[0], n.y + c[1], c[2] - 2, col[1]));
     if(last){ const g = .6 + .4 * Math.sin(t * 3); X.globalAlpha = g; for(let s = 0; s < 8; s++) R(n.x - 14 + (s * 7 + Math.floor(t * 5)) % 28, n.y - 22 + (s * 11) % 26, 2, 2, s % 2 ? '#ffe27a' : '#5ef0ff'); X.globalAlpha = 1; R(n.x - 3, n.y - 14, 3, 3, '#ffe27a'); R(n.x, n.y - 17, 4, 3, '#ffe27a'); R(n.x + 1, n.y - 11, 3, 5, '#ffe27a'); R(n.x, n.y - 7, 3, 2, '#ffe27a'); R(n.x, n.y - 2, 3, 3, '#ffe27a'); }
     else lrnDecor(LRN_I[i], R, circ, n.x, n.y, t); });
-  LRNN.forEach((n, i) => { if(!vis(n)) return; const last = i >= LRN_N, open = last ? lrnAllDone() || LRN_OPEN : lrnIslOpen(i), done = !last && lrnIslDone(i), sel = A.sel === i;
+  LRNN.forEach((n, i) => { if(!vis(n)) return; const last = i >= LRN_N, open = last ? lrnAllDone() || lrnOpenAll() : lrnIslOpen(i), done = !last && lrnIslDone(i), sel = A.sel === i;
     if(sel){ const rr = 8 + Math.floor(t * 4) % 2; for(let a = 0; a < 16; a += 2) R(n.x + Math.cos(a / 16 * 6.283) * rr - 1, n.y + Math.sin(a / 16 * 6.283) * rr - 1, 2, 2, '#fff'); }
     circ(n.x, n.y + 14, 5, '#0d2033'); circ(n.x, n.y + 14, 4, !open ? '#6c7a92' : done ? '#7be28f' : '#f58bb0');
     if(!open){ R(n.x - 2, n.y + 13, 5, 4, '#2a3550'); R(n.x - 1, n.y + 11, 3, 1, '#2a3550'); R(n.x - 1, n.y + 12, 1, 1, '#2a3550'); R(n.x + 1, n.y + 12, 1, 1, '#2a3550'); }
@@ -1790,6 +1802,129 @@ function lrnDecor(I, R, circ, x, y, t){
   else if(d === 'kit'){ circ(x, y, 7, '#2a1020'); circ(x, y, 6, '#ef5b6e'); circ(x, y, 3, '#fff3f5'); R(x - 14, y - 10 + bump, 9, 2, '#ffd23f'); R(x + 6, y - 10, 9, 2, '#ffd23f'); R(x - 6, y - 15, 12, 4, '#e8e8f4'); R(x - 6, y - 15, 12, 1, '#fff'); }
   else { R(x - 10, y - 8, 20, 12, '#8a2a3a'); R(x - 8, y - 6, 16, 8, '#2a0a14'); R(x - 6, y - 2 + bump, 12, 5, '#ef6a7a'); R(x - 1, y - 1 + bump, 1, 3, '#b8404f'); R(x - 8, y - 6, 3, 2, '#fff'); R(x + 5, y - 6, 3, 2, '#fff'); }
 }
+
+/* =====================================================================
+   DÉFI AMIS — l'entrée « sans code » pour les potes beatboxers.
+   Lien : …/beatbox-hero.html?i=<invitation>  (l'invitation est déclarée dans Firebase : invitations/<id>).
+   Parcours : accueil expliqué + niveau (débutant / avancé) → réglage micro → répéter les sons → rythmes en mode jeu.
+   Chaque partie (et chaque son répété) part automatiquement vers  ami/<invitation>/takes/<id>  (+ audio/<id>/<k>).
+   Aucun nom, aucun compte. Marc relit tout depuis  ?admin=ami  (connecté à son compte Google).
+   ===================================================================== */
+const AMI_ONLY = false /*__AMIONLY__*/; // vrai dans defi-amis.html : aucun chemin vers le jeu normal ni vers l'admin
+const AMI_LS = 'bbx-ami';
+const AMI_STEPS = { // [île, exercice] du Tableau 1 (indices de learn.js)
+  deb:[['lp', 0], ['lt', 1], ['lk', 0], ['lk', 1], ['lts', 1], ['ll', 0], ['lk', 3], ['lb1', 0]],
+  adv:[['lp', 5], ['lt', 6], ['lts', 4], ['lt', 8], ['lkk', 3], ['lpch', 3], ['lpf', 4], ['lspt', 4], ['lfsh', 4], ['ll', 3], ['lb1', 2], ['lb2', 1], ['lb2', 3]] };
+const AMI_SND = { deb:['P', 'T', 'K', 'Ts', 'L'], adv:['P', 'K', 'K~', 'Ts', 'T', 'Pch', 'Pf', 'Spt', 'Fsh', 'L'] };
+const AMI_ISL = { P:'lp', T:'lt', Ts:'lts', K:'lk', 'K~':'lkk', Pch:'lpch', Pf:'lpf', Spt:'lspt', Fsh:'lfsh', L:'ll' };
+const AMI_LVL = { deb:'🌱 Je débute', adv:'🔥 Je suis avancé' };
+let AMI = null; const AMI_Q = [];
+const amiOn = () => !!AMI;
+const amiSave = () => { if(AMI) LS.set(AMI_LS, AMI); };
+const amiRid = n => { const a = new Uint8Array(n); crypto.getRandomValues(a); return Array.from(a, v => (v % 36).toString(36)).join(''); };
+function amiInit(){
+  const q = new URLSearchParams(location.search), inv = (q.get('i') || '').toLowerCase();
+  if(!AMI_ONLY && q.get('ami') === 'off'){ try{ localStorage.removeItem(AMI_LS); }catch(e){} AMI = null; return false; }
+  const d = LS.get(AMI_LS, null); AMI = d && d.inv ? d : null;
+  if(/^[a-z0-9]{6,24}$/.test(inv)){ if(!AMI) AMI = { inv, dev:amiRid(8), lvl:null, snd:{}, sndDone:false, s:{}, b:{}, round:1, done:[], days:[], plays:0, t0:Date.now() }; else AMI.inv = inv; amiSave(); }
+  return !!AMI;
+}
+const amiSteps = () => (AMI_STEPS[AMI.lvl] || []).map(([id, e]) => ({ i:LRN_I.findIndex(x => x.id === id), e }));
+function amiBuild(k){ const s = amiSteps()[k], A = lrnBuild(s.i, s.e); A.bpm += Math.min(20, 4 * (AMI.round - 1)); A.ami = k; A.amiRound = AMI.round; return A; }
+const amiDay = d => { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+function amiStreak(){ const set = new Set(AMI.days || []); let n = 0, d = new Date(); if(!set.has(amiDay(d))) d.setDate(d.getDate() - 1); while(set.has(amiDay(d))){ n++; d.setDate(d.getDate() - 1); } return n; }
+function amiTouchDay(){ const t = amiDay(); if(!AMI.days.includes(t)){ AMI.days.push(t); if(AMI.days.length > 120) AMI.days.shift(); } }
+function amiEnv(){ const ua = navigator.userAgent || ''; return { inapp:/FBAN|FBAV|Instagram|Messenger|Line\/|Snapchat|TikTok|MicroMessenger|Twitter|LinkedInApp|; wv\)/i.test(ua), nomic:!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !(window.AudioContext || window.webkitAudioContext) }; }
+const amiEnvHtml = () => { const e = amiEnv(); return (e.nomic || e.inapp) ? `<div class="res no"><b>⚠ ${e.nomic ? 'Ce navigateur ne donne pas accès au micro.' : 'Tu es dans le navigateur d\'une appli (WhatsApp, Instagram…), qui bloque souvent le micro.'}</b><br>Ouvre ce lien dans <b>Safari</b> (iPhone) ou <b>Chrome</b> (Android / ordinateur).<div class="row" style="margin-top:6px"><button class="b-cyan" id="amiCopy">📋 Copier le lien</button></div></div>` : ''; };
+function amiEnvBind(){ const b = $('#amiCopy'); if(b) b.onclick = async () => { try{ await navigator.clipboard.writeText(location.href); b.textContent = 'Copié ✓'; }catch(e){ prompt('Copie ce lien :', location.href); } }; }
+
+/* ---------- envoi (sons répétés) : même schéma que les parties, sous ami/<invitation>/ ---------- */
+async function amiPush(info, x, sr, extra){
+  try{ const app = await fbApp(true), db = app.database(), id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5), base = 'ami/' + AMI.inv; let n = 0;
+    if(x){ const w = b64(HERO.toWav(x, sr)); n = Math.ceil(w.length / CH); if(n > 14) n = 0; else for(let k = 0; k < n; k++) await db.ref(base + '/audio/' + id + '/' + k).set(w.slice(k * CH, (k + 1) * CH)); }
+    await db.ref(base + '/takes/' + id).set(Object.assign({ t:Date.now(), v:VERSION, source:'ami', who:'', acct:'', sr, latMs:getLat() ? getLat().ms : null, adjMs:getAdj(), ua:navigator.userAgent.slice(0, 120), audioChunks:n, ami:Object.assign({ inv:AMI.inv, dev:AMI.dev, lvl:AMI.lvl, round:AMI.round }, info) }, extra || {}));
+    return true; }catch(e){ AMI.lastErr = String(e && e.message || e); return false; } }
+async function amiFlush(){ const q = AMI_Q.splice(0); for(const a of q){ if(!(await amiPush.apply(null, a))) AMI_Q.push(a); } }
+function amiInfoOf(R){ const a = R.g.adv; return { inv:AMI.inv, dev:AMI.dev, lvl:AMI.lvl, round:a.amiRound, step:a.ami, ex:a.id + ':' + a.ex, snd:a.sounds, tour:AMI.plays }; }
+function amiAudioOk(R){ const a = R.g.adv; return a.amiRound <= 1 || (a.ami + a.amiRound) % 3 === 0; } // tour 1 : tout est enregistré ; ensuite 1 étape sur 3 (audio = le gros du stockage)
+
+/* ---------- écran ---------- */
+function amiShow(){ show('ami'); AMI.starting = false; AMI.lvl ? amiHub() : amiWelcome(); }
+function amiWelcome(){
+  $('#amiB').innerHTML = `${amiEnvHtml()}<div class="card"><h2>👋 Salut !</h2>
+    <p style="margin:6px 0"><b>Marc</b>, prof de beatbox, met au point un <b>jeu pour apprendre le beatbox</b>, façon Guitar Hero : des notes descendent, tu joues le son au bon moment, et le <b>micro de ton téléphone ou ordinateur</b> écoute si tu es dans le rythme.</p>
+    <p style="margin:6px 0">Tu fais partie des premiers à l'essayer, merci ! Compte <b>10 minutes</b> la première fois, puis 2-3 minutes quand tu reviens. Tout se passe ici, dans le navigateur : <b>rien à installer, rien à saisir</b>. Mets un <b>casque</b> si tu peux (sinon le micro entend le clic).</p>
+    <div class="res"><b>🔒 Ce qui est envoyé :</b> tes parties et l'enregistrement de ta voix partent automatiquement vers Marc, pour qu'il améliore le jeu et la détection des sons. Pas de nom, pas de compte, rien d'autre. Tu peux arrêter quand tu veux.</div>
+    <p style="margin:10px 0 6px"><b>Ton niveau en beatbox ?</b> <span class="small muted">(les sons proposés s'adaptent)</span></p>
+    <div class="row"><button class="b-yel big" id="amiDeb" style="flex:1">${AMI_LVL.deb}</button><button class="b-pink big" id="amiAdv" style="flex:1">${AMI_LVL.adv}</button></div></div>`;
+  amiEnvBind(); const pick = l => { AMI.lvl = l; AMI.done = []; amiSave(); amiHub(); };
+  $('#amiDeb').onclick = () => pick('deb'); $('#amiAdv').onclick = () => pick('adv'); }
+function amiCal(){ calStep = 0; renderCal(); show('cal'); }
+function amiHub(){
+  const S = amiSteps(), sn = AMI_SND[AMI.lvl], cal = getCal(), fresh = calOk(), sd = sn.filter(t => AMI.snd[t]).length, stp = amiStreak(), next = S.findIndex((_, k) => !AMI.done.includes(k)), ready = !!cal && AMI.sndDone;
+  const chk = ok => ok ? '✅' : '⬜';
+  let h = `${amiEnvHtml()}<div class="card"><div class="row"><h2 style="margin:0">🎮 Défi amis</h2><span class="sp"></span><span class="small muted">${AMI_LVL[AMI.lvl]} · <a href="#" id="amiLvl">changer</a></span></div>
+    <div class="row" style="margin-top:6px"><span class="tk" style="--c:#ef8a2f">🔥 ${stp} jour${stp > 1 ? 's' : ''}</span><span class="tk" style="--c:#8b6fd6">🏁 Tour ${AMI.round}</span><span class="tk" style="--c:#2fb3d9">▶ ${AMI.plays} partie${AMI.plays > 1 ? 's' : ''}</span></div></div>
+    <div class="card"><h2>${chk(!!cal)} 1 · Réglage du micro</h2><div class="small muted">Une minute : le jeu apprend à t'entendre et mesure le décalage de ton téléphone. ${cal && !fresh ? '<b>Ton réglage date de plus de 12 h : refais-le si tu changes de casque.</b>' : ''}</div>
+      <div class="row" style="margin-top:8px"><button class="${cal ? '' : 'b-yel big'}" id="amiCal">${cal ? '🎚 Refaire le réglage' : '🎚 Régler mon micro'}</button></div></div>
+    <div class="card" ${cal ? '' : 'style="opacity:.55"'}><h2>${chk(AMI.sndDone)} 2 · Tes sons</h2><div class="small muted">Je te fais écouter chaque son, tu le répètes 4 fois. ${AMI.sndDone ? '' : '(' + sd + '/' + sn.length + ')'}</div>
+      <div class="row" style="margin-top:8px"><button class="${cal && !AMI.sndDone ? 'b-yel big' : ''}" id="amiSnd" ${cal ? '' : 'disabled'}>${AMI.sndDone ? '🗣 Refaire mes sons' : sd ? '🗣 Continuer mes sons' : '🗣 Répéter les sons'}</button></div></div>`;
+  if(ready){ h += `<div class="card"><h2>🎮 3 · Les rythmes</h2><div class="small muted">${S.length} étapes. Quand tu as fini toutes les étapes, un nouveau <b>tour</b> commence, 4 BPM plus vite.${AMI.round > 1 ? ' Tu en es au tour ' + AMI.round + ' (+' + Math.min(20, 4 * (AMI.round - 1)) + ' BPM).' : ''}</div>`;
+    S.forEach((s, k) => { const I = LRN_I[s.i], X = I.ex[s.e], key = I.id + ':' + s.e, st = Math.min(3, AMI.s[key] || 0), dn = AMI.done.includes(k), sn2 = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))];
+      h += `<div class="amiS ${k === next ? 'next' : ''}"><div class="n">${dn ? '✓' : k + 1}</div><div class="b"><div class="t">${I.ic} ${escH(X.n)}</div><div class="d">${sn2.map(t => `<span class="tk" style="--c:${LC[HERO.laneOf(t)]}">${escH(t)}</span>`).join('')} ${X.bpm + Math.min(20, 4 * (AMI.round - 1))} BPM${AMI.b[key] != null ? ' · record ' + AMI.b[key] + ' %' : ''}</div></div><div class="s">${'★'.repeat(st)}<span style="color:#cbd9e3">${'★'.repeat(3 - st)}</span></div><button class="b-pink" data-k="${k}">▶</button></div>`; });
+    h += '</div>'; }
+  else h += `<div class="card" style="opacity:.55"><h2>🎮 3 · Les rythmes</h2><div class="small muted">Ils s'ouvrent quand le réglage et tes sons sont faits.</div></div>`;
+  if(AMI_Q.length) h += `<div class="res warn">⚠ ${AMI_Q.length} enregistrement(s) pas encore envoyé(s) (connexion ?). <button class="b-cyan" id="amiRetry" style="padding:4px 10px">Réessayer</button></div>`;
+  h += `<p class="small" style="color:#eaf8ff;margin-top:10px">🔒 Tes parties et ta voix sont envoyées automatiquement à Marc, sans nom. Reviens quand tu veux : ta progression reste sur cet appareil.</p>`;
+  $('#amiB').innerHTML = h; amiEnvBind();
+  $('#amiLvl').onclick = e => { e.preventDefault(); AMI.lvl = null; AMI.done = []; AMI.sndDone = false; AMI.snd = {}; amiSave(); amiWelcome(); };
+  $('#amiCal').onclick = amiCal; $('#amiSnd').onclick = () => amiSnd(0);
+  const rt = $('#amiRetry'); if(rt) rt.onclick = async () => { rt.textContent = '…'; await amiFlush(); amiHub(); };
+  $$('#amiB [data-k]').forEach(b => { b.onclick = () => amiLaunch(+b.dataset.k); }); }
+
+/* ---------- phase « tes sons » : écouter puis répéter 4 fois (enregistré et étiqueté) ---------- */
+function amiSnd(i){
+  const L = AMI_SND[AMI.lvl], tok = L[i];
+  if(!tok){ AMI.sndDone = true; amiTouchDay(); amiSave(); amiHub(); return; }
+  const I = LRN_I.find(x => x.id === AMI_ISL[tok]), col = LC[HERO.laneOf(tok)]; let take = null;
+  $('#amiB').innerHTML = `<div class="card"><div class="small muted">Étape 2 · tes sons · ${i + 1}/${L.length}</div><div class="bigletter" style="--c:${col}">${escH(tok)}</div>
+    <div class="small" style="margin:2px 0 8px">${escH(I.how)}</div>
+    <div class="row"><button class="b-cyan" id="amiHear">🔊 Écouter</button><button class="b-yel" id="amiRec">● Je le fais 4 fois</button></div>
+    <div class="timebar" id="amiBar" style="display:none;margin-top:8px"><i></i></div><div id="amiMsg" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:10px"><button id="amiBackH">⌂ Retour</button><button id="amiSk">Passer</button><span class="sp"></span><button class="b-pink" id="amiOk" disabled>Suivant →</button></div></div>`;
+  $('#amiBackH').onclick = amiHub; $('#amiHear').onclick = () => lrnHear(tok); $('#amiSk').onclick = () => amiSnd(i + 1);
+  $('#amiOk').onclick = () => { if(take){ const a = [{ kind:'snd', tok, n:take.n }, take.x, take.sr, { style:'ami-snd', niv:0, bpm:0, pat:[tok] }]; AMI.snd[tok] = 1; amiTouchDay(); amiSave(); amiPush.apply(null, a).then(ok => { if(!ok) AMI_Q.push(a); }); } amiSnd(i + 1); };
+  $('#amiRec').onclick = async () => {
+    const s0 = SES; $('#amiRec').disabled = true; $('#amiHear').disabled = true; $('#amiOk').disabled = true; const bar = $('#amiBar'); bar.style.display = ''; bar.firstElementChild.style.transition = 'none'; bar.firstElementChild.style.width = '0%';
+    $('#amiMsg').innerHTML = `<div class="res">À toi ! Joue « ${escH(tok)} » 4 fois, à ton rythme…</div>`;
+    try{ const rec = await recStart(); requestAnimationFrame(() => { bar.firstElementChild.style.transition = 'width 6s linear'; bar.firstElementChild.style.width = '100%'; });
+      await sleep(6000); const r = rec.stop(); if(s0 !== SES) return;
+      let ons = RY.onsets(r.x, r.sr); if(ons.length < 2) ons = RY.onsets(r.x, r.sr, { sens:.03, dynDb:50, dynDb2:65 }); const raw = ons.length, mx = Math.max.apply(null, ons.map(z => z.db).concat([-99])); ons = ons.filter(z => z.db == null || z.db >= mx - 28); const mg = []; ons.forEach(z => { if(!mg.length || z.t - mg[mg.length - 1] > .2) mg.push(z.t); }); // on garde les attaques nettes et on fusionne les sons en 2 parties (K~, Pch…) : un son = un coup
+      const n = mg.length, db = Math.round(20 * Math.log10(r.peak + 1e-9));
+      take = n >= 2 ? { x:r.x, sr:r.sr, n } : null;
+      $('#amiMsg').innerHTML = n >= 3 && n <= 8 ? `<div class="res ok">✅ J'ai entendu ${n} coups.</div>` : n > 8 ? `<div class="res warn">J'ai entendu beaucoup de bruit (≈ ${n} coups). Pas grave : ton enregistrement est gardé, tu peux continuer. Si tu veux, refais-le en jouant 4 sons nets, puis silence.</div>` : n >= 2 ? `<div class="res warn">J'ai entendu ${n} coups (vise 4). Tu peux refaire, ou continuer.</div>` : `<div class="res no">Je n'ai presque rien entendu (niveau ${db} dB). Rapproche le micro de ta bouche (5-10 cm, sur le côté) et refais.</div>`;
+      $('#amiOk').disabled = !take;
+    }catch(e){ if(s0 === SES) $('#amiMsg').innerHTML = '<div class="res no">Micro indisponible : ' + escH(e.message || e) + '</div>'; }
+    if(s0 === SES){ bar.style.display = 'none'; $('#amiRec').disabled = false; $('#amiRec').textContent = '● Refaire'; $('#amiHear').disabled = false; } };
+}
+
+/* ---------- jouer une étape ---------- */
+function amiLaunch(k){
+  if(AMI.starting) return; const e = amiEnv(); if(e.nomic){ alert('Ce navigateur ne donne pas accès au micro : ouvre le lien dans Safari ou Chrome.'); return; }
+  if(!getCal()){ amiCal(); return; }
+  AMI.starting = true; show('ami'); ADV = amiBuild(k); startGame().finally(() => { AMI.starting = false; }); }
+function amiBanner(g, stars, why){
+  const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = amiRecord(a, stars, g.J.accuracy(), why); later(() => advFan(stars, r.tour || r.newDone), 450); }
+  const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00', N = amiSteps().length;
+  const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
+  const msg = why === 'dead' ? 'Plus de cœurs… respire, écoute le clic et retente !' : blue ? 'Rien de faux, tout pile !' : stars === 3 ? '3 étoiles : tout est bien dans le temps !' : stars === 2 ? 'Bravo ! Vise « Parfait » sur chaque son.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour valider l\'étape. Retente !';
+  const nx = r.tour ? `<div class="res ok" style="font-weight:900;text-align:center">🎉 Tour ${r.round - 1} terminé ! Le tour ${r.round} démarre 4 BPM plus vite.</div>` : r.newDone ? `<div class="res ok" style="font-weight:900;text-align:center">✓ Étape validée · ${AMI.done.length}/${N} pour ce tour</div>` : '';
+  return `<div class="advend"><div class="advk">${a.ic} ${escH(a.style).toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">Étape ${a.ami + 1}/${N} · tour ${AMI.round} · 🔥 ${amiStreak()} jour${amiStreak() > 1 ? 's' : ''}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nx}`; }
+function amiRecord(a, stars, pct, why){
+  const key = a.id + ':' + a.ex, old = AMI.s[key] || 0, oldB = AMI.b[key]; if(stars > old) AMI.s[key] = stars; if(oldB == null || pct > oldB) AMI.b[key] = pct; AMI.plays++; amiTouchDay();
+  let tour = false, newDone = false; if(why !== 'dead' && stars >= 1 && !AMI.done.includes(a.ami)){ AMI.done.push(a.ami); newDone = true; if(AMI.done.length >= amiSteps().length){ AMI.round++; AMI.done = []; tour = true; } }
+  amiSave(); return { tour, newDone, round:AMI.round, newBest:oldB == null || pct > oldB }; }
+function amiNoLink(){ show('ami'); $('#amiB').innerHTML = '<div class="card"><h2>🔗 Lien incomplet</h2><p>Ce lien ne contient pas ton invitation personnelle. Reprends le lien exact que Marc t\'a envoyé (il se termine par <b>?i=…</b>).</p></div>'; }
 
 const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, songId:'bj120', kck:'P', snr:'K', hat:'T', part:'beat', guide:true, mus:true, clk:true, mvol:.55, audOff:0, audBpm:0, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
 const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
@@ -2169,7 +2304,7 @@ function renderCal(){
       <div class="row" style="margin-top:10px"><button id="cPrev">← Précédent</button><span class="sp"></span><button id="cReset">Remettre à 0</button><button class="b-pink" id="cDone">Terminé ✓</button></div>`;
     $('#cPrev').onclick = () => { calStep = 2; renderCal(); };
     $('#cReset').onclick = () => { LS.set('bbx-hero-adj', 0); renderCal(); };
-    $('#cDone').onclick = () => { renderHome(); show('home'); };
+    $('#cDone').onclick = () => { if(amiOn()){ amiShow(); return; } renderHome(); show('home'); };
     $('#cGo').onclick = syncTest;
   }
 }
@@ -2228,7 +2363,7 @@ async function syncTest(){
   $('#cGo').disabled = false; calBusy = false;
 }
 $('#bCal').onclick = () => { calStep = 0; renderCal(); show('cal'); };
-$('#calBack').onclick = () => { renderHome(); show('home'); };
+$('#calBack').onclick = () => { if(amiOn()){ amiShow(); return; } renderHome(); show('home'); };
 
 /* ---------- jeu ---------- */
 const cv = $('#cv'), ctx = cv.getContext('2d'); let VW = 0, VH = 0;
@@ -2309,7 +2444,7 @@ document.addEventListener('visibilitychange', () => { if(document.hidden && G &&
 // reconnaissance du son après coup (mode prof) : la forme d'onde complète n'est connue que ~0,35 s après l'attaque
 function checkPending(g){ if(!g.pend || !g.pend.length || !g.flat) return; const sr = ac.sampleRate;
   while(g.pend.length && ac.currentTime >= g.pend[0].z.t + .36){ const p = g.pend.shift(), i0 = Math.round(p.z.t * sr - g.f0); if(i0 < 0 || i0 + sr * .3 > g.flat.length) continue;
-    try{ const gs = soundGuess(HERO.soundVec(g.flat, sr, i0)); p.z.pr = gs.tok; p.z.pp = gs.p; if(gs.p >= SMODEL.thr && !sndSame(gs.tok, p.tok) && g.J.recant(p.note, gs.tok)) fx({ type:'wrong', note:p.note, d:0, heardTok:gs.tok }); }catch(e){} } }
+    try{ const gs = soundGuess(HERO.soundVec(g.flat, sr, i0)); p.z.pr = gs.tok; p.z.pp = gs.p; if(RECANT && gs.p >= SMODEL.thr && !sndSame(gs.tok, p.tok) && g.J.recant(p.note, gs.tok)) fx({ type:'wrong', note:p.note, d:0, heardTok:gs.tok }); }catch(e){} } }
 function frame(){
   const g = G; if(!g || g.done) return;
   if(g.paused){ draw(g, heardNow(g.lat)); g.raf = requestAnimationFrame(frame); return; }
@@ -2482,7 +2617,7 @@ function draw(g, now){
 function quitGame(silent){
   const g = G; if(!g) return; g.done = true; cancelAnimationFrame(g.raf); killAudio(); if(g.paused){ g.paused = false; $('#pauseov').classList.remove('on'); try{ ac.resume(); }catch(e){} }
   try{ if(g.bus){ g.bus.gain.value = 0; g.bus.disconnect(); } if(g.mus){ g.mus.gain.value = 0; g.mus.disconnect(); } if(g.src) g.src.stop(); (g.srcs || []).forEach(x => { try{ x.stop(); }catch(e){} }); }catch(e){} try{ if(g.mic) g.mic.close(); }catch(e){} try{ if(g.wl) g.wl.release(); }catch(e){}
-  $('#game').classList.remove('on'); if(silent !== false){ if(g.adv && g.adv.lrn){ lrnShow(g.adv.isl); } else if(g.adv){ ADV_LV = g.adv.lv; advShow(g.adv.wi); } else { renderHome(); show('home'); } } G = null;
+  $('#game').classList.remove('on'); if(silent !== false){ if(g.adv && g.adv.ami != null){ amiShow(); } else if(g.adv && g.adv.lrn){ lrnShow(g.adv.isl); } else if(g.adv){ ADV_LV = g.adv.lv; advShow(g.adv.wi); } else { renderHome(); show('home'); } } G = null;
 }
 $('#quit').onclick = () => quitGame();
 
@@ -2527,7 +2662,7 @@ function tableHtml(rows, meId){ if(!rows.length) return '<p class="sm">Aucun sco
   return '<table>' + rows.map((r, i) => `<tr class="${r.id === meId || r.me ? 'me' : ''} ${i === 0 ? 'r1' : ''}"><td>${i + 1}${['ST', 'ND', 'RD'][i] || 'TH'}</td><td>${escH(r.n)}</td><td>${String(r.s).padStart(6, '0')}</td><td>${r.a != null ? r.a + '%' : ''}</td></tr>`).join('') + '</table>'; }
 const arcClose = () => { $('#arc').classList.remove('on'); };
 let MQ = { k:'', t:0 };
-async function marquee(){ const k = boardKey(), el = $('#marq'); if(!el) return; el.innerHTML = '<span class="y bl">▶ PRESS START ◀</span>';
+async function marquee(){ if(amiOn() || AMI_ONLY) return; const k = boardKey(), el = $('#marq'); if(!el) return; el.innerHTML = '<span class="y bl">▶ PRESS START ◀</span>';
   if(MQ.k === k && Date.now() - MQ.t < 20000 && MQ.h){ el.innerHTML = MQ.h; return; }
   const B = await fetchBoard(k); const top = B.rows.slice(0, 3).map((r, i) => `<span class="y">${i + 1}${['ST', 'ND', 'RD'][i]}</span> ${escH(r.n)} ${String(r.s).padStart(6, '0')}`).join('  ·  ');
   MQ = { k, t:Date.now(), h:'<span class="y bl">▶ PRESS START ◀</span><br>' + (top || '<span style="opacity:.6">aucun score — sois le premier !</span>') }; if(boardKey() === k) el.innerHTML = MQ.h; }
@@ -2558,7 +2693,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v45', CH = 600000;
+const VERSION = 'v47', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -2584,10 +2719,10 @@ const escH = t => String(t).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', 
 function sendMsg(R, html, cls){ R.stHtml = html; R.stCls = cls; const st = $('#sendSt'); if(st){ st.innerHTML = html; st.className = 'res ' + cls; } }
 async function sendTake(){ const R = LASTRES; if(!R || R.sending) return; R.sending = true; sendMsg(R, '📤 Envoi pour analyse…', '');
   try{ const app = await fbApp(true), db = app.database(), id = R.id || (R.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 5));
-    const w = b64(HERO.toWav(R.x, R.sr)), n = Math.ceil(w.length / CH), withAudio = n <= 14;
-    const code = getCode(), take = Object.assign(takeObj(), { t:Date.now(), v:VERSION, source:'hero', acct:LS.get('bbx-hero-g', ''), who:String(LS.get('bbx-hero-name', '')).slice(0, 30), audioChunks:withAudio ? n : 0 });
-    if(withAudio) for(let k = 0; k < n; k++) await db.ref('analyse/' + code + '/audio/' + id + '/' + k).set(w.slice(k * CH, (k + 1) * CH)); // audio d'abord : une prise visible = prise complète
-    await db.ref('analyse/' + code + '/takes/' + id).set(take);
+    const w = b64(HERO.toWav(R.x, R.sr)), n = Math.ceil(w.length / CH), withAudio = n <= 14 && (!amiOn() || R.g.adv.ami == null || amiAudioOk(R));
+    const AM = amiOn() && R.g.adv && R.g.adv.ami != null, base = AM ? 'ami/' + AMI.inv : 'analyse/' + getCode(), take = Object.assign(takeObj(), { t:Date.now(), v:VERSION, source:AM ? 'ami' : 'hero', acct:AM ? '' : LS.get('bbx-hero-g', ''), who:AM ? '' : String(LS.get('bbx-hero-name', '')).slice(0, 30), audioChunks:withAudio ? n : 0 }, AM ? { ami:amiInfoOf(R) } : {});
+    if(withAudio) for(let k = 0; k < n; k++) await db.ref(base + '/audio/' + id + '/' + k).set(w.slice(k * CH, (k + 1) * CH)); // audio d'abord : une prise visible = prise complète
+    await db.ref(base + '/takes/' + id).set(take);
     sendMsg(R, '✅ Envoyé pour analyse' + (withAudio ? '' : ' (résultat seulement : prise trop longue pour l\'audio)'), 'ok');
   }catch(e){ sendMsg(R, '⚠ Non envoyé : ' + escH(e && e.message || e) + ' <button id="bRetry" class="b-cyan" style="padding:4px 10px">Réessayer</button>', 'warn'); const b = $('#bRetry'); if(b) b.onclick = () => { R.sending = false; sendTake(); }; }
   R.sending = false; }
@@ -2641,9 +2776,9 @@ function renderEnd(){
     if(conf.length) h += '<h2 style="margin:12px 0 2px">Sons confondus</h2><ul class="l">' + conf.map(z => `<li>Case ${z.c.i + 1} (<b>${z.c.tok}</b>, ${LNAME[HERO.laneOf(z.c.tok)]}) : entendu plutôt « ${LNAME[z.r.fh] || '?'} » ${z.r.f} fois</li>`).join('') + '</ul><div class="small muted">Fiable entre familles différentes (P / K / Ts), pas entre sons proches (Pch / Pf, K / K~).</div>'; }
   h += `<div class="row" style="margin-top:12px"><button id="bCopy">📋 Copier le résultat</button><button id="bWav">💾 Prise (.wav)</button></div><div id="sendSt" class="res" style="margin-top:8px;display:none"></div><div class="row" id="sendRow" style="display:none;margin-top:6px"><button id="bSend" class="b-cyan">📤 Envoyer cette partie pour analyse</button></div>`;
   $('#endBody').innerHTML = h;
-  { const i = g.adv ? g.adv.wi : -1; $('#bMenu').textContent = g.adv ? '🗺 Carte' : 'Menu'; const nx = $('#bNext'); if(g.adv && g.adv.lrn){ nx.style.display = why !== 'dead' && (LASTRES.advRes ? lrnNextOf(g.adv) : null) ? '' : 'none'; nx.textContent = 'Exercice suivant ▶'; } else { nx.style.display = g.adv && i + 1 < ADV_W.length && advOpen(i + 1, g.adv.lv) && why !== 'dead' ? '' : 'none'; if(g.adv) nx.textContent = 'Lieu suivant ▶'; } }
-  if(!LASTRES.arc){ LASTRES.arc = 1; later(() => arcade(LASTRES), perfectRun ? 2600 : 900); }
-  { const R = LASTRES, auto = !!LS.get('bbx-hero-send', false);
+  { const i = g.adv ? g.adv.wi : -1; $('#bMenu').textContent = g.adv ? (g.adv.ami != null ? '🏠 Défi' : '🗺 Carte') : 'Menu'; const nx = $('#bNext'); if(g.adv && g.adv.ami != null){ nx.style.display = why !== 'dead' && g.adv.ami + 1 < amiSteps().length ? '' : 'none'; nx.textContent = 'Étape suivante ▶'; } else if(g.adv && g.adv.lrn){ nx.style.display = why !== 'dead' && (LASTRES.advRes ? lrnNextOf(g.adv) : null) ? '' : 'none'; nx.textContent = 'Exercice suivant ▶'; } else { nx.style.display = g.adv && i + 1 < ADV_W.length && advOpen(i + 1, g.adv.lv) && why !== 'dead' ? '' : 'none'; if(g.adv) nx.textContent = 'Lieu suivant ▶'; } }
+  if(!LASTRES.arc && !amiOn()){ LASTRES.arc = 1; later(() => arcade(LASTRES), perfectRun ? 2600 : 900); }
+  { const R = LASTRES, auto = !!LS.get('bbx-hero-send', false) || amiOn();
     if(R.stHtml){ $('#sendSt').style.display = ''; sendMsg(R, R.stHtml, R.stCls); }
     else if(auto && !R.sentOnce){ R.sentOnce = 1; $('#sendSt').style.display = ''; sendTake(); }
     else if(!auto){ $('#sendRow').style.display = ''; $('#bSend').onclick = () => { $('#sendRow').style.display = 'none'; $('#sendSt').style.display = ''; sendTake(); }; } }
@@ -2655,18 +2790,18 @@ function renderEnd(){
 /* ---------- « Mes parties » : relire / télécharger les parties envoyées avec ton code d'analyse ---------- */
 let ADM = { db:null, rows:[] };
 const admDl = (name, blob) => { const u = URL.createObjectURL(blob), l = document.createElement('a'); l.href = u; l.download = name; l.click(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
-async function admWav(r){ let w = ''; for(let k = 0; k < (r.audioChunks || 0); k++) w += (await ADM.db.ref('analyse/' + getCode() + '/audio/' + r.id + '/' + k).once('value')).val() || ''; return w; }
+async function admWav(r){ let w = ''; for(let k = 0; k < (r.audioChunks || 0); k++) w += (await ADM.db.ref((r._p || 'analyse/' + getCode()) + '/audio/' + r.id + '/' + k).once('value')).val() || ''; return w; }
 const admB64Blob = (w, type) => { const bin = atob(w), u = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type }); };
-async function admInit(){ show('admin'); try{ ADM.db = (await fbApp(true)).database(); await admLoad(); }catch(e){ $('#admBody').innerHTML = '<div class="res warn">⚠ ' + escH(e.message || e) + '</div>'; } }
+async function admInit(){ ADM.ami = /[?&]admin=ami/.test(location.search); show('admin'); try{ ADM.db = (await fbApp(true)).database(); await admLoad(); }catch(e){ $('#admBody').innerHTML = '<div class="res warn">⚠ ' + escH(e.message || e) + '</div>'; } }
 async function admLoad(){ const B = $('#admBody'); B.innerHTML = '<p class="small muted">Chargement…</p>'; const code = getCode();
-  try{ const v = (await ADM.db.ref('analyse/' + code + '/takes').once('value')).val() || {}, rows = Object.keys(v).map(id => Object.assign({}, v[id], { id })).sort((a, b) => b.t - a.t); ADM.rows = rows;
+  try{ let rows = []; if(ADM.ami){ const inv = (await ADM.db.ref('invitations').once('value')).val() || {}; for(const k of Object.keys(inv)){ const v = (await ADM.db.ref('ami/' + k + '/takes').once('value')).val() || {}; Object.keys(v).forEach(id => rows.push(Object.assign({}, v[id], { id, _p:'ami/' + k, _l:(inv[k] && inv[k].label) || k }))); } } else { const v = (await ADM.db.ref('analyse/' + code + '/takes').once('value')).val() || {}; rows = Object.keys(v).map(id => Object.assign({}, v[id], { id, _p:'analyse/' + code })); } rows.sort((a, b) => b.t - a.t); ADM.rows = rows;
     const done = LS.get('bbx-hero-dl', []);
     B.innerHTML = `<div class="small muted">${rows.length} partie(s) avec ton code · cochées = pas encore téléchargées</div><div class="row" style="margin:8px 0"><button class="b-pink" id="admAll">⬇ Télécharger les cochées (1 fichier)</button><button id="admRef">↻</button></div><div id="admList"></div><div id="admMsg" class="small"></div>`;
     $('#admList').innerHTML = rows.map((r, i) => { const f = r.final && r.final.pct != null ? r.final.pct + '%' : '–', d = new Date(r.t).toLocaleString('fr-CH', { dateStyle:'short', timeStyle:'short' });
-      return `<div class="res" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="checkbox" data-i="${i}" ${done.includes(r.id) ? '' : 'checked'}><div style="flex:1;min-width:180px"><b>${escH(r.who || '?')}</b> · ${d}<br><span class="small">${escH(r.style)} niv${r.niv} · ${r.bpm} BPM · direct ${r.live ? r.live.acc : '–'}% · final ${f} · ${r.v || ''}</span></div><button data-w="${i}" style="padding:4px 10px">💾 .wav</button><button data-x="${i}" style="padding:4px 10px">🗑</button></div>`; }).join('') || '<p class="small muted">Aucune partie reçue pour l\'instant.</p>';
+      return `<div class="res" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="checkbox" data-i="${i}" ${done.includes(r.id) ? '' : 'checked'}><div style="flex:1;min-width:180px"><b>${escH(r._l || r.who || '?')}</b> · ${d}<br><span class="small">${escH(r.style)} niv${r.niv} · ${r.bpm} BPM · direct ${r.live ? r.live.acc : '–'}% · final ${f} · ${r.v || ''}${r.ami ? ' · ' + escH((r.ami.lvl || '') + ' t' + (r.ami.round || '') + (r.ami.kind === 'snd' ? ' son ' + r.ami.tok : ' étape ' + r.ami.step)) : ''}</span></div><button data-w="${i}" style="padding:4px 10px">💾 .wav</button><button data-x="${i}" style="padding:4px 10px">🗑</button></div>`; }).join('') || '<p class="small muted">Aucune partie reçue pour l\'instant.</p>';
     $('#admRef').onclick = admLoad;
     $$('#admList [data-w]').forEach(b => b.onclick = async () => { const r = rows[+b.dataset.w]; b.textContent = '…'; try{ admDl('bbx-hero-' + r.id + '.wav', admB64Blob(await admWav(r), 'audio/wav')); }catch(e){ $('#admMsg').textContent = '⚠ ' + e.message; } b.textContent = '💾 .wav'; });
-    $$('#admList [data-x]').forEach(b => b.onclick = async () => { const r = rows[+b.dataset.x]; if(!confirm('Supprimer cette partie ?')) return; await ADM.db.ref('analyse/' + code + '/takes/' + r.id).remove(); await ADM.db.ref('analyse/' + code + '/audio/' + r.id).remove(); admLoad(); });
+    $$('#admList [data-x]').forEach(b => b.onclick = async () => { const r = rows[+b.dataset.x]; if(!confirm('Supprimer cette partie ?')) return; await ADM.db.ref(r._p + '/takes/' + r.id).remove(); await ADM.db.ref(r._p + '/audio/' + r.id).remove(); admLoad(); });
     $('#admAll').onclick = async () => { const sel = $$('#admList [data-i]').filter(c => c.checked).map(c => rows[+c.dataset.i]); if(!sel.length){ $('#admMsg').textContent = 'Rien de coché.'; return; }
       $('#admMsg').textContent = 'Téléchargement de ' + sel.length + ' partie(s)…'; try{ const out = []; for(const r of sel) out.push(Object.assign({}, r, { wav_b64:await admWav(r) }));
         admDl('bbx-hero-parties-' + new Date().toISOString().slice(0, 10) + '.json', new Blob([JSON.stringify({ takes:out })], { type:'application/json' })); LS.set('bbx-hero-dl', done.concat(sel.map(r => r.id))); $('#admMsg').textContent = '✅ Fichier téléchargé.'; }catch(e){ $('#admMsg').textContent = '⚠ ' + (e.message || e); } };
@@ -2674,10 +2809,12 @@ async function admLoad(){ const B = $('#admBody'); B.innerHTML = '<p class="smal
 $('#admMenu').onclick = () => { renderHome(); show('home'); };
 $('#bPlay').onclick = () => { ADV = null; startGame(); };
 $('#bAgain').onclick = () => { const a = LASTRES && LASTRES.g.adv; show('home'); ADV = a || null; startGame(); };
-$('#bNext').onclick = () => { const a = LASTRES.g.adv; show('home'); if(a.lrn){ const n = lrnNextOf(a); if(!n){ lrnShow(a.isl); return; } ADV = lrnBuild(n.i, n.e); } else ADV = advBuild(a.wi + 1, a.lv); startGame(); };
-$('#bMenu').onclick = () => { const a = LASTRES && LASTRES.g.adv; if(a && a.lrn){ lrnShow(a.isl); } else if(a){ ADV_LV = a.lv; advShow(a.wi); } else { renderHome(); show('home'); } };
+$('#bNext').onclick = () => { const a = LASTRES.g.adv; if(a.ami != null){ if(a.ami + 1 >= amiSteps().length){ amiShow(); return; } amiLaunch(a.ami + 1); return; } show('home'); if(a.lrn){ const n = lrnNextOf(a); if(!n){ lrnShow(a.isl); return; } ADV = lrnBuild(n.i, n.e); } else ADV = advBuild(a.wi + 1, a.lv); startGame(); };
+$('#bMenu').onclick = () => { const a = LASTRES && LASTRES.g.adv; if(a && a.ami != null){ amiShow(); } else if(a && a.lrn){ lrnShow(a.isl); } else if(a){ ADV_LV = a.lv; advShow(a.wi); } else { renderHome(); show('home'); } };
 advInitUI(); lrnInit();
 renderHome();
-if(/[?&]admin\b/.test(location.search)) admInit();
+if(AMI_ONLY){ if(amiInit()) amiShow(); else amiNoLink(); }
+else { if(amiInit() && !/[?&]admin\b/.test(location.search)) amiShow();
+if(/[?&]admin\b/.test(location.search)) admInit(); }
 </script>
 </body></html>
