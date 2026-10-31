@@ -1899,9 +1899,10 @@ function amiSnd(i){
     $('#amiMsg').innerHTML = `<div class="res">À toi ! Joue « ${escH(tok)} » 4 fois, à ton rythme…</div>`;
     try{ const rec = await recStart(); requestAnimationFrame(() => { bar.firstElementChild.style.transition = 'width 6s linear'; bar.firstElementChild.style.width = '100%'; });
       await sleep(6000); const r = rec.stop(); if(s0 !== SES) return;
-      let ons = RY.onsets(r.x, r.sr); if(ons.length < 2) ons = RY.onsets(r.x, r.sr, { sens:.03, dynDb:50, dynDb2:65 }); const n = ons.length, db = Math.round(20 * Math.log10(r.peak + 1e-9));
+      let ons = RY.onsets(r.x, r.sr); if(ons.length < 2) ons = RY.onsets(r.x, r.sr, { sens:.03, dynDb:50, dynDb2:65 }); const raw = ons.length, mx = Math.max.apply(null, ons.map(z => z.db).concat([-99])); ons = ons.filter(z => z.db == null || z.db >= mx - 28); const mg = []; ons.forEach(z => { if(!mg.length || z.t - mg[mg.length - 1] > .2) mg.push(z.t); }); // on garde les attaques nettes et on fusionne les sons en 2 parties (K~, Pch…) : un son = un coup
+      const n = mg.length, db = Math.round(20 * Math.log10(r.peak + 1e-9));
       take = n >= 2 ? { x:r.x, sr:r.sr, n } : null;
-      $('#amiMsg').innerHTML = n >= 3 && n <= 8 ? `<div class="res ok">✅ J'ai entendu ${n} coups.</div>` : n >= 2 ? `<div class="res warn">J'ai entendu ${n} coups (vise 4). Tu peux refaire, ou continuer.</div>` : `<div class="res no">Je n'ai presque rien entendu (niveau ${db} dB). Rapproche le micro de ta bouche (5-10 cm, sur le côté) et refais.</div>`;
+      $('#amiMsg').innerHTML = n >= 3 && n <= 8 ? `<div class="res ok">✅ J'ai entendu ${n} coups.</div>` : n > 8 ? `<div class="res warn">J'ai entendu beaucoup de bruit (≈ ${n} coups). Pas grave : ton enregistrement est gardé, tu peux continuer. Si tu veux, refais-le en jouant 4 sons nets, puis silence.</div>` : n >= 2 ? `<div class="res warn">J'ai entendu ${n} coups (vise 4). Tu peux refaire, ou continuer.</div>` : `<div class="res no">Je n'ai presque rien entendu (niveau ${db} dB). Rapproche le micro de ta bouche (5-10 cm, sur le côté) et refais.</div>`;
       $('#amiOk').disabled = !take;
     }catch(e){ if(s0 === SES) $('#amiMsg').innerHTML = '<div class="res no">Micro indisponible : ' + escH(e.message || e) + '</div>'; }
     if(s0 === SES){ bar.style.display = 'none'; $('#amiRec').disabled = false; $('#amiRec').textContent = '● Refaire'; $('#amiHear').disabled = false; } };
