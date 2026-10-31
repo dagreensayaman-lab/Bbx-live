@@ -102,6 +102,9 @@ body.advon{overflow:hidden;background:#1b63c4}
 #lrn.on{display:flex;justify-content:center;position:fixed;inset:0;z-index:40;background:#0d2033}
 #lrnCol{position:relative;height:100%;max-width:100%;overflow:hidden;overflow:clip}
 #lrnCv{display:block;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;background:#1b63c4}
+#lrnLv{position:absolute;left:8px;right:8px;top:max(48px,calc(env(safe-area-inset-top) + 42px));display:flex;gap:5px;z-index:3}
+#lrnLv button{flex:1;padding:4px 2px 3px;background:#0d2033e6;color:#fff;border:2px solid #ffffff55;border-radius:5px;box-shadow:0 3px 0 #000;font:900 .78rem 'Courier New',monospace;line-height:1.1}#lrnLv button small{display:block;font-size:.62rem;opacity:.85;font-weight:800}
+#lrnLv button.on{background:#ffe27a;color:#0d2033;border-color:#fff}#lrnLv button.hc{border-color:#ff6a4a;color:#ffb199}#lrnLv button.hc.on{background:#ff5a3a;color:#fff}#lrnLv button.lk{opacity:.65}#lrnLv button.clk{flex:0 0 38px;font-size:1.05rem;border-color:#5ef0ff}#lrnLv button.clk.off{opacity:.7;border-color:#ff8aa0}
 #lrnBack,#lrnSnd{padding:6px 12px;background:#0d2033;color:#ffe27a;border:2px solid #ffe27a;border-radius:4px;box-shadow:0 3px 0 #000;font:900 1rem 'Courier New',monospace}
 #lrnDlg{display:none;position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.5);align-items:flex-end;padding:0 8px max(14px,env(safe-area-inset-bottom));cursor:pointer}#lrnDlg.on{display:flex}
 #lrnIsl{display:none;position:absolute;inset:0;z-index:4;background:linear-gradient(#0d2033,#17324a);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:max(8px,env(safe-area-inset-top)) 12px max(16px,env(safe-area-inset-bottom));color:#fff}#lrnIsl.on{display:block}
@@ -138,7 +141,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 47 · 31 oct. 2026 · Défi amis (lien d'invitation, envoi automatique)</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 48 · 31 oct. 2026 · Tableau 1 en 3 niveaux + Hardcore · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
@@ -240,6 +243,7 @@ body.advon{overflow:hidden;background:#1b63c4}
   <div id="lrnCol">
     <canvas id="lrnCv" width="120" height="310"></canvas>
     <div class="advbar"><button id="lrnBack">◀</button><div class="advtt">LES SONS</div><button id="lrnSnd" title="Son">🔊</button><div class="advsc" id="lrnSc"></div></div>
+    <div id="lrnLv"></div>
     <div class="advp" id="lrnP"></div>
     <div id="lrnIsl"><button id="lrnIslX">◀ Carte</button><div id="lrnIslB"></div></div>
     <div id="lrnDlg"></div>
@@ -1635,38 +1639,42 @@ LRN_I.forEach((I, i) => { ADV_SCENE[I.id] = ADV_SCENE[LRN_SC[i % LRN_SC.length]]
 const LRG = 36, LRWH = 40 + LRN_N * LRG + 130, LRNN = Array.from({ length:LRN_N + 1 }, (_, i) => ({ x:[34, 86, 32, 88, 36, 84][i % 6], y:LRWH - 130 - i * LRG }));
 
 const lrnData = () => { const d = LS.get(LRN_LS, null); return d && d.s ? d : { s:{}, b:{} }; };
-const lrnKey = (i, e) => LRN_I[i].id + ':' + e;
-const lrnStars = (i, e) => lrnData().s[lrnKey(i, e)] || 0;
-const lrnIslOpen = i => lrnOpenAll() || i === 0 || lrnIslDone(i - 1);
-const lrnExOpen = (i, e) => lrnOpenAll() || (lrnIslOpen(i) && (e === 0 || lrnStars(i, e - 1) >= 1));
-const lrnIslDone = i => LRN_I[i].ex.every((_, e) => lrnStars(i, e) >= 1);
-const lrnAllDone = () => LRN_I.every((_, i) => lrnIslDone(i));
-const lrnIslStars = i => LRN_I[i].ex.reduce((t, _, e) => t + Math.min(3, lrnStars(i, e)), 0), lrnIslMax = i => LRN_I[i].ex.length * 3;
-const lrnTotal = () => LRN_I.reduce((t, _, i) => t + lrnIslStars(i), 0), lrnMax = LRN_I.reduce((t, I) => t + I.ex.length * 3, 0);
+/* v48 : 3 niveaux (+ Hardcore). Niveau 1 = clés d'avant (« lp:0 »), niveaux suivants « lp:0@2 »… */
+const lrnKey = (i, e, lv) => { lv = lv || LRNLV; return LRN_I[i].id + ':' + e + (lv > 1 ? '@' + lv : ''); };
+const lrnExs = (i, lv) => LRN_X[lv || LRNLV][i];
+const lrnStars = (i, e, lv) => lrnData().s[lrnKey(i, e, lv)] || 0;
+const lrnIslOpen = (i, lv) => lrnOpenAll() || i === 0 || lrnIslDone(i - 1, lv);
+const lrnExOpen = (i, e, lv) => lrnOpenAll() || (lrnIslOpen(i, lv) && (e === 0 || lrnStars(i, e - 1, lv) >= 1));
+const lrnIslDone = (i, lv) => lrnExs(i, lv).every((_, e) => lrnStars(i, e, lv) >= 1);
+const lrnAllDone = lv => LRN_I.every((_, i) => lrnIslDone(i, lv || 1)); // la porte du Tableau 2 = le niveau 1 terminé
+const lrnIslStars = (i, lv) => lrnExs(i, lv).reduce((t, _, e) => t + Math.min(3, lrnStars(i, e, lv)), 0), lrnIslMax = (i, lv) => lrnExs(i, lv).length * 3;
+const lrnTotal = lv => LRN_I.reduce((t, _, i) => t + lrnIslStars(i, lv), 0), lrnMax = lv => LRN_I.reduce((t, _, i) => t + lrnIslMax(i, lv), 0);
+const lrnMaxed = () => [1, 2, 3].every(lv => LRN_I.every((_, i) => lrnExs(i, lv).every((_, e) => lrnStars(i, e, lv) >= LRN_HC_STARS)));
+const lrnHcOpen = () => lrnOpenAll() || lrnMaxed();
 
 /* un exercice → un « niveau » pour le moteur de jeu (même forme que advBuild) */
-function lrnBuild(i, e){
-  const I = LRN_I[i], X = I.ex[e], lv = X.lv, order = ['P', 'K', 'K~', 'T', 'Ts', 'Pch', 'Pf', 'Spt', 'Fsh', 'L'], ix = x => { const k = order.indexOf(x); return k < 0 ? 99 : k; };
+function lrnBuild(i, e, lv){ // sans lv : liste d'origine (Défi amis) ; avec lv (1-3, 4 = Hardcore) : liste du niveau
+  const I = LRN_I[i], X = lv ? lrnExs(i, lv)[e] : I.ex[e], lvl = X.lv, order = ['P', 'K', 'K~', 'T', 'Ts', 'Pch', 'Pf', 'Spt', 'Fsh', 'L'], ix = x => { const k = order.indexOf(x); return k < 0 ? 99 : k; };
   const sounds = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))].sort((a, b) => ix(a) - ix(b));
-  return { id:I.id, ic:I.ic, n:I.n, style:X.n, wi:i, isl:i, ex:e, lv, niv:e + 1, lrn:true, pat:X.m.map(z => z[1]), divs:X.m.map(z => z[0]), div:X.m[0][0], bpm:X.bpm, cycles:X.cyc, win:ADV_ST[lv].win, lifeK:ADV_ST[lv].lifeK,
-    clk:true, boss:false, sounds:sounds.join(' '), mes:X.m.length * X.cyc, teach:X.t,
+  return { id:I.id, ic:I.ic, n:I.n, style:X.n, wi:i, isl:i, ex:e, lv:lvl, lvl:lv || 0, niv:e + 1, lrn:true, pat:X.m.map(z => z[1]), divs:X.m.map(z => z[0]), div:X.m[0][0], bpm:X.bpm, cycles:X.cyc, win:ADV_ST[lvl].win, lifeK:ADV_ST[lvl].lifeK,
+    clk:lv ? CFG.clk !== false : true, boss:false, sounds:sounds.join(' '), mes:lrnMeasures(X.m).length * X.cyc, teach:X.t,
     prog:[[36, 'maj'], [36, 'maj'], [43, 'maj'], [36, 'maj']], bass:X.mus ? [[0, .9, 0], [2, .9, 0]] : null, perc:X.mus ? () => [0, 1, 2, 3].map(b => [b + .5, 's']) : null }; }
 /* exercice suivant dans le parcours (même île, sinon la première de l'île suivante) */
-function lrnNextOf(a){
-  const I = LRN_I[a.isl]; if(a.ex + 1 < I.ex.length) return lrnExOpen(a.isl, a.ex + 1) ? { i:a.isl, e:a.ex + 1 } : null;
-  return a.isl + 1 < LRN_N && lrnExOpen(a.isl + 1, 0) ? { i:a.isl + 1, e:0 } : null; }
-function lrnSave(a, stars, pct){
-  const d = lrnData(), k = lrnKey(a.isl, a.ex), old = d.s[k] || 0, doneBefore = lrnIslDone(a.isl), allBefore = lrnAllDone();
+function lrnNextOf(a){ const lv = a.lvl || 1, N = lrnExs(a.isl, lv).length;
+  if(a.ex + 1 < N) return lrnExOpen(a.isl, a.ex + 1, lv) ? { i:a.isl, e:a.ex + 1 } : null;
+  return a.isl + 1 < LRN_N && lrnExOpen(a.isl + 1, 0, lv) ? { i:a.isl + 1, e:0 } : null; }
+function lrnSave(a, stars, pct){ const lv = a.lvl || 1;
+  const d = lrnData(), k = lrnKey(a.isl, a.ex, lv), old = d.s[k] || 0, doneBefore = lrnIslDone(a.isl, lv), allBefore = lrnAllDone(lv), hcBefore = lrnMaxed();
   if(stars > old) d.s[k] = stars; if(pct > (d.b[k] || 0)) d.b[k] = pct; LS.set(LRN_LS, d);
-  return { old, newEx:old === 0 && stars >= 1 && a.ex + 1 < LRN_I[a.isl].ex.length, islDone:!doneBefore && lrnIslDone(a.isl), all:!allBefore && lrnAllDone() }; }
+  return { old, lv, newEx:old === 0 && stars >= 1 && a.ex + 1 < lrnExs(a.isl, lv).length, islDone:!doneBefore && lrnIslDone(a.isl, lv), all:!allBefore && lrnAllDone(lv), hc:!hcBefore && lrnMaxed() }; }
 function lrnBanner(g, stars, why){
   if(g.adv.ami != null) return amiBanner(g, stars, why);
   const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = lrnSave(a, stars, g.J.accuracy()); later(() => advFan(stars, r.newEx || r.islDone), 450); }
   const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00';
   const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
   const msg = why === 'dead' ? 'Plus de cœurs… respire, écoute le clic et retente !' : blue ? 'Rien de faux, tout pile : tu maîtrises !' : stars === 3 ? '3 étoiles : tout est bien dans le temps !' : stars === 2 ? 'Bravo ! Vise maintenant « Parfait » sur chaque son.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour passer. Retente !';
-  const nx = r.all ? '<div class="res ok" style="font-weight:900;text-align:center">🌊 Tous les sons sont à toi ! Une nouvelle île apparaît à l\'horizon…</div>' : r.islDone ? '<div class="res ok" style="font-weight:900;text-align:center">🏝 ' + a.n + ' terminée !' + (a.isl + 1 < LRN_N ? ' 🔓 ' + LRN_I[a.isl + 1].ic + ' ' + LRN_I[a.isl + 1].n : '') + '</div>' : r.newEx ? '<div class="res ok" style="font-weight:900;text-align:center">🔓 Exercice suivant débloqué : ' + LRN_I[a.isl].ex[a.ex + 1].n + '</div>' : '';
-  return `<div class="advend"><div class="advk">${a.ic} ${a.n.toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">Exercice ${a.ex + 1}/${LRN_I[a.isl].ex.length} · ${a.style}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nx}`; }
+  const LV = r.lv || 1, nx = r.hc ? '<div class="res ok" style="font-weight:900;text-align:center">🔥 TOUT EST MAXÉ ! Le mode HARDCORE est débloqué : choisis-le sur la carte.</div>' : r.all ? '<div class="res ok" style="font-weight:900;text-align:center">' + (LV === 1 ? '🌊 Tous les sons sont à toi ! Une nouvelle île apparaît à l\'horizon…' : LV === 4 ? '🔥 Hardcore terminé : légende !' : '🏆 Niveau ' + LV + ' terminé !') + '</div>' : r.islDone ? '<div class="res ok" style="font-weight:900;text-align:center">🏝 ' + a.n + ' terminée !' + (a.isl + 1 < LRN_N ? ' 🔓 ' + LRN_I[a.isl + 1].ic + ' ' + LRN_I[a.isl + 1].n : '') + '</div>' : r.newEx ? '<div class="res ok" style="font-weight:900;text-align:center">🔓 Exercice suivant débloqué : ' + lrnExs(a.isl, LV)[a.ex + 1].n + '</div>' : '';
+  return `<div class="advend"><div class="advk">${a.ic} ${a.n.toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">${LV === 4 ? '🔥 HARDCORE' : 'NIV ' + LV} · Exercice ${a.ex + 1}/${lrnExs(a.isl, LV).length} · ${a.style}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nx}`; }
 
 /* ---------- écran : la carte du Tableau 1 + l'écran d'île ---------- */
 let LR = null;
@@ -1686,17 +1694,26 @@ function lrnInit(){
   document.addEventListener('keydown', e => { if(!$('#lrn').classList.contains('on') || $('#lrnIsl').classList.contains('on')) return; if(e.key === 'ArrowDown' || e.key === 'ArrowLeft') lrnSelect(Math.max(0, A.sel - 1), true); else if(e.key === 'ArrowUp' || e.key === 'ArrowRight') lrnSelect(Math.min(LRN_N, A.sel + 1), true); else if(e.key === 'Enter') lrnSelect(A.sel); });
   lrnHomeSt();
 }
-function lrnHomeSt(){ const e = $('#lrnHomeSt'); if(e) e.textContent = '★ ' + lrnTotal() + ' / ' + lrnMax; }
+function lrnHomeSt(){ const e = $('#lrnHomeSt'); if(e) e.textContent = '★ ' + lrnTotal() + ' / ' + lrnMax(); }
 function lrnSndBtn(){ const b = $('#lrnSnd'); if(b) b.textContent = ADVA.on ? '🔊' : '🔇'; }
 function lrnResize(){ const A = LR, iw = window.innerWidth, ih = window.innerHeight, w = Math.min(iw, Math.round(ih * .62)); $('#lrnCol').style.width = w + 'px';
   A.hv = Math.round(ih * 120 / w); if(A.cv.width !== 120 || A.cv.height !== A.hv){ A.cv.width = 120; A.cv.height = A.hv; } A.cv.style.width = w + 'px'; A.cv.style.height = ih + 'px'; A.sc = w / 120; }
 function lrnShow(isl){ if(LR) LR.starting = false;
-  ADV = null; show('lrn'); lrnResize(); const A = LR; if(isl == null){ isl = 0; for(let i = 0; i < LRN_N; i++) if(lrnIslOpen(i)){ isl = i; if(!lrnIslDone(i)) break; } if(lrnAllDone()) isl = LRN_N; }
-  A.sel = isl; { const q = LRNN[Math.min(isl, LRN_N)]; A.hx = q.x; A.hy = q.y - 5; } A.free = false; A.cam = lrnClampCam(A.hy - A.hv * .4); lrnCloseIsl(true); lrnSndBtn(); lrnHomeSt(); $('#lrnSc').textContent = '★ ' + lrnTotal() + '/' + lrnMax;
+  ADV = null; show('lrn'); lrnResize(); const A = LR; if(isl == null){ isl = 0; for(let i = 0; i < LRN_N; i++) if(lrnIslOpen(i)){ isl = i; if(!lrnIslDone(i)) break; } if(lrnAllDone(LRNLV)) isl = LRN_N; }
+  A.sel = isl; { const q = LRNN[Math.min(isl, LRN_N)]; A.hx = q.x; A.hy = q.y - 5; } A.free = false; A.cam = lrnClampCam(A.hy - A.hv * .4); lrnCloseIsl(true); lrnSndBtn(); lrnHomeSt(); lrnLvBar(); $('#lrnSc').textContent = '★ ' + lrnTotal() + '/' + lrnMax();
   if(!AVCR) advMusic('map'); lrnPanel();
   if(!A.raf){ A.last = 0; A.raf = requestAnimationFrame(lrnLoop); }
   if(!LS.get('bbx-lrn-seen', 0)){ LS.set('bbx-lrn-seen', 1); later(() => advDialog(LRN_INTRO, '🌱 LE PARCOURS', null, '#lrnDlg'), 350); } }
 const LRN_INTRO = ['Avant de voyager dans tous les styles de musique, il faut apprendre les sons de base du beatbox.', 'Chaque île t\'en apprend un : le kick, les charleys, les caisses claires… Écoute-le, essaie-le, puis joue-le en rythme avec les exercices.', 'Quand tu auras ramassé toutes les étoiles, une nouvelle île apparaîtra à l\'horizon…'];
+/* barre des niveaux : NIV 1 · NIV 2 · NIV 3 · 🔥 HARDCORE (verrouillé tant que tout n'est pas à 3 étoiles) · 🔔 clic */
+const lrnLvName = lv => (lv || LRNLV) === 4 ? '🔥 HARDCORE' : 'NIV ' + (lv || LRNLV);
+function lrnLvBar(){ const el = $('#lrnLv'); if(!el) return; const hc = lrnHcOpen();
+  el.innerHTML = [1, 2, 3, 4].map(l => `<button data-l="${l}" class="${LRNLV === l ? 'on' : ''} ${l === 4 ? 'hc' : ''} ${l === 4 && !hc ? 'lk' : ''}">${l === 4 ? (hc ? '🔥 HARD' : '🔒 HARD') : 'NIV ' + l}<small>${l === 4 && !hc ? 'tout maxer' : '★ ' + lrnTotal(l)}</small></button>`).join('') + `<button id="lrnClk" class="clk ${CFG.clk === false ? 'off' : ''}" title="Clic du métronome">${CFG.clk === false ? '🔕' : '🔔'}</button>`;
+  $$('#lrnLv [data-l]').forEach(b => b.onclick = () => lrnSetLv(+b.dataset.l)); $('#lrnClk').onclick = lrnToggleClk; }
+function lrnToggleClk(){ CFG.clk = CFG.clk === false; saveCfg(); advSfx('ui'); lrnLvBar(); const b = $('#lrnClk2'); if(b) b.textContent = lrnClkTxt(); }
+const lrnClkTxt = () => CFG.clk === false ? '🔕 Sans clic' : '🔔 Avec clic';
+function lrnSetLv(l){ if(l === 4 && !lrnHcOpen()){ advSfx('lock'); const p = $('#lrnP'); if(p) p.innerHTML = '<div class="advh">🔒 HARDCORE</div><div class="advt">Le mode Hardcore se débloque quand tu as <b>' + LRN_HC_STARS + ' étoiles à tous les exercices</b> des niveaux 1, 2 et 3. Le même parcours, mais ultra rapide, avec des triolets et des doubles croches à l\'improviste.</div>'; lrnPanelH(); return; }
+  if(l === LRNLV) return; advSfx('sel'); LRNLV = l; LS.set('bbx-lrn-lv', l); lrnCloseIsl(true); lrnShow(); }
 function lrnSelect(i, quiet){ const A = LR, open = i >= LRN_N ? lrnAllDone() || lrnOpenAll() : lrnIslOpen(i); advSfx(open ? 'sel' : 'lock'); A.sel = i; A.free = false; lrnPanel();
   if(!quiet && open){ if(i >= LRN_N) lrnToT2(); else lrnOpenIsl(i); } }
 function lrnToT2(){ advSfx('go'); advMusic(null); later(() => advShow(), 300); }
@@ -1706,8 +1723,8 @@ function lrnPanel(){
   if(i >= LRN_N){ const open = lrnAllDone() || lrnOpenAll();
     p.innerHTML = `<div class="advh">${open ? '🌊' : '🔒'} TABLEAU 2</div><div class="advs">Les styles de musique · Beatbox Adventure</div><div class="advt">${open ? 'Tu connais tous les sons de base ! Pars à la découverte des douze îles des styles : reggae, afro, hip-hop, samba…' : 'Une île mystérieuse brille à l\'horizon. Termine les ' + LRN_N + ' îles des sons (au moins 1 étoile à chaque exercice) pour t\'y rendre.'}</div><div class="advrow"><div class="advstr"></div><button class="b-pink" id="lrnGo" ${open ? '' : 'disabled'}>${open ? '▶ PARTIR' : '🔒'}</button></div>`;
     $('#lrnGo').onclick = lrnToT2; lrnPanelH(); return; }
-  const I = LRN_I[i], open = lrnIslOpen(i), st = lrnIslStars(i), done = I.ex.filter((_, e) => lrnStars(i, e) >= 1).length;
-  p.innerHTML = `<div class="advh">${open ? I.ic : '🔒'} ${i + 1}/${LRN_N} · ${I.n.toUpperCase()}</div><div class="advs">${I.tok ? 'Le son : <b>' + I.tok + '</b> · ' : ''}${I.zone} · ${done}/${I.ex.length} exercices</div>
+  const I = LRN_I[i], EX = lrnExs(i), open = lrnIslOpen(i), st = lrnIslStars(i), done = EX.filter((_, e) => lrnStars(i, e) >= 1).length;
+  p.innerHTML = `<div class="advh">${open ? I.ic : '🔒'} ${i + 1}/${LRN_N} · ${I.n.toUpperCase()}</div><div class="advs">${I.tok ? 'Le son : <b>' + I.tok + '</b> · ' : ''}${I.zone} · ${done}/${EX.length} exercices</div>
     <div class="advt">${open ? I.how : 'Termine l\'île précédente (au moins 1 étoile à chaque exercice) pour ouvrir celle-ci.'}</div>
     <div class="advrow"><div class="advstr" style="font-size:1.25rem;letter-spacing:0"><span class="g">★ ${st}</span><span class="d"> / ${lrnIslMax(i)}</span></div><button class="b-pink" id="lrnGo" ${open ? '' : 'disabled'}>${open ? '▶ ENTRER' : '🔒'}</button></div>`;
   $('#lrnGo').onclick = () => lrnOpenIsl(i); lrnPanelH(); }
@@ -1715,12 +1732,12 @@ function lrnPanelH(){ const A = LR; requestAnimationFrame(() => { const p = $('#
 /* l'intérieur de l'île : écouter, comprendre, les exercices */
 function lrnOpenIsl(i){
   if(!lrnIslOpen(i)) return; const I = LRN_I[i], el = $('#lrnIsl'); LR.isl = i; advSfx('sel');
-  const rows = I.ex.map((X, e) => { const open = lrnExOpen(i, e), st = lrnStars(i, e), best = lrnData().b[lrnKey(i, e)], sn = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))].join(' ');
+  const EX = lrnExs(i), rows = EX.map((X, e) => { const open = lrnExOpen(i, e), st = lrnStars(i, e), best = lrnData().b[lrnKey(i, e)], sn = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))].join(' ');
     return `<div class="lrx ${open ? '' : 'lk'}" data-e="${e}"><div class="lrxn">${open ? e + 1 : '🔒'}</div><div class="lrxb"><div class="lrxt">${X.n}</div><div class="lrxd">${open ? X.t : 'Réussis l\'exercice précédent.'}</div><div class="lrxs"><span class="${st >= 4 ? 'b' : 'g'}">${'★'.repeat(Math.min(3, st))}</span><span class="d">${'★'.repeat(3 - Math.min(3, st))}</span> <small>${sn} · ${X.bpm} BPM${best != null ? ' · ' + best + ' %' : ''}</small></div></div>${open ? '<button class="lrs" title="Écouter l\'exercice">🔊</button>' : ''}<button class="b-pink" ${open ? '' : 'disabled'}>▶</button>${open ? lrnStrip(X) : ''}</div>`; }).join('');
   el.querySelector('#lrnIslB').innerHTML = `<div class="lrh"><span class="lri">${I.ic}</span><div><div class="advh" style="font-size:1.15rem">${I.n.toUpperCase()}</div><div class="advs">${I.tok ? 'Le son : <b>' + I.tok + '</b> · ' : ''}${I.zone}</div></div></div>
-    <div class="advt" style="font-size:.88rem">${I.how}</div><div class="lrhr">${I.hear.map(t => `<button class="lrl" data-t="${t}">🔊 Écouter le ${t}</button>`).join('')}</div>
-    <div class="lrg">LES EXERCICES (${I.ex.length})</div><div class="lrlg"><i class="a"></i>sur le temps (1 2 3 4) <i class="b"></i>« & » = contretemps <i class="c"></i>« e » et « a » = doubles croches · 🔊 écouter · la case claire qui bouge = où on en est</div>${rows}`;
-  el.classList.add('on'); $$('#lrnIslB .lrl').forEach(b => { b.onclick = () => lrnHear(b.dataset.t); });
+    <div class="advt" style="font-size:.88rem">${I.how}</div><div class="lrhr"><button class="lrl" id="lrnClk2" style="flex:1 1 100%">${lrnClkTxt()}</button></div><div class="lrhr">${I.hear.map(t => `<button class="lrl" data-t="${t}">🔊 Écouter le ${t}</button>`).join('')}</div>
+    <div class="lrg">LES EXERCICES · ${lrnLvName()} (${EX.length})</div><div class="lrlg"><i class="a"></i>sur le temps (1 2 3 4) <i class="b"></i>« & » = contretemps <i class="c"></i>« e » et « a » = doubles croches · 🔊 écouter · la case claire qui bouge = où on en est</div>${rows}`;
+  el.classList.add('on'); $$('#lrnIslB .lrl[data-t]').forEach(b => { b.onclick = () => lrnHear(b.dataset.t); }); $('#lrnClk2').onclick = lrnToggleClk;
   $$('#lrnIslB .lrx').forEach(r => { const e = +r.dataset.e; r.querySelector('.b-pink').onclick = () => lrnPlay(i, e); const sb = r.querySelector('.lrs'); if(sb) sb.onclick = () => lrnListen(i, e); }); el.scrollTop = 0; }
 function lrnCloseIsl(quiet){ lrnStopListen(); const el = $('#lrnIsl'); if(el) el.classList.remove('on'); if(LR) LR.isl = -1; if(!quiet && LR) lrnPanel(); }
 /* écouter le son : 4 coups du vrai sample */
@@ -1733,13 +1750,14 @@ const lrnCls = (ci, d) => { const r = ci % d; return r === 0 ? 'a' : r * 2 === d
 const lrnLab = (j, d) => j === 0 ? '' : j * 2 === d ? '&' : d === 4 ? (j === 1 ? 'e' : 'a') : d === 8 ? (j === 2 ? 'e' : j === 6 ? 'a' : '') : '';
 /* la phrase en « partition » : une ligne par mesure, 4 temps, chaque temps découpé en d cases ; les étiquettes 1 e & a sont au-dessus, la couleur de fond de la case dit où l'on est */
 function lrnStrip(X){
-  return '<div class="lrst">' + X.m.map(([d, s], k) => { const T = s.split(' '); let h = '';
-    for(let b = 0; b < 4; b++){ let lab = '', cel = '';
-      for(let j = 0; j < d; j++){ const ci = b * d + j, tk = T[ci], c = lrnCls(ci, d);
-        lab += `<i class="${c}">${j === 0 ? b + 1 : lrnLab(j, d)}</i>`;
-        cel += `<span class="sc ${c} ${tk === '.' ? 'z' : ''}" data-m="${k}" data-c="${ci}"${tk === '.' ? '' : ` style="--c:${LC[HERO.laneOf(tk)]}"`}>${tk === '.' ? '' : tk}</span>`; }
-      h += `<div class="lrbt"><div class="lrlb">${lab}</div><div class="lrcl">${cel}</div></div>`; }
-    return `<div class="lrm d${d}"><b class="lrmn">${k + 1}</b>${h}</div>`; }).join('') + '</div>'; }
+  return '<div class="lrst">' + lrnMeasures(X.m).map((M, k) => { let h = '', ci = 0, bn = 0;
+    M.forEach(sg => { const d = sg.d;
+      for(let b = 0; b < sg.T.length / d; b++){ let lab = '', cel = '';
+        for(let j = 0; j < d; j++){ const tk = sg.T[b * d + j], c = d === 3 ? 'c' : lrnCls(j, d), id = ci++;
+          lab += `<i class="${c}">${j === 0 ? bn + 1 : lrnLab(j, d)}</i>`;
+          cel += `<span class="sc ${c} ${tk === '.' ? 'z' : ''}" data-m="${k}" data-c="${id}"${tk === '.' ? '' : ` style="--c:${LC[HERO.laneOf(tk)]}"`}>${tk === '.' ? '' : tk}</span>`; }
+        h += `<div class="lrbt"><div class="lrlb">${lab}</div><div class="lrcl">${cel}</div></div>`; bn++; } });
+    return `<div class="lrm d${Math.max.apply(null, M.map(z => z.d))}"><b class="lrmn">${k + 1}</b>${h}</div>`; }).join('') + '</div>'; }
 function lrnStopListen(){
   const L = LRL; LRL = null;
   if(L){ cancelAnimationFrame(L.raf); try{ L.bus.gain.setValueAtTime(0, ac.currentTime); L.bus.disconnect(); }catch(er){} }
@@ -1748,21 +1766,23 @@ async function lrnListen(i, e){
   if(LRL && LRL.i === i && LRL.e === e){ lrnStopListen(); return; }
   lrnStopListen(); advMusic(null); const row = $$('#lrnIslB .lrx')[e], btn = row && row.querySelector('.lrs'); if(btn) btn.textContent = '…';
   const s0 = SES; try{ await hearLoad(); }catch(er){} if(s0 !== SES) return;
-  ensure(); const X = LRN_I[i].ex[e], spb = 60 / X.bpm, bus = ac.createGain(); bus.gain.value = .9; bus.connect(ac.destination);
-  const T = ac.currentTime + .1, nM = X.m.length, total = 4 + X.cyc * nM * 4;
+  ensure(); const X = lrnExs(i)[e], spb = 60 / X.bpm, bus = ac.createGain(); bus.gain.value = .9; bus.connect(ac.destination);
+  const MS = lrnMeasures(X.m), nM = MS.length, cyc = X.cyc, cl = []; // cl = toutes les cases d'un tour : { t (temps depuis le début du tour), k (mesure), c (case) , tk }
+  MS.forEach((M, k) => { let at = k * 4, ci = 0; M.forEach(sg => { sg.T.forEach((tk, j) => { cl.push({ t:at + j / sg.d, k, c:ci++, tk }); }); at += sg.beats; }); });
+  const T = ac.currentTime + .1, total = 4 + cyc * nM * 4;
   for(let b = 0; b < total; b++) clickAt(T + b * spb, b % 4 === 0, bus);
-  for(let c = 0; c < X.cyc; c++) X.m.forEach(([d, s], k) => s.split(' ').forEach((tk, ci) => { if(tk !== '.') sampleAt(T + (4 + (c * nM + k) * 4 + ci / d) * spb, tk, HERO.laneOf(tk), bus); }));
+  for(let c = 0; c < cyc; c++) cl.forEach(z => { if(z.tk !== '.') sampleAt(T + (4 + c * nM * 4 + z.t) * spb, z.tk, HERO.laneOf(z.tk), bus); });
   const L = LRL = { i, e, bus, raf:0 }; if(btn){ btn.textContent = '■'; btn.classList.add('on'); }
   const cells = row ? [...row.querySelectorAll('.sc')] : []; let last = null;
   const tick = () => { if(LRL !== L) return; const bt = (ac.currentTime - T) / spb - 4;
-    if(bt > X.cyc * nM * 4 + .5){ lrnStopListen(); return; }
-    let cur = null; if(bt >= 0){ const mi = Math.floor(bt / 4), k = mi % nM, d = X.m[k][0], ci = Math.min(d * 4 - 1, Math.floor((bt - mi * 4) * d + 1e-6)); cur = cells.find(x => +x.dataset.m === k && +x.dataset.c === ci) || null; }
+    if(bt > cyc * nM * 4 + .5){ lrnStopListen(); return; }
+    let cur = null; if(bt >= 0){ const u = bt % (nM * 4); let z = cl[0]; for(let q = 0; q < cl.length && cl[q].t <= u + 1e-6; q++) z = cl[q]; cur = cells.find(x => +x.dataset.m === z.k && +x.dataset.c === z.c) || null; }
     if(cur !== last){ if(last) last.classList.remove('now'); if(cur) cur.classList.add('now'); last = cur; }
     L.raf = requestAnimationFrame(tick); };
   L.raf = requestAnimationFrame(tick); }
 function lrnPlay(i, e){
   if(!lrnExOpen(i, e)) return; if(!getCal()){ alert('Fais d\'abord la calibration (micro, latence, sons) : elle ne prend qu\'une minute.'); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(er){} calStep = 0; renderCal(); show('cal'); return; }
-  if(LR.starting) return; lrnStopListen(); LR.starting = true; advMusic(null); advSfx('go'); later(() => { LR.starting = false; ADV = lrnBuild(i, e); startGame(); }, 420); }
+  if(LR.starting) return; lrnStopListen(); LR.starting = true; advMusic(null); advSfx('go'); later(() => { LR.starting = false; ADV = lrnBuild(i, e, LRNLV); startGame(); }, 420); }
 
 /* ---------- dessin de la carte ---------- */
 function lrnLoop(now){ const A = LR; if(!$('#lrn').classList.contains('on')){ A.raf = 0; return; }
@@ -1802,6 +1822,109 @@ function lrnDecor(I, R, circ, x, y, t){
   else if(d === 'kit'){ circ(x, y, 7, '#2a1020'); circ(x, y, 6, '#ef5b6e'); circ(x, y, 3, '#fff3f5'); R(x - 14, y - 10 + bump, 9, 2, '#ffd23f'); R(x + 6, y - 10, 9, 2, '#ffd23f'); R(x - 6, y - 15, 12, 4, '#e8e8f4'); R(x - 6, y - 15, 12, 1, '#fff'); }
   else { R(x - 10, y - 8, 20, 12, '#8a2a3a'); R(x - 8, y - 6, 16, 8, '#2a0a14'); R(x - 6, y - 2 + bump, 12, 5, '#ef6a7a'); R(x - 1, y - 1 + bump, 1, 3, '#b8404f'); R(x - 8, y - 6, 3, 2, '#fff'); R(x + 5, y - 6, 3, 2, '#fff'); }
 }
+
+/* =====================================================================
+   NIVEAUX DU TABLEAU 1 (v48) — comme un jeu d'arcade : on choisit son niveau avant de jouer.
+   NIV 1 : débutant (phrases de base, tolérance large, aucune triple croche) · NIV 2 : les mêmes exercices, 2× plus de mesures,
+   phrases changées et un peu plus corsées · NIV 3 : 3× plus de mesures, phrases plus dures, quelques rafales de triples croches (jamais à la suite)
+   HARDCORE (débloqué quand tout est à 3 étoiles aux 3 niveaux) : le niveau 3, BPM +20 %, avec des triolets et des doubles croches glissés ici et là.
+   Les exercices du niveau 1 gardent leur numéro d'avant (les étoiles déjà gagnées restent). Le Défi amis utilise toujours la liste d'origine (LRN_I[i].ex).
+   Écriture compacte : « d:cases|d:cases » = une mesure par bloc, d = cases par temps (1, 2, 4, 8 ; 3 = triolet), « $ » = le son de l'île, « . » = silence.
+   ===================================================================== */
+ADV_ST[4] = { t1:45, t2:80, t3:96, r3:.80, win:3, lifeK:1.2 }; // HARDCORE : tolérance serrée, peu de marge d'erreur
+const LRN_HC_STARS = 3; // étoiles à avoir partout (niv 1, 2, 3) pour débloquer le Hardcore
+let LRNLV = Math.min(4, Math.max(1, +LS.get('bbx-lrn-lv', 1) || 1));
+const LRN_X = { 1:[], 2:[], 3:[], 4:[] };
+const LM = s => s.split('|').map(z => { const k = z.indexOf(':'); return [+z.slice(0, k), z.slice(k + 1).trim()]; });
+/* les mesures d'un exercice : une mesure = 4 temps, éventuellement coupée en plusieurs blocs (triolets…) */
+function lrnMeasures(m){ const out = []; let cur = [], beats = 0;
+  m.forEach(([d, s]) => { const T = s.trim().split(/\s+/), b = T.length / d; cur.push({ d, T, beats:b }); beats += b; if(beats > 3.999){ out.push(cur); cur = []; beats = 0; } });
+  if(cur.length) out.push(cur); return out; }
+
+/* ---------- le contenu : B = phrases ajoutées au niveau 2 · C = phrases ajoutées au niveau 3 · o = remplace l'exercice du niveau 1 ---------- */
+const LRN_MIXG = (MIX, san) => MIX.map((z, k) => san && san[k] ? san[k] : z[4]);
+/* « un peu de tout » du charley : les deux mesures à triples croches d'origine sont remplacées par des doubles croches (niveau 1 et 2) */
+const LRN_T3 = LM('2:$ $ $ $ $ $ $ $|4:$ . $ . $ . $ . $ . $ . $ $ $ $|4:$ . $ . $ . $ . $ . $ . $ $ $ $|4:$ $ $ $ $ $ $ $ $ . $ . $ . $ .');
+const LRN_T4 = LM('4:$ . $ . $ . $ . $ . $ . $ $ $ $|4:$ . $ $ $ . $ $ $ . $ $ $ . $ $|2:$ $ $ $ $ $ $ $|4:$ . $ . $ . $ . $ . $ . $ $ $ $');
+const LRN_GP = LRN_MIXG(LRN_MIX_P), LRN_GT = LRN_MIXG(LRN_MIX_T, { 3:LRN_T3, 4:LRN_T4 });
+const LRN_HB_P = [LM('2:$ . . $ . . $ .|4:$ . . . . . $ . . . $ . $ . . .|2:$ . $ . . $ . $|4:$ . . $ . . $ . . $ . . $ . $ $')];
+const LRN_HC_P = [LM('2:$ . $ $ . $ . .|4:$ . . . $ . . $ . . $ . $ . . .|2:$ $ . $ . $ $ .|4:$ . $ . . $ . . $ . $ . . $ $ $'), LM('4:$ . . $ . . $ . . $ . . $ . . $|2:$ . $ . $ $ $ .|4:$ . $ . $ . . $ $ . $ . $ . $ $|4:$ . . . $ . . . $ . $ $ $ . $ $')];
+const LRN_HB_T = [LM('4:$ . $ $ $ . $ $ $ . $ $ $ . $ $|2:$ $ $ $ $ $ $ $|4:$ $ $ $ $ . $ . $ $ $ $ $ . $ .|4:$ . $ . $ $ $ $ . $ . $ $ $ $ $')];
+/* niveau 3 du charley : une petite rafale de triples croches (4 coups) par-ci par-là, jamais à la suite */
+const LRN_HC_T = [LM('2:$ $ $ $ $ $ $ $|8:$ . . . . . . . $ . . . . . . . $ . . . . . . . $ $ $ $ . . . .|4:$ . $ . $ . $ . $ . $ . $ $ $ $|8:$ . . . $ . . . $ . . . $ . . . $ . . . $ . . . $ $ $ $ . . . .'),
+  LM('8:$ . . . . . . . . . . . . . . . $ . . . . . . . $ $ $ $ . . . .|4:$ . $ $ $ . $ $ $ . $ $ $ . $ $|2:$ $ $ $ $ $ $ $|8:$ . . . $ . . . $ . . . $ . . . $ . . . $ . . . $ $ $ $ . . . .')];
+const mixExt = (G, HB, HC, base) => G.map((_, k) => ({ B:G[k + 1] || HB[k + 1 - G.length], C:G[k + 2] || HC[k + 2 - G.length] })).reduce((o, x, k) => { o[base + k] = x; return o; }, {});
+const rhythmExt = [
+  { B:'1:$ . $ $|1:$ $ . $', C:'1:. $ $ $|1:$ $ $ .' },
+  { B:'2:$ . $ $ . $ $ .|2:. $ $ . $ . . $', C:'2:$ $ . $ $ . $ .|2:. $ . $ $ $ . $' },
+  { B:'2:$ $ . $ $ $ . $|2:$ $ $ $ . $ $ $', C:'2:$ . $ $ $ $ . $|2:. $ $ $ $ . $ $' },
+  { B:'4:$ $ $ $ . . . . . . . . $ $ $ $|4:$ . $ . $ . $ . $ . $ . $ $ $ $', C:'4:$ $ $ . $ $ $ . $ $ $ . $ $ $ .|4:$ . $ $ $ . $ $ $ . $ $ $ . $ $' }];
+const LRN_EXT = {
+  lp:Object.assign({}, rhythmExt, mixExt(LRN_GP, LRN_HB_P, LRN_HC_P, 4)),
+  lt:Object.assign({}, rhythmExt, { 4:{
+      o:{ n:'Doubles en rafales', t:'Des rafales de quatre coups, avec de la place pour respirer entre chaque.', bpm:56, m:LM('4:$ $ $ $ . . . . . . . . $ $ $ $|4:. . . . $ $ $ $ . . . . $ $ $ $') },
+      B:'4:$ $ $ $ . . . . $ $ $ $ $ $ $ $|4:$ $ $ $ $ $ $ $ . . . . $ $ $ $',
+      C:'8:$ . . . . . . . $ . . . . . . . $ . . . . . . . $ $ $ $ . . . .|8:$ . . . . . . . . . . . . . . . $ . . . . . . . $ $ $ $ . . . .', ct:'Niveau 3 : une toute petite rafale de triples croches (4 coups ultra rapides) à la fin de la mesure. Elle est courte : tu peux le faire !' } },
+    mixExt(LRN_GT, LRN_HB_T, LRN_HC_T, 5)),
+  lts:{ 0:{ B:'1:Ts . . Ts|1:. Ts . Ts', C:'1:Ts Ts . Ts|1:Ts . Ts Ts' },
+    1:{ B:'2:. Ts . Ts . Ts . .|2:. Ts . . . Ts . Ts', C:'2:. Ts . Ts Ts . . Ts|2:Ts . . Ts . Ts . Ts' },
+    2:{ B:'2:T Ts T T T Ts T Ts|2:T T Ts T T Ts T T', C:'2:T T T Ts T T Ts T|2:T Ts T Ts T T T Ts' },
+    3:{ B:'2:Ts Ts . Ts Ts Ts . Ts|2:Ts . Ts Ts Ts . Ts Ts', C:'2:Ts Ts Ts Ts . Ts Ts .|2:Ts . Ts Ts . Ts Ts Ts' },
+    4:{ B:'2:T Ts T T T Ts T Ts|4:T . T . Ts . T . T . T . T . Ts Ts|2:T T Ts T T Ts T Ts|4:T . T . T . Ts . T . Ts . T . Ts .', C:'4:T . T T T . Ts . T . T T T . Ts T|2:T Ts T T Ts T Ts T|4:T . T . T Ts T . T . T . T Ts T .|2:T Ts T Ts T T Ts Ts' },
+    5:{ B:'2:P Ts P T P Ts P Ts|2:P T P Ts P T P T|2:P Ts P Ts P T P Ts|2:P T P T P Ts P Ts', C:'2:P Ts T Ts P Ts T Ts|2:P T P Ts P P T Ts|2:P Ts P T Ts P P Ts|2:P T Ts T P Ts P Ts' } },
+  ll:{ 0:{ B:'1:L . L L|1:L L . L', C:'1:L . . L|1:. L L .' },
+    1:{ B:'2:L L . L L L . L|2:L . L L . L L L', C:'2:L . L . L L L L|2:L L . . L L L .' },
+    2:{ B:'2:P L K L P L K P|2:P . K L P L K L', C:'2:P . K L . P K L|2:P L K P P L K L' },
+    3:{ B:'2:P L K T P T K L|2:P L K T P P K T', C:'2:P T K L . P K T|2:P L K T P P K L' } },
+  lb1:{ 0:{ B:'2:P T K T P P K T|2:P T K . P T K T', C:'2:P T K T P T K P|2:P P K T P T K T' },
+    1:{ B:'2:P . K T T P K T|2:P T K P . P K T', C:'2:P T K T P P K T|2:P T K P T P K P' },
+    2:{ B:'4:P . T T K . T T P . T . K . T T|4:P . T . K T T . . P T P K . T T', C:'4:P . T T K . T T . P T P K . T T|4:P T T . K . T T P . P T K . T P' },
+    3:{ B:'2:. T . T K T . T|2:. T P T K T . T', C:'2:. T . T K T T T|2:. T . P K T . T' } },
+  lb2:{ 0:{ B:'2:P . K . P . K .|2:P . K P . P K .', C:'2:P . K . . P K P|2:P P K . . P K .' },
+    1:{ B:'2:P . K . P P Pch .|2:P T K . . P Pch T', C:'2:P . K T . P Pch P|2:P T K . P P Pch T' },
+    2:{ B:'4:P T T T K T T T P T T P K T T T|4:P T T T K T P T P T T T K T T T', C:'4:P T T P K T T T P T P T K T T P|4:P T P T K T T T P T P P K T T T' },
+    3:{ B:'2:P T K T P P K Pch|4:P T T T K T T T P T P T K T T P|2:P P K T T P K T|2:P T K T P P K T', C:'4:P T T P K T T T P T P T K T T P|2:P P K . T P K Pch|4:P . T T K . T T P T P T K T T P|2:P T K T P P K Pch' } }
+};
+const LRN_EXT_S = { // les 6 îles de caisses claires : « $ » = la snare de l'île, elle tombe toujours sur le 2 et le 4
+  0:{ B:'2:. . $ . . . $ .|2:. . $ . . . $ .', C:'4:. . . . $ . . . . . . . $ . . .|4:. . . . $ . . . . . . . $ . . .' },
+  1:{ B:'1:P $ . $|1:. $ P $', C:'2:P . $ . P . $ .|2:P . $ . . P $ .' },
+  2:{ B:'2:P . $ P . . $ .|2:P . $ . P P $ .', C:'4:P . . . $ . . P . . P . $ . . .|4:P . . P $ . P . . . P P $ . . P' },
+  3:{ B:'2:P T $ T P P $ T|2:P . $ T P T $ T', C:'4:P T T T $ T T T P T P T $ T T T|4:P T T P $ T T T P T P T $ T P T' },
+  4:{ B:'2:P T $ T P P $ T|2:P . $ T . P $ P', C:'4:P . T T $ T . T . P P T $ T T .|4:P T . P $ . T T P . P T $ T . P' } };
+LRN_EXT.lt[8].o = { t:'Le charley de trap : des croches, des doubles et une rafale de doubles croches pour finir la mesure.', m:LRN_T3 };
+LRN_EXT.lt[9].o = { t:'Le final : le charley dans tous ses états, avec une rafale de doubles croches pour finir.', m:LRN_T4 };
+['lk', 'lkk', 'lpch', 'lpf', 'lspt', 'lfsh'].forEach(id => { LRN_EXT[id] = LRN_EXT_S; });
+
+/* ---------- construction des listes par niveau ---------- */
+const lrnExtM = (v, I) => v == null ? [] : (typeof v === 'string' ? LM(v) : v).map(([d, s]) => [d, s.replace(/\$/g, I.tok)]);
+function lrnLevelsBuild(){
+  LRN_I.forEach((I, i) => { const ext = LRN_EXT[I.id] || {};
+    LRN_X[1][i] = I.ex.map((X, e) => { const o = ext[e] && ext[e].o; return Object.assign({}, X, o ? Object.assign({}, o, { m:lrnExtM(o.m, I) }) : {}, { lv:1 }); });
+    LRN_X[2][i] = LRN_X[1][i].map((X, e) => { const x = ext[e] || {}; return Object.assign({}, X, { lv:2, bpm:X.bpm + 4, m:X.m.concat(lrnExtM(x.B, I)), t:X.t + ' Niveau 2 : les phrases changent, un peu plus corsées.' }); });
+    LRN_X[3][i] = LRN_X[1][i].map((X, e) => { const x = ext[e] || {}; return Object.assign({}, X, { lv:3, bpm:X.bpm + 8, m:X.m.concat(lrnExtM(x.B, I), lrnExtM(x.C, I)), t:X.t + ' ' + (x.ct || 'Niveau 3 : encore plus de phrases, plus serrées. À toi de jouer !') }); });
+    LRN_X[4][i] = LRN_X[3][i].map((X, e) => lrnHC(Object.assign({}, X, { t:LRN_X[1][i][e].t }))); });
+}
+/* HARDCORE : niveau 3, BPM +20 %, et par-ci par-là un triolet ou une rafale de doubles croches à la place d'un temps (jamais sur un temps qui contient la snare) */
+function lrnHC(X){
+  const SN = /^(K|K~|Pch|Pf|Spt|Fsh)$/, out = [];
+  lrnMeasures(X.m).forEach((M, j) => {
+    if(M.length > 1 || M[0].d > 4){ M.forEach(sg => out.push([sg.d, sg.T.join(' ')])); return; }
+    const d = M[0].d, T = M[0].T, bt = [0, 1, 2, 3].map(b => T.slice(b * d, b * d + d)), ok = b => { const h = bt[b].filter(x => x !== '.'); return h.length > 0 && !h.some(x => SN.test(x)); };
+    const order = j % 4 === 1 ? [3, 2, 1, 0] : j % 4 === 3 ? [1, 0, 2, 3] : [], b = order.find(ok);
+    if(b == null){ out.push([d, T.join(' ')]); return; }
+    const h = bt[b].filter(x => x !== '.'), x = h[0], y = h[1] || h[0], dbl = d === 2 && j % 4 === 3, alt = dbl ? [4, [x, y, x, y].join(' ')] : [3, [x, y, x].join(' ')], cells = (a, z) => bt.slice(a, z).reduce((s, q) => s.concat(q), []).join(' ');
+    if(b > 0) out.push([d, cells(0, b)]); out.push(alt); if(b < 3) out.push([d, cells(b + 1, 4)]); });
+  return Object.assign({}, X, { lv:4, bpm:Math.min(150, Math.round(X.bpm * 1.2)), m:out, t:X.t + ' 🔥 Hardcore : tempo plus vif, des triolets et des doubles croches à l\'improviste.' }); }
+lrnLevelsBuild();
+
+/* Vérification interne (utilisée par les tests) : toutes les mesures font bien 4 temps, la snare reste sur le 2 et le 4, pas de triples croches avant le niveau 3 */
+function lrnCheck(){ const bad = [];
+  [1, 2, 3, 4].forEach(lv => LRN_X[lv].forEach((L, i) => L.forEach((X, e) => { const nm = LRN_I[i].id + ':' + e + '@' + lv;
+    let beats = 0; X.m.forEach(([d, s]) => { const n = s.trim().split(/\s+/).length; if(n % d) bad.push(nm + ' bloc incomplet ' + d + ':' + s); beats += n / d; if(lv < 3 && d >= 8) bad.push(nm + ' triples croches trop tôt'); });
+    if(Math.abs(beats % 4) > 1e-6) bad.push(nm + ' mesure pas à 4 temps (' + beats + ')');
+    if(lv < 4 && /^(lk|lkk|lpch|lpf|lspt|lfsh)$/.test(LRN_I[i].id)) X.m.forEach(([d, s]) => { s.trim().split(/\s+/).forEach((tk, c) => { if(tk === LRN_I[i].tok && (c % (2 * d) !== d)) bad.push(nm + ' snare hors du 2/4 : ' + d + ':' + s); }); }); })));
+  [2, 3].forEach(lv => LRN_I.forEach((I, i) => LRN_X[lv][i].forEach((X, e) => { if(X.m.length <= LRN_X[1][i][e].m.length) bad.push(I.id + ':' + e + '@' + lv + ' pas de phrases ajoutées'); })));
+  return bad; }
 
 /* =====================================================================
    DÉFI AMIS — l'entrée « sans code » pour les potes beatboxers.
@@ -2494,9 +2617,12 @@ function draw(g, now){
   const t = performance.now(), dt = Math.min(.05, (t - (g.tPrev || t)) / 1000); g.tPrev = t;
   if(g.pitch && !g.pr){ const ms = B.notes.map(n => n.m); const lo = Math.min.apply(null, ms), hi = Math.max.apply(null, ms); g.pr = { lo, span:Math.max(7, hi - lo), mid:(lo + hi) / 2 }; }
   const pX = g.pitch ? (m => X0 + PW * ((m - g.pr.lo + 1.5) / (g.pr.span + 3))) : null, pW = g.pitch ? PW / (g.pr.span + 3) : 0;
+  // v48 : pistes utilisées + écart minimal entre 2 coups d'une même piste (pour dessiner des notes plus fines quand ça va vite)
+  if(g.minGap == null){ g.minGap = 99; g.laneSet = {}; g.lanes = 0; if(!g.pitch){ const by = {}; B.notes.forEach(n => { (by[n.lane] = by[n.lane] || []).push(n.beat); }); Object.keys(by).forEach(l => { g.laneSet[l] = 1; g.lanes++; const a = by[l].sort((x, y) => x - y); for(let q = 1; q < a.length; q++) if(a[q] - a[q - 1] > 1e-6) g.minGap = Math.min(g.minGap, a[q] - a[q - 1]); }); } }
+  const lonly = !!g.adv && !g.pitch && g.lanes >= 1, lused = l => !lonly || !!g.laneSet[l]; // écran épuré (Tableau 1 / Adventure) : on ne montre que les pistes utilisées
   // vie : détecte une perte pour l'animation du cœur
   if(g.lifePrev == null) g.lifePrev = J.life;
-  if(J.life < g.lifePrev - .01){ g.heartAt = t; g.heartIdx = Math.max(0, Math.min(4, Math.ceil(g.lifePrev / 20 - 1e-6) - 1)); g.shakeAt = t; g.hurtAt = t; g.shakeK = g.adv ? [0, .5, 1][g.adv.lv - 1] : 1; g.hurtK = g.adv ? [.3, .7, 1][g.adv.lv - 1] : 1; const hx = W / 2 - 3.5 * 28 + g.heartIdx * 28 + 14; spark(g, hx, lineY + 74, '#ff4d6d', 10, .8); }
+  if(J.life < g.lifePrev - .01){ g.heartAt = t; g.heartIdx = Math.max(0, Math.min(4, Math.ceil(g.lifePrev / 20 - 1e-6) - 1)); g.shakeAt = t; g.hurtAt = t; g.shakeK = g.adv ? [0, .5, 1][Math.min(3, g.adv.lv) - 1] : 1; g.hurtK = g.adv ? [.3, .7, 1][Math.min(3, g.adv.lv) - 1] : 1; const hx = W / 2 - 3.5 * 28 + g.heartIdx * 28 + 14; spark(g, hx, lineY + 74, '#ff4d6d', 10, .8); }
   g.lifePrev = J.life;
   const dying = g.dyingAt ? Math.min(1, (t - g.dyingAt) / 1200) : 0;
   const sk = g.shakeAt && t - g.shakeAt < 260 ? (1 - (t - g.shakeAt) / 260) * 7 * (g.shakeK == null ? 1 : g.shakeK) : 0;
@@ -2512,7 +2638,7 @@ function draw(g, now){
     for(let k = 0; k <= g.pr.span + 3; k++){ const x = X0 + PW * k / (g.pr.span + 3); ctx.strokeStyle = 'rgba(255,255,255,' + (k % 12 === 0 ? .2 : .07) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, topY - 10); ctx.lineTo(x, lineY + 56); ctx.stroke(); }
     ctx.fillStyle = '#8b6fd6'; ctx.fillRect(X0, topY - 10, PW, 3);
     ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.font = '900 11px ' + RF; ctx.textAlign = 'left'; ctx.fillText('◀ GRAVE', X0 + 6, topY + 10); ctx.textAlign = 'right'; ctx.fillText('AIGU ▶', X0 + PW - 6, topY + 10); }
-  else LORDER.forEach((l, i) => { const x = X0 + i * LW, fl = g.laneAt && g.laneAt[l] ? Math.max(0, 1 - (t - g.laneAt[l]) / 320) : 0;
+  else LORDER.forEach((l, i) => { if(!lused(l)) return; const x = X0 + i * LW, fl = g.laneAt && g.laneAt[l] ? Math.max(0, 1 - (t - g.laneAt[l]) / 320) : 0;
     const gr = ctx.createLinearGradient(0, topY - 10, 0, lineY + 40); gr.addColorStop(0, LC[l] + '10'); gr.addColorStop(1, LC[l] + (fl ? '55' : '30')); ctx.fillStyle = gr; ctx.fillRect(x, topY - 10, LW, H);
     if(fl){ ctx.fillStyle = (g.laneCol && g.laneCol[l] || '#fff'); ctx.globalAlpha = fl * .22; ctx.fillRect(x, topY - 10, LW, lineY - topY + 50); ctx.globalAlpha = 1; }
     ctx.fillStyle = LC[l]; ctx.globalAlpha = .95; ctx.fillRect(x + 2, topY - 10, LW - 4, 3); ctx.globalAlpha = 1;
@@ -2524,21 +2650,22 @@ function draw(g, now){
     if(t - g.fev < 1100){ const a = 1 - (t - g.fev) / 1100; ctx.save(); ctx.globalAlpha = a; ctx.translate(W / 2, lineY - 150 - (1 - a) * 20); ctx.font = '900 40px ' + RF; ctx.textAlign = 'center'; ctx.fillStyle = '#000'; ctx.fillText('🔥 FEVER !', 3, 3); ctx.fillStyle = '#ffe27a'; ctx.shadowColor = '#ff5e2e'; ctx.shadowBlur = 16; ctx.fillText('🔥 FEVER !', 0, 0); ctx.restore(); } } else g.fev = 0;
   // temps
   const k0 = Math.floor((now - g.T0) / spb) - 1, k1 = Math.ceil((now + LA - g.T0) / spb);
-  if(g.hasOff == null){ const fr = n => { const f = n.beat - Math.floor(n.beat + 1e-6); return f < .03 || f > .97 ? 0 : Math.abs(f - .5) < .03 ? 1 : 2; }; g.hasOff = B.notes.some(n => fr(n) === 1); g.hasSub = B.notes.some(n => fr(n) === 2); }
+  if(g.hasOff == null){ const fr = n => { const f = n.beat - Math.floor(n.beat + 1e-6); return f < .03 || f > .97 ? 0 : Math.abs(f - .5) < .03 ? 1 : (Math.abs(f - 1 / 3) < .03 || Math.abs(f - 2 / 3) < .03) ? 3 : 2; }; g.hasOff = B.notes.some(n => fr(n) === 1); g.hasSub = B.notes.some(n => fr(n) === 2); g.hasTri = B.notes.some(n => fr(n) === 3); }
   const pb = Math.abs(py(g.T0 + spb) - py(g.T0));
   for(let k = Math.max(0, k0); k <= k1; k++){ const y = py(g.T0 + k * spb);
     if(y >= topY - 10 && y <= H){ ctx.strokeStyle = k % 4 === 0 ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.1)'; ctx.lineWidth = k % 4 === 0 ? 2 : 1; ctx.beginPath(); ctx.moveTo(X0, y); ctx.lineTo(X0 + PW, y); ctx.stroke();
       ctx.save(); ctx.font = '900 ' + (k % 4 === 0 ? 15 : 12) + 'px ' + RF; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = k % 4 === 0 ? 'rgba(255,255,255,.85)' : 'rgba(255,255,255,.5)'; ctx.fillText(String(k % 4 + 1), X0 + 5, y - 9); ctx.restore(); }
     if(g.hasOff){ const yh = py(g.T0 + (k + .5) * spb); if(yh >= topY - 10 && yh <= H){ const bh = Math.max(10, Math.min(30, pb * .2)); ctx.save(); ctx.fillStyle = 'rgba(255,190,50,.16)'; ctx.fillRect(X0, yh - bh / 2, PW, bh); ctx.setLineDash([5, 6]); ctx.strokeStyle = 'rgba(255,205,90,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X0, yh); ctx.lineTo(X0 + PW, yh); ctx.stroke(); ctx.setLineDash([]); ctx.font = '900 13px ' + RF; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(255,205,90,.95)'; ctx.fillText('&', X0 + 5, yh - 8); ctx.restore(); } }
+    if(g.hasTri) [[1 / 3, '3'], [2 / 3, '3']].forEach(([q, lb]) => { const yq = py(g.T0 + (k + q) * spb); if(yq >= topY - 10 && yq <= H){ const bh = Math.max(6, Math.min(16, pb * .09)); ctx.save(); ctx.fillStyle = 'rgba(120,230,255,.12)'; ctx.fillRect(X0, yq - bh / 2, PW, bh); ctx.setLineDash([2, 5]); ctx.strokeStyle = 'rgba(130,235,255,.55)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X0, yq); ctx.lineTo(X0 + PW, yq); ctx.stroke(); ctx.setLineDash([]); if(pb > 70){ ctx.font = '900 11px ' + RF; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(130,235,255,.9)'; ctx.fillText(lb, X0 + 5, yq - 7); } ctx.restore(); } });
     if(g.hasSub) [[.25, 'e'], [.75, 'a']].forEach(([q, lb]) => { const yq = py(g.T0 + (k + q) * spb); if(yq >= topY - 10 && yq <= H){ const bh = Math.max(6, Math.min(18, pb * .1)); ctx.save(); ctx.fillStyle = 'rgba(255,120,190,.13)'; ctx.fillRect(X0, yq - bh / 2, PW, bh); ctx.setLineDash([2, 6]); ctx.strokeStyle = 'rgba(255,150,210,.5)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X0, yq); ctx.lineTo(X0 + PW, yq); ctx.stroke(); ctx.setLineDash([]); if(pb > 70){ ctx.font = '900 11px ' + RF; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(255,150,210,.9)'; ctx.fillText(lb, X0 + 5, yq - 7); } ctx.restore(); } }); }
   // ligne de frappe + pads
   ctx.save(); ctx.strokeStyle = elec ? '#bff6ff' : 'rgba(255,255,255,.9)'; ctx.lineWidth = elec ? 4 : 3; ctx.shadowColor = elec ? '#7fe9ff' : '#fff'; ctx.shadowBlur = elec ? 14 + 6 * Math.sin(t / 70) : 6; ctx.beginPath(); ctx.moveTo(X0, lineY); ctx.lineTo(X0 + PW, lineY); ctx.stroke(); ctx.restore();
-  if(!g.pitch) LORDER.forEach((l, i) => { const cx = X0 + i * LW + LW / 2, fl = g.laneAt && g.laneAt[l] ? Math.max(0, 1 - (t - g.laneAt[l]) / 260) : 0;
+  if(!g.pitch) LORDER.forEach((l, i) => { if(!lused(l)) return; const cx = X0 + i * LW + LW / 2, fl = g.laneAt && g.laneAt[l] ? Math.max(0, 1 - (t - g.laneAt[l]) / 260) : 0;
     ctx.save(); ctx.beginPath(); ctx.arc(cx, lineY, 25 + 4 * fl, 0, 7); ctx.fillStyle = fl ? (g.laneCol && g.laneCol[l] || '#fff') : LC[l] + '33'; ctx.globalAlpha = fl ? .35 + .55 * fl : 1; ctx.shadowColor = LC[l]; ctx.shadowBlur = 8 + 18 * fl; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = LC[l]; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
-    ctx.fillStyle = LC[l]; ctx.font = '900 13px ' + RF; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(LLABEL[l], cx, lineY + 46); });
+    ctx.fillStyle = LC[l]; ctx.font = '900 13px ' + RF; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; if(!lonly || g.lanes > 1) ctx.fillText(LLABEL[l], cx, lineY + 46); });
   // notes
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, lineY + 56); ctx.clip();
-  const nh = 36, tNow = t; ctx.font = '900 17px ' + RF; ctx.textBaseline = 'middle';
+  const nh = Math.max(9, Math.min(36, pb * g.minGap - 9)), ins = nh >= 20 ? 4 : 2, tNow = t; ctx.font = '900 17px ' + RF; ctx.textBaseline = 'middle';
   for(let j = B.notes.length - 1; j >= 0; j--){ const n = B.notes[j], y = py(n.tc); if(g.pitch){ const yTop = py(n.tc + n.durB * spb); if(y < topY - 30 && yTop < topY - 30) continue; if(yTop > H + 40) continue;
       n.px = pX(n.m); const w = Math.max(18, pW * .9), x = n.px - w / 2, act = n.state === 0 && now >= n.tc && now <= n.tc + n.durB * spb + .1;
       let fill = '#f3fafe', edge = '#8b6fd6', al = 1; if(n.state !== 0){ const age = n.fxAt ? (tNow - n.fxAt) / 1000 : 0; al = Math.max(0, 1 - Math.max(0, age - .45) / .6); if(al <= 0) continue; fill = n.state === 1 ? (n.grade === 'perfect' ? V_OK : V_GOOD) : V_BAD; edge = '#fff'; }
@@ -2556,9 +2683,10 @@ function draw(g, now){
       fill = n.state === 1 ? (n.grade === 'perfect' ? V_OK : V_GOOD) : n.state === 2 ? V_BAD : V_WRONG; glow = fill; gb = 18; edge = '#fff'; bw = 3; txt = (n.state === 1 && n.grade === 'good') ? '#17324a' : '#fff'; }
     ctx.globalAlpha = al; ctx.shadowColor = glow; ctx.shadowBlur = gb;
     ctx.fillStyle = '#0b0620'; pxr(cx - w / 2 - 3, y - nh / 2 - 3, w + 6, nh + 6, 6); ctx.fill(); ctx.fillStyle = edge; pxr(cx - w / 2, y - nh / 2, w, nh, 5); ctx.fill(); ctx.shadowBlur = 0;
-    ctx.fillStyle = fill; pxr(cx - w / 2 + 4, y - nh / 2 + 4, w - 8, nh - 8, 3); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(cx - w / 2 + 8, y - nh / 2 + 6, w - 16, 3); ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(cx - w / 2 + 8, y + nh / 2 - 9, w - 16, 3);
-    ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.fillText(n.tok, cx, y + 1);
+    ctx.fillStyle = fill; pxr(cx - w / 2 + ins, y - nh / 2 + ins, w - 2 * ins, nh - 2 * ins, 3); ctx.fill();
+    if(nh >= 24){ ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(cx - w / 2 + 8, y - nh / 2 + 6, w - 16, 3); ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(cx - w / 2 + 8, y + nh / 2 - 9, w - 16, 3); }
+    if(nh >= 22){ ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.fillText(n.tok, cx, y + 1); } // notes serrées (triples croches…) : pas de lettre, la couleur de la piste suffit
+    else if(nh >= 14){ ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.font = '900 ' + Math.max(9, Math.round(nh * .62)) + 'px ' + RF; ctx.fillText(n.tok, cx, y + 1); ctx.font = '900 17px ' + RF; }
     ctx.globalAlpha = 1; }
   ctx.restore();
   if(g.pitch && g.dbg){ const d = g.dbg, nm = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']; const lab = d.m != null && d.conf < .36 ? nm[((Math.round(d.m) % 12) + 12) % 12] + ' ' + Math.round(d.f) + 'Hz' : (d.rms > 0.001 ? 'voix ? ' : '…'); ctx.font = '900 10px ' + RF; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.textAlign = 'right'; ctx.fillText('micro ' + lab + ' · ' + Math.round(Math.min(1, d.rms * 20) * 100) + '%', W - 8, topY - 6); ctx.textAlign = 'left'; }
@@ -2694,7 +2822,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v47c', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v48', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -2752,7 +2880,7 @@ function renderEnd(){
   const perfectRun = why !== 'dead' && cn.miss + cn.wrong + cn.extra === 0 && cn.perfect + cn.good > 0, allPerfect = perfectRun && cn.good === 0;
   if(perfectRun && !LASTRES.conf){ LASTRES.conf = 1; later(() => confetti(allPerfect), 250); }
   let h = (perfectRun ? `<div class="res ok" style="text-align:center;font-size:1.25rem;font-weight:900;background:linear-gradient(135deg,#fff3b0,#ffd36b);color:#7a4a00;border:0">${allPerfect ? '🏆 100 % PARFAIT !' : '🌟 100 % — AUCUNE ERREUR !'}<div class="small" style="font-weight:700">${allPerfect ? 'Chaque son pile dans le temps. Légendaire.' : 'Tous les sons joués. Vise maintenant que tout soit « Parfait » !'}</div></div>` : '') + `<div class="row" style="align-items:flex-end"><div><div class="pctbig">${pct}%</div><div class="small muted">précision (jugement en direct)</div></div><span class="sp"></span><div style="text-align:right"><div class="grade">${grade}</div><div style="font-size:1.7rem;letter-spacing:2px;color:#ffb02e;line-height:1">${'★'.repeat(stars)}<span style="color:#cbd9e3">${'★'.repeat(3 - stars)}</span></div></div></div>` + (LASTRES.unlocked ? '<div class="res ok" style="font-weight:900;text-align:center">🔓 Niveau suivant débloqué !</div>' : '');
-  if(g.adv) h = advBanner(g, stars0, why) + h;
+  const ban = g.adv ? advBanner(g, stars0, why) : '';
   if(!hasA && why !== 'dead' && !g.pitch) h += `<div class="res warn">L'analyse complète n'a pas pu placer ta prise (${err || 'trop peu de sons détectés'}). Je montre le jugement en direct.</div>`;
   h += `<div class="kpis"><div class="kpi"><b>${J.score}</b>score</div><div class="kpi"><b>${J.maxCombo}</b>combo max</div><div class="kpi"><b>${cn.perfect}</b>parfait</div><div class="kpi"><b>${cn.good}</b>bien</div></div>
     <div class="kpis"><div class="kpi"><b>${cn.miss}</b>ratés</div><div class="kpi"><b>${cn.extra}</b>en trop</div><div class="kpi"><b>${hasA ? a.conf : cn.wrong}</b>sons confondus</div><div class="kpi"><b>${hasA ? '±' + a.reg : '–'}</b>régularité ms</div></div>`;
@@ -2777,9 +2905,12 @@ function renderEnd(){
     if(bad.length) h += '<h2 style="margin:12px 0 2px">Notes à travailler</h2><ul class="l">' + bad.sort((p, q) => q.r.m - p.r.m).slice(0, 5).map(z => `<li>Case ${z.i + 1} (<b>${z.c.tok}</b>) : ratée ${z.r.m} fois sur ${z.r.h + z.r.m}</li>`).join('') + '</ul>';
     if(conf.length) h += '<h2 style="margin:12px 0 2px">Sons confondus</h2><ul class="l">' + conf.map(z => `<li>Case ${z.c.i + 1} (<b>${z.c.tok}</b>, ${LNAME[HERO.laneOf(z.c.tok)]}) : entendu plutôt « ${LNAME[z.r.fh] || '?'} » ${z.r.f} fois</li>`).join('') + '</ul><div class="small muted">Fiable entre familles différentes (P / K / Ts), pas entre sons proches (Pch / Pf, K / K~).</div>'; }
   h += `<div class="row" style="margin-top:12px"><button id="bCopy">📋 Copier le résultat</button><button id="bWav">💾 Prise (.wav)</button></div><div id="sendSt" class="res" style="margin-top:8px;display:none"></div><div class="row" id="sendRow" style="display:none;margin-top:6px"><button id="bSend" class="b-cyan">📤 Envoyer cette partie pour analyse</button></div>`;
-  $('#endBody').innerHTML = h;
+  if(g.adv && g.adv.ami == null){ // v48 : Adventure / Tableau 1 immersifs → l'élève ne voit que son résultat ; le détail technique (grille, sons confondus, envoi…) est replié
+    $('#endBody').innerHTML = ban + `<div style="text-align:center;margin:4px 0 8px" class="small muted">${pct} % dans le temps</div><div class="row" style="justify-content:center"><button id="bDet" class="small" style="padding:4px 12px;opacity:.75">🔍 Détails de la partie</button></div><div id="endDet" style="display:none">${h}</div>`;
+    $('#bDet').onclick = () => { const d = $('#endDet'), on = d.style.display === 'none'; d.style.display = on ? '' : 'none'; $('#bDet').textContent = on ? '▲ Masquer les détails' : '🔍 Détails de la partie'; }; }
+  else $('#endBody').innerHTML = ban + h;
   { const i = g.adv ? g.adv.wi : -1; $('#bMenu').textContent = g.adv ? (g.adv.ami != null ? '🏠 Défi' : '🗺 Carte') : 'Menu'; const nx = $('#bNext'); if(g.adv && g.adv.ami != null){ nx.style.display = why !== 'dead' && g.adv.ami + 1 < amiSteps().length ? '' : 'none'; nx.textContent = 'Étape suivante ▶'; } else if(g.adv && g.adv.lrn){ nx.style.display = why !== 'dead' && (LASTRES.advRes ? lrnNextOf(g.adv) : null) ? '' : 'none'; nx.textContent = 'Exercice suivant ▶'; } else { nx.style.display = g.adv && i + 1 < ADV_W.length && advOpen(i + 1, g.adv.lv) && why !== 'dead' ? '' : 'none'; if(g.adv) nx.textContent = 'Lieu suivant ▶'; } }
-  if(!LASTRES.arc && !amiOn()){ LASTRES.arc = 1; later(() => arcade(LASTRES), perfectRun ? 2600 : 900); }
+  if(!LASTRES.arc && !amiOn() && !g.adv){/* v48 : pas de tableau de scores Hero dans le Tableau 1 / l'Adventure (immersion) */ LASTRES.arc = 1; later(() => arcade(LASTRES), perfectRun ? 2600 : 900); }
   { const R = LASTRES, auto = !!LS.get('bbx-hero-send', false) || amiOn();
     if(R.stHtml){ $('#sendSt').style.display = ''; sendMsg(R, R.stHtml, R.stCls); }
     else if(auto && !R.sentOnce){ R.sentOnce = 1; $('#sendSt').style.display = ''; sendTake(); }
@@ -2818,7 +2949,7 @@ async function admLoad(){ const B = $('#admBody'); B.innerHTML = '<p class="smal
 $('#admMenu').onclick = () => { renderHome(); show('home'); };
 $('#bPlay').onclick = () => { ADV = null; startGame(); };
 $('#bAgain').onclick = () => { const a = LASTRES && LASTRES.g.adv; show('home'); ADV = a || null; startGame(); };
-$('#bNext').onclick = () => { const a = LASTRES.g.adv; if(a.ami != null){ if(a.ami + 1 >= amiSteps().length){ amiShow(); return; } amiLaunch(a.ami + 1); return; } show('home'); if(a.lrn){ const n = lrnNextOf(a); if(!n){ lrnShow(a.isl); return; } ADV = lrnBuild(n.i, n.e); } else ADV = advBuild(a.wi + 1, a.lv); startGame(); };
+$('#bNext').onclick = () => { const a = LASTRES.g.adv; if(a.ami != null){ if(a.ami + 1 >= amiSteps().length){ amiShow(); return; } amiLaunch(a.ami + 1); return; } show('home'); if(a.lrn){ const n = lrnNextOf(a); if(!n){ lrnShow(a.isl); return; } ADV = lrnBuild(n.i, n.e, a.lvl || undefined); } else ADV = advBuild(a.wi + 1, a.lv); startGame(); };
 $('#bMenu').onclick = () => { const a = LASTRES && LASTRES.g.adv; if(a && a.ami != null){ amiShow(); } else if(a && a.lrn){ lrnShow(a.isl); } else if(a){ ADV_LV = a.lv; advShow(a.wi); } else { renderHome(); show('home'); } };
 advInitUI(); lrnInit();
 renderHome();
