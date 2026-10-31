@@ -1893,7 +1893,7 @@ function amiSnd(i){
     <div class="timebar" id="amiBar" style="display:none;margin-top:8px"><i></i></div><div id="amiMsg" style="margin-top:8px"></div>
     <div class="row" style="margin-top:10px"><button id="amiBackH">⌂ Retour</button><button id="amiSk">Passer</button><span class="sp"></span><button class="b-pink" id="amiOk" disabled>Suivant →</button></div></div>`;
   $('#amiBackH').onclick = amiHub; $('#amiHear').onclick = () => lrnHear(tok); $('#amiSk').onclick = () => amiSnd(i + 1);
-  $('#amiOk').onclick = () => { if(take){ const a = [{ kind:'snd', tok, n:take.n }, take.x, take.sr, { style:'ami-snd', niv:0, bpm:0, pat:[tok] }]; AMI.snd[tok] = 1; amiTouchDay(); amiSave(); amiPush.apply(null, a).then(ok => { if(!ok) AMI_Q.push(a); }); } amiSnd(i + 1); };
+  $('#amiOk').onclick = () => { if(take){ const a = [{ kind:'snd', tok, n:take.n }, take.x, take.sr, { style:'ami-snd', niv:0, bpm:0, pat:[tok], iso:true, onsets:take.sv }]; AMI.snd[tok] = 1; amiTouchDay(); amiSave(); amiPush.apply(null, a).then(ok => { if(!ok) AMI_Q.push(a); }); } amiSnd(i + 1); };
   $('#amiRec').onclick = async () => {
     const s0 = SES; $('#amiRec').disabled = true; $('#amiHear').disabled = true; $('#amiOk').disabled = true; const bar = $('#amiBar'); bar.style.display = ''; bar.firstElementChild.style.transition = 'none'; bar.firstElementChild.style.width = '0%';
     $('#amiMsg').innerHTML = `<div class="res">À toi ! Joue « ${escH(tok)} » 4 fois, à ton rythme…</div>`;
@@ -1901,7 +1901,8 @@ function amiSnd(i){
       await sleep(6000); const r = rec.stop(); if(s0 !== SES) return;
       let ons = RY.onsets(r.x, r.sr); if(ons.length < 2) ons = RY.onsets(r.x, r.sr, { sens:.03, dynDb:50, dynDb2:65 }); const raw = ons.length, mx = Math.max.apply(null, ons.map(z => z.db).concat([-99])); ons = ons.filter(z => z.db == null || z.db >= mx - 28); const mg = []; ons.forEach(z => { if(!mg.length || z.t - mg[mg.length - 1] > .2) mg.push(z.t); }); // on garde les attaques nettes et on fusionne les sons en 2 parties (K~, Pch…) : un son = un coup
       const n = mg.length, db = Math.round(20 * Math.log10(r.peak + 1e-9));
-      take = n >= 2 ? { x:r.x, sr:r.sr, n } : null;
+      let sv = []; try{ sv = mg.slice(0, 12).map(t => ({ t:+t.toFixed(3), k:tok, v:'hit', sv:HERO.soundVec(r.x, r.sr, Math.round(t * r.sr)) })); }catch(e){} // empreintes de chaque coup, étiquetées avec le son demandé : sert à entraîner la reconnaissance des sons
+      take = n >= 2 ? { x:r.x, sr:r.sr, n, sv } : null;
       $('#amiMsg').innerHTML = n >= 3 && n <= 8 ? `<div class="res ok">✅ J'ai entendu ${n} coups.</div>` : n > 8 ? `<div class="res warn">J'ai entendu beaucoup de bruit (≈ ${n} coups). Pas grave : ton enregistrement est gardé, tu peux continuer. Si tu veux, refais-le en jouant 4 sons nets, puis silence.</div>` : n >= 2 ? `<div class="res warn">J'ai entendu ${n} coups (vise 4). Tu peux refaire, ou continuer.</div>` : `<div class="res no">Je n'ai presque rien entendu (niveau ${db} dB). Rapproche le micro de ta bouche (5-10 cm, sur le côté) et refais.</div>`;
       $('#amiOk').disabled = !take;
     }catch(e){ if(s0 === SES) $('#amiMsg').innerHTML = '<div class="res no">Micro indisponible : ' + escH(e.message || e) + '</div>'; }
@@ -2693,7 +2694,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v47b', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v47c', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
