@@ -141,7 +141,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 49 · 1er nov. 2026 · Tableau 1 en planètes animées + décors par planète · Défi amis</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 50 · 2 nov. 2026 · planètes plus grandes, décors corrigés · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
@@ -1411,7 +1411,7 @@ Object.assign(ADV_SCENE, {
     R(0, hz, w, h - hz, '#1f94cc'); for(let y = hz + 2; y < h; y += 3) for(let x = ((y * 7) % 13) + Math.floor(t * 5) % 13 - 13; x < w; x += 13) R(x, y, 4, 1, y % 6 ? '#3aa8dc' : '#9ee6ff');
     [[.18, 11, 5], [.82, 9, 4]].forEach(([fx, rx, ry], s) => { const x = Math.round(w * fx), y = hz + 2; for(let yy = -ry; yy <= 2; yy++){ const ww = Math.round(rx * Math.sqrt(Math.max(0, 1 - (yy / ry) * (yy / ry)))); R(x - ww, y + yy, ww * 2, 1, yy < 0 ? '#3fb86a' : '#f1de9a'); }
       for(let j = 0; j < 12; j++) R(x + (j > 9 ? 1 : 0), y - ry - j, 1, 1, '#7a5030'); for(const [dx, dy] of [[-4, 0], [-3, -1], [-2, -2], [-1, -1], [0, 0], [2, -1], [3, -2], [4, -1], [5, 0], [1, -2]]) R(x + dx - 1, y - ry - 12 + dy + Math.floor(Math.sin(t * 2 + s) * 1), 2, 1, '#2f9a58'); });
-    const fx = Math.round(w * .82) + 8, fy = hz - 12; R(fx, fy - 12, 1, 14, '#7a5030'); for(let j = 0; j < 5; j++) for(let i = 0; i < 6 - j; i++) R(fx + 1 + i, fy - 12 + j + Math.round(Math.sin(t * 6 - i * .9)), 1, 1, j < 3 ? '#f04646' : '#be283c');
+    const fx = Math.round(w * .82) + 6, fy = hz - 1; R(fx, fy - 12, 1, 14, '#7a5030'); for(let j = 0; j < 5; j++) for(let i = 0; i < 6 - j; i++) R(fx + 1 + i, fy - 12 + j + Math.round(Math.sin(t * 6 - i * .9)), 1, 1, j < 3 ? '#f04646' : '#be283c');
     pCl(R, ((t * 2.4 + 10) % (w + 30)) - 12, h * .2, 1); pCl(R, ((t * 1.6 + 60) % (w + 30)) - 12, h * .32, 1); pCl(R, ((t * 3 + 40) % (w + 30)) - 12, h * .08, 1);
     pBird(R, w * .3 + Math.sin(t * .7) * 8, h * .27 + Math.sin(t * 1.3) * 2, t, 0, '#1c3a6a'); pBird(R, w * .55 + Math.sin(t * .6 + 2) * 8, h * .18 + Math.sin(t * 1.1) * 2, t, 1, '#1c3a6a'); },
   /* K — désert : dunes, ruines de château, cyclone gris */
@@ -1437,7 +1437,7 @@ Object.assign(ADV_SCENE, {
   pl_Pch(c, w, h, t){ const R = sR(c), C = sC(c), hz = Math.round(h * .62); sSky(c, w, h, '#17353a', '#6ab49a', .62); sStars(c, w, h, t, 14, '#e8fff4', .3);
     [[.3, 40, 24], [.68, 56, 30], [.92, 34, 20]].forEach(([fx, hh, hw]) => { const px = Math.round(w * fx); for(let y = 0; y < hh; y++){ const ww = hw * (1 - y / hh); R(px - ww, hz - y, ww * 2, 1, y > hh * .66 ? '#f2f6fb' : (y % 5 < 2 ? '#7a8aa4' : '#667690')); } });
     R(0, hz, w, h - hz, '#1d4a3e'); for(let x = 0; x < w; x += 2){ const hh = 12 + sRn(x) * 10; for(let j = 0; j < hh; j++){ const ww = Math.max(0, 4 - j * .35); R(x - ww / 2, hz - j + 4, ww + 1, 1, j % 4 ? '#1a5a40' : '#237052'); } }
-    const lx = Math.round(w * .5); R(lx - 12, hz + 8, 24, 8, '#8a5e38'); for(let j = 0; j < 6; j++) R(lx - 14 + j * 1.5, hz + 2 + j, 28 - j * 3, 1, j % 2 ? '#5a4640' : '#6a5650'); R(lx - 2, hz + 11, 5, 5, '#2a1a14'); R(lx - 12, hz - 2, 2, 5, '#e8c048'); R(lx + 10, hz - 2, 2, 5, '#e8c048'); pSmoke(c, R, lx, hz - 1, t, 4, '#dfe8ee');
+    const lx = Math.round(w * .5); R(lx - 12, hz + 8, 24, 8, '#8a5e38'); for(let j = 0; j < 6; j++){ const m = 5 - j; R(lx - 14 + m * 1.5, hz + 2 + j, 28 - m * 3, 1, j % 2 ? '#5a4640' : '#6a5650'); } R(lx - 2, hz + 11, 5, 5, '#2a1a14'); R(lx - 6, hz - 3, 2, 5, '#e8c048'); R(lx + 5, hz - 3, 2, 5, '#e8c048'); pSmoke(c, R, lx, hz - 1, t, 4, '#dfe8ee');
     for(let y = hz + 16; y < h; y++){ const x = w * .55 + Math.sin(y / 12) * 8 + (y - hz) * .15; R(x - 3, y, 6, 1, '#68bce4'); if((y + Math.floor(t * 6)) % 9 < 2) R(x - 1, y, 2, 1, '#d4f2ff'); }
     for(let k = 0; k < 7; k++){ const px = [.08, .2, .86, .94, .12, .9, .02][k] * w, py = h - 10 - (k % 3) * 18; for(let j = 0; j < 12; j++){ const ww = 1 + j * .55; R(px - ww / 2, py - 14 + j, ww + 1, 1, j % 3 ? '#164a34' : '#1e6046'); } R(px, py - 2, 1, 4, '#3a2418'); }
     sFall(c, w, h, t, 40, '#fff', 12, 5, 1); },
@@ -1445,7 +1445,7 @@ Object.assign(ADV_SCENE, {
   pl_L(c, w, h, t){ const R = sR(c), C = sC(c), hz = Math.round(h * .6); sSky(c, w, h, '#7fcaf6', '#e6f8d0', .6);
     for(let x = 0; x < w; x++){ R(x, hz - 4 + Math.sin(x / 18) * 3, 1, 30, '#9cc24c'); R(x, hz + 10 + Math.sin(x / 11 + 1) * 3, 1, 50, '#86b23c'); }
     R(0, hz + 22, w, h, '#74a232'); for(let x = 0; x < w; x += 3) R(x + Math.sin(t + x) * 0, hz + 22 + Math.sin(x / 4) * 1.5, 3, 2, '#8cba44');
-    const tx = Math.round(w * .74); for(let j = 0; j < 60; j++){ const hw = j > 52 ? 7 : 4; R(tx - hw, hz - j + 4, hw * 2, 1, j % 6 < 5 ? '#d8dcee' : '#aab0d0'); if(j % 15 === 8) R(tx - 1, hz - j + 4, 2, 3, '#403a60'); } for(let j = 0; j < 12; j++){ const hw = 6 - j * .5; R(tx - hw, hz - 64 - j + 4, hw * 2, 1, j % 2 ? '#4f8ad0' : '#3f78c0'); } R(tx, hz - 84, 1, 8, '#7a6450'); for(let i = 0; i < 6; i++) R(tx + 1 + i, hz - 84 + (i / 3 | 0) + Math.round(Math.sin(t * 6 - i * .8)), 1, 1, '#e64646');
+    const tx = Math.round(w * .74); for(let j = 0; j < 60; j++){ const hw = j > 52 ? 7 : 4; R(tx - hw, hz - j + 4, hw * 2, 1, j % 6 < 5 ? '#d8dcee' : '#aab0d0'); if(j % 15 === 8) R(tx - 1, hz - j + 4, 2, 3, '#403a60'); } for(let j = 0; j < 12; j++){ const hw = 6 - j * .5; R(tx - hw, hz - 64 - j + 4, hw * 2, 1, j % 2 ? '#4f8ad0' : '#3f78c0'); } R(tx, hz - 82, 1, 12, '#7a6450'); for(let i = 0; i < 6; i++) R(tx + 1 + i, hz - 82 + (i / 3 | 0) + Math.round(Math.sin(t * 6 - i * .8)), 1, 1, '#e64646');
     const hs = (x, y, fl, b, s, ph) => { const st = Math.floor(t * 5 + ph) % 4, gz = Math.floor(t * .5 + ph) % 3 === 0; [[0, 0, 8, 3], [7, -2 + (gz ? 3 : 0), 3, 3]].forEach(([dx, dy, ww, hh]) => R(x + (fl ? -dx - ww : dx), y + dy, ww, hh, b)); [[1, 3, st === 1], [3, 3, st === 3], [6, 3, st === 1], [8, 3, st === 3]].forEach(([dx, dy, up]) => R(x + (fl ? -dx : dx), y + dy, 1, up ? 1 : 3, s)); };
     hs(w * .2, hz + 28, 0, '#9e663e', '#704828', 0); hs(w * .45, hz + 38, 1, '#f4f0e8', '#bebabe', 1.5); hs(w * .12, hz + 52, 1, '#604030', '#42301f', 3);
     for(let k = 0; k < 3; k++){ const px = [.05, .93, .5][k] * w, py = hz + 18 + k * 22; R(px, py - 4, 2, 5, '#704c30'); C(px + 1, py - 8, 5, '#4ca84c'); C(px - 2, py - 6, 3, '#2c8040'); }
@@ -1454,7 +1454,7 @@ Object.assign(ADV_SCENE, {
   pl_PTK(c, w, h, t){ const R = sR(c), C = sC(c), hz = Math.round(h * .66); sSky(c, w, h, '#2a1c5a', '#c8b8f0', .66); sStars(c, w, h, t, 20, '#fff', .35); C(w * .84, h * .12, 6, '#fff7d8');
     for(let x = 0; x < w; x++) R(x, hz - 6 + Math.sin(x / 12) * 3, 1, 8, '#6a6aa0'); R(0, hz, w, h - hz, '#7a7aa6'); for(let x = 0; x < w; x += 3) R(x, hz + Math.sin(x / 5) * 1.5, 3, 2, '#9494bc');
     const cx = Math.round(w * .5); R(cx - 16, hz - 32, 32, 34, '#d8dcee'); R(cx - 16, hz - 32, 32, 2, '#aab0d0'); for(let k = 0; k < 5; k++) R(cx - 16 + k * 7, hz - 36, 4, 4, '#d8dcee'); for(let y = hz - 30; y < hz; y += 4) R(cx - 16, y, 32, 1, '#b4bad4');
-    [-22, 16].forEach(dx => { R(cx + dx, hz - 52, 8, 54, '#e4e7f4'); R(cx + dx + 6, hz - 52, 2, 54, '#aab0d0'); for(let j = 0; j < 10; j++){ const hw = 6 - j * .55; R(cx + dx + 4 - hw, hz - 62 + j, hw * 2, 1, j % 2 ? '#f86868' : '#d63a48'); } R(cx + dx + 4, hz - 72, 1, 10, '#8a8aa0'); for(let i = 0; i < 4; i++) R(cx + dx + 5 + i, hz - 72 + (i / 2 | 0) + Math.round(Math.sin(t * 6 - i * .9 + dx)), 1, 1, '#ffe27a'); R(cx + dx + 2, hz - 44, 3, 5, '#3a3a5a'); });
+    [-22, 16].forEach(dx => { R(cx + dx, hz - 52, 8, 54, '#e4e7f4'); R(cx + dx + 6, hz - 52, 2, 54, '#aab0d0'); for(let j = 0; j < 10; j++){ const hw = .6 + j * .55; R(cx + dx + 4 - hw, hz - 62 + j, hw * 2, 1, j % 2 ? '#f86868' : '#d63a48'); } R(cx + dx + 4, hz - 72, 1, 10, '#8a8aa0'); for(let i = 0; i < 4; i++) R(cx + dx + 5 + i, hz - 72 + (i / 2 | 0) + Math.round(Math.sin(t * 6 - i * .9 + dx)), 1, 1, '#ffe27a'); R(cx + dx + 2, hz - 44, 3, 5, '#3a3a5a'); });
     R(cx - 3, hz - 10, 7, 12, '#2e2250'); for(let k = 0; k < 4; k++) R(cx - 10 + k * 5, hz - 24, 2, 3, Math.floor(t * 1.5 + k) % 3 ? '#ffe27a' : '#6a5a8a');
     for(let y = hz + 4; y < h; y++){ const u = (y - hz) / (h - hz), x = cx + Math.sin(y / 14) * (6 + u * 18), ww = 3 + u * 14; R(x - ww / 2, y, ww, 1, '#f2e2bc'); R(x - ww / 2, y, 1, 1, '#c8a878'); R(x + ww / 2 - 1, y, 1, 1, '#c8a878'); }
     for(let i = 0; i < 10; i++){ const x = [.06, .16, .9, .82, .96][i % 5] * w, y = hz + 8 + (i % 3) * 20; if((Math.floor(t * 1.5) + i) % 3) R(x, y, 1, 1, '#fff'); R(x, y + 1, 1, 1, '#ffe27a'); }
@@ -1729,8 +1729,8 @@ LRN_PL.forEach((P, pi) => { P.pi = pi; P.i = P.isl.map(id => LRN_I.findIndex(x =
 const LRN_PN = LRN_PL.length, LRN_ORD = [].concat.apply([], LRN_PL.map(P => P.i)), lrnPlOf = i => LRN_PL.findIndex(P => P.i.indexOf(i) >= 0);
 LRN_I.forEach(I => { const sc = PLN_SCENE[I.id]; ADV_SCENE[I.id] = ADV_SCENE[sc]; ADV_FRAME[I.id] = ADV_FRAME[sc]; });
 /* carte : planètes en zigzag dans le ciel, la dernière (« ? ») mène au Tableau 2 · caméra verticale (glisser / molette) · 224 px de large, comme la carte dessinée */
-const LRW = 224, LRPS = 106, LRWH = 320 + LRN_PN * LRPS,
-  LRNN = Array.from({ length:LRN_PN + 1 }, (_, i) => { const x = i % 2 ? 152 : 72, y = LRWH - 235 - i * LRPS; return { x, y, ax:x < 112 ? x + 40 : x - 40, ay:y + 22 }; });
+const LRW = 192, LRPS = 106, LRWH = 320 + LRN_PN * LRPS,
+  LRNN = Array.from({ length:LRN_PN + 1 }, (_, i) => { const x = i % 2 ? 130 : 62, y = LRWH - 235 - i * LRPS; return { x, y, ax:x < 96 ? x + 38 : x - 38, ay:y + 22 }; });
 
 const lrnData = () => { const d = LS.get(LRN_LS, null); return d && d.s ? d : { s:{}, b:{} }; };
 /* v48 : 3 niveaux (+ Hardcore). Niveau 1 = clés d'avant (« lp:0 »), niveaux suivants « lp:0@2 »… */
@@ -1904,7 +1904,7 @@ function lrnLoop(now){ const A = LR; if(!$('#lrn').classList.contains('on')){ A.
   lrnDraw((now - A.t0) / 1000); A.raf = requestAnimationFrame(lrnLoop); }
 function lrnDraw(t){
   const A = LR, X = A.x, W = LRW, H = A.hv, cam = Math.round(A.cam), R = (x, y, w, h, c) => { X.fillStyle = c; X.fillRect(Math.round(x), Math.round(y - cam), w, h); };
-  const pat = (rows, x, y, col, k) => rows.forEach((row, j) => { for(let i = 0; i < row.length; i++){ const ch = row[i]; if(ch !== '.' && ch !== '0') R(x + i * (k || 1), y + j * (k || 1), k || 1, k || 1, typeof col === 'function' ? col(ch) : col); } });
+  const pat = (rows, x, y, col, k) => { k = k || 1; rows.forEach((row, j) => { const y0 = Math.round(y + j * k), hh = Math.round(y + (j + 1) * k) - y0; for(let i = 0; i < row.length; i++){ const ch = row[i]; if(ch !== '.' && ch !== '0'){ const x0 = Math.round(x + i * k); R(x0, y0, Math.round(x + (i + 1) * k) - x0, hh, typeof col === 'function' ? col(ch) : col); } } }); };
   const vis = n => n.y > cam - 70 && n.y < cam + H + 70;
   if(!LRSKY) LRSKY = lrnSkyBuild(); X.drawImage(LRSKY, 0, -cam);
   for(let k = 0; k < 9; k++){ const cx = 112 + Math.sin(t * .25 + k * 1.9) * 12 + (k % 2 ? 78 : -78) * (.6 + k % 3 * .25), cy = 40 + k * 100 + (k % 3) * 14; if(cy < cam - 20 || cy > cam + H + 20) continue; R(cx - 14, cy + 4, 28, 6, '#f2f8ff'); R(cx - 9, cy, 18, 6, '#fff'); R(cx - 4, cy - 3, 9, 5, '#fff'); R(cx - 14, cy + 9, 28, 2, '#d4e6f8'); }
@@ -1916,8 +1916,8 @@ function lrnDraw(t){
     if(sel){ const rr = 38 + Math.floor(t * 4) % 2; for(let a = 0; a < 28; a += 2) R(n.x + Math.cos(a / 28 * 6.283 + t * .6) * rr - 1, n.y + Math.sin(a / 28 * 6.283 + t * .6) * rr - 1, 2, 2, '#fff'); }
     if(!open){ R(n.x - 7, n.y - 3, 14, 11, '#0d2033'); R(n.x - 6, n.y - 2, 12, 9, '#c9d1e8'); R(n.x - 5, n.y - 11, 3, 9, '#0d2033'); R(n.x + 2, n.y - 11, 3, 9, '#0d2033'); R(n.x - 3, n.y - 13, 6, 3, '#0d2033'); R(n.x - 4, n.y - 10, 1, 7, '#9aa5c0'); R(n.x + 3, n.y - 10, 1, 7, '#9aa5c0'); R(n.x - 2, n.y - 12, 4, 1, '#9aa5c0'); R(n.x - 1, n.y + 1, 2, 3, '#0d2033'); }
     if(!last){ const kk = lrnPlStars(i) / lrnPlMax(i) * 4; for(let s = 0; s < 4; s++){ const full = kk >= s + 1 ? 2 : kk > s ? 1 : 0, sx = n.x - 14 + s * 7, sy = n.y + 40; pat(AV_STAR, sx + 1, sy + 1, '#0d2033'); pat(AV_STAR, sx, sy, full === 2 ? '#ffd23f' : full === 1 ? '#c9a73a' : '#5a78a8'); } if(done) pat(AV_STAR, n.x + 17, n.y + 40, '#7be28f'); } });
-  { const walk = A.walk, f = walk ? Math.floor(performance.now() / 130) % 2 : 0, bob = walk ? 0 : Math.floor(t * 3) % 2, x = Math.round(A.hx) - 11, y = Math.round(A.hy) - 30 + bob * 2;
-    R(x + 2, y + 30 - bob * 2, 18, 3, 'rgba(0,0,0,.25)'); pat(AV_HERO, x, y, ch => AV_COL[ch] || '#fff', 2); pat(AV_LEG[f], x, y + 22, ch => AV_COL[ch] || '#fff', 2); }
+  { const walk = A.walk, f = walk ? Math.floor(performance.now() / 130) % 2 : 0, bob = walk ? 0 : Math.floor(t * 3) % 2, x = Math.round(A.hx) - 8, y = Math.round(A.hy) - 23 + bob;
+    R(x + 1, y + 23 - bob, 14, 2, 'rgba(0,0,0,.25)'); pat(AV_HERO, x, y, ch => AV_COL[ch] || '#fff', 1.5); pat(AV_LEG[f], x, y + 16.5, ch => AV_COL[ch] || '#fff', 1.5); }
 }
 
 /* =====================================================================
@@ -2919,7 +2919,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v49', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v50', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
