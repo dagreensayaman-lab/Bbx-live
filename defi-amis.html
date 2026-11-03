@@ -2721,7 +2721,7 @@ const dName = () => String(LS.get('bbx-hero-name', '') || '').slice(0, 14) || 'J
 async function duelDb(){ const app = await fbApp(true); return { db:app.database(), uid:app.auth().currentUser.uid }; }
 function duelDetach(){ if(!DUEL) return; try{ DUEL.refs.forEach(r => r.off()); }catch(e){} DUEL.refs = []; }
 function duelLeave(rm){
-  if(DUEL){ const D = DUEL; duelDetach(); try{ if(rm && D.role === 'host') D.db.ref('duels/' + D.code).remove(); else if(D.db) D.db.ref('duels/' + D.code + '/p/' + D.uid).remove(); }catch(e){} }
+  if(DUEL){ const D = DUEL; duelDetach(); try{ if(rm && D.role === 'host') D.db.ref('duels/' + D.code).remove(); else if(D.db){ D.db.ref('duels/' + D.code + '/p/' + D.uid).remove(); D.db.ref('duels/' + D.code + '/g').remove(); } }catch(e){} }
   DUEL = null; $('#dHud').classList.remove('on'); $('#dFog').classList.remove('on'); duelHome(); }
 
 /* ---------- construit l'exercice joué (même forme que crsBuild) ---------- */
@@ -2776,7 +2776,7 @@ async function duelCreate(name, def){
 async function duelJoin(code, name){
   const { db, uid } = await duelDb(); const room = (await db.ref('duels/' + code).once('value')).val();
   if(!room) throw new Error('Aucune salle avec ce code.'); const ids = Object.keys(room.p || {});
-  if(!ids.includes(uid)){ if(ids.length >= 2) throw new Error('Salle pleine.'); if(room.st !== 'lobby') throw new Error('Le duel a déjà commencé.'); await db.ref('duels/' + code + '/p/' + uid).set({ n:name, r:0 }); }
+  if(!ids.includes(uid)){ if(ids.length >= 2) throw new Error('Salle pleine.'); if(room.st !== 'lobby') throw new Error('Le duel a déjà commencé.'); try{ await db.ref('duels/' + code + '/g').set(uid); }catch(e){ throw new Error('Salle pleine.'); } await db.ref('duels/' + code + '/p/' + uid).set({ n:name, r:0 }); }
   await duelStart(code, room.h === uid ? 'host' : 'guest', name); }
 
 const dOpp = R => { const id = Object.keys(R.p || {}).find(k => k !== DUEL.uid); return id ? Object.assign({ id }, R.p[id]) : null; };
