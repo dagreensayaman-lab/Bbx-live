@@ -153,6 +153,19 @@ body.advon{overflow:hidden;background:#1b63c4}
 #dFog.on{display:block}
 #dToast{display:none;position:absolute;left:50%;top:84px;transform:translateX(-50%);z-index:7;color:#fff;border-radius:16px;padding:8px 16px;font:900 16px Nunito,system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.4);white-space:nowrap}
 #dToast.on{display:block}
+
+.dAvs{display:flex;flex-wrap:wrap;gap:6px}
+.dAv{background:rgba(255,255,255,.18);border:3px solid transparent;border-radius:12px;padding:2px 3px;line-height:0;cursor:pointer}
+.dAv.sel{border-color:#ffe27a;background:rgba(255,226,122,.3)}
+.dav0,.dav{image-rendering:pixelated}
+.dRoom{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:8px 0;padding:14px 8px 10px;border-radius:16px;background:linear-gradient(180deg,#3b2f7a 0,#5a4aa0 62%,#2b2260 62%,#241c52 100%);box-shadow:inset 0 -4px 0 rgba(0,0,0,.25)}
+.dSlot{flex:1;text-align:center;min-width:0}
+.dFig{height:112px;display:flex;align-items:flex-end;justify-content:center}
+.dFig canvas{width:78px;height:102px;transition:transform .2s}
+.dGhost{height:112px;display:flex;align-items:center;justify-content:center;font:900 44px Nunito,system-ui;color:rgba(255,255,255,.3)}
+.dNm{margin-top:4px;font:900 15px Nunito,system-ui;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dSt{font:800 12px Nunito,system-ui;color:#ffe27a;min-height:16px}
+.dVs{font:900 20px Nunito,system-ui;color:#ffe27a;padding-bottom:42px}
 </style></head><body>
 <div class="wrap">
 
@@ -160,7 +173,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 57 · 3 nov. 2026 · duel en ligne, intensité fort/faible, Mes cours · Défi amis</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 58 · 3 nov. 2026 · duel en ligne + avatars, intensité fort/faible, Mes cours · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
@@ -2698,6 +2711,47 @@ const crsHomeSt = () => { const e = $('#crsHomeSt'); if(e) e.textContent = CRS.c
 { const b = $('#bCrs'); if(b) b.onclick = () => crsShow('home'); const m = $('#lrnCrs'); if(m) m.onclick = () => { try{ advMusic(null); }catch(e){} crsShow('lrn'); }; crsHomeSt(); }
 
 /* =====================================================================
+   AVATARS (v58) — les persos des joueurs (même style pixel-art que le héros de l'histoire : 11 × 15 pixels).
+   Un profil = une forme de tête/cheveux (AVH) + des couleurs (peau, cheveux, haut, pantalon, détails). Choix mémorisé : localStorage « bbx-hero-av ».
+   avDraw(ctx, id, x, y, k, frame, mic) dessine le perso (x, y = coin haut-gauche, k = taille d'un pixel) ; avCanvas(id, k) crée un <canvas> prêt à l'emploi.
+   Lettres : s peau · h cheveux · H cheveux foncés (mèches) · r/R casquette ou bonnet · g/G casque audio · w haut · W haut (ombre) · b pantalon · k baskets · e yeux · m bouche · M/n micro
+   ===================================================================== */
+const AVH = { // 11 colonnes × 11 lignes (tête + buste)
+  cap:   ['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.RRRRRRRRRR', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
+  phones:['...hhhhh...', '..hhhhhhh..', '.ghhhhhhhg.', 'gghhhhhhhgg', 'gghsssssHgg'.replace('H', 'h'), 'gghsesesh.g'.replace('.', 'h'), '.hhsssmsshh', '.hh.sssss.h', '.hwwwwwwwwM', 'hswwwwwwwsn', 'hswwwwwwwwn'],
+  afro:  ['..hhhhhhh..', '.hhhhhhhhh.', 'hhhhhhhhhhh', 'hhhhhhhhhhh', 'hhsssssssh.'.replace('.', 'h'), 'hhsesssesh.'.replace('.', 'h'), '.hsssmssh..'.replace('..', 'h.'), '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
+  spiky: ['.h..h.h..h.', '..hhhhhhh..', '.hhhhhhhhh.', '.hhHHHHHhh.', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
+  scarf: ['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.rrsssssrr.', '.rrsesesrr.', '.rrssmssrr.', '.rrrsssrrr.', '..rrrrrrr.M', '.rrwwwwwrrM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
+  bun:   ['....hhh....', '..hhhhhhh..', '.hhhhhhhhh.', '.hhhhhhhhh.', '.hhsssssHh.'.replace('H', 'h'), '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
+  beanie:['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.RRRRRRRRR.', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
+  locs:  ['..hhhhhhh..', '.hhhhhhhhh.', 'hhhhhhhhhhh', 'hhhsssssshh'.slice(0, 11), 'hhsesssesh.'.replace('.', 'h'), 'h.sssmsss.h', 'h.sssssss.h', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'] };
+const AVL = [['.bbbbbbbbb.', '.bbbb.bbbb.', '.bbbb.bbbb.', 'kkkk...kkkk'], ['.bbbbbbbbb.', 'bbbb...bbbb', 'bbb.....bbb', 'kkk.....kkk']];
+const AV_SK = { a:'#ffdcb8', b:'#f1c27d', c:'#d49a62', d:'#a8693a', e:'#7a4a28', f:'#4e3020' }; // du plus clair au plus foncé
+const AV_PROF = [ // n = nom du profil (info-bulle)
+  { n:'Casquette',      h:'cap',    sk:'a', hair:'#2b1d14', r:'#e23a3a', w:'#f6f6f6', b:'#2f5fc4' },
+  { n:'Casquette',      h:'cap',    sk:'d', hair:'#1a1410', r:'#2f9e5b', w:'#fff3b0', b:'#3a3a52' },
+  { n:'Casque audio',   h:'phones', sk:'a', hair:'#7a4a28', g:'#ff5ec4', w:'#7fe9ff', b:'#3b2f7a' },
+  { n:'Casque audio',   h:'phones', sk:'e', hair:'#161018', g:'#ffd23f', w:'#ff8fb8', b:'#2f5fc4' },
+  { n:'Afro',           h:'afro',   sk:'f', hair:'#120d0c', w:'#ffd23f', b:'#2f5fc4' },
+  { n:'Pointes',        h:'spiky',  sk:'b', hair:'#14141f', w:'#e23a3a', b:'#3a3a52' },
+  { n:'Foulard',        h:'scarf',  sk:'c', r:'#8a5cff', w:'#f6f6f6', b:'#3a3a52' },
+  { n:'Chignon',        h:'bun',    sk:'b', hair:'#14141f', w:'#2fd073', b:'#2f5fc4' },
+  { n:'Bonnet',         h:'beanie', sk:'a', hair:'#c8562a', r:'#2f5fc4', w:'#e23a3a', b:'#3a3a52' },
+  { n:'Locks',          h:'locs',   sk:'d', hair:'#2b1d14', w:'#7fe9ff', b:'#3b2f7a' },
+  { n:'Casque audio',   h:'phones', sk:'c', hair:'#e8b030', g:'#8a5cff', w:'#f6f6f6', b:'#2f5fc4' },
+  { n:'Pointes',        h:'spiky',  sk:'e', hair:'#ff5ec4', w:'#fff3b0', b:'#3b2f7a' } ];
+function avColors(id){ const P = AV_PROF[id % AV_PROF.length], sk = AV_SK[P.sk], shade = (c, f) => '#' + [1, 3, 5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(c.substr(i, 2), 16) * f))).toString(16).padStart(2, '0')).join('');
+  return { s:sk, m:shade(sk, .68), e:'#1a1a2e', h:P.hair || '#2b1d14', H:shade(P.hair || '#2b1d14', 1.5), r:P.r || '#e23a3a', R:shade(P.r || '#e23a3a', .72), g:P.g || '#7fe9ff', w:P.w, W:shade(P.w, .8), b:P.b, k:'#ffffff', M:'#c9d1d9', n:'#3a3a46' }; }
+function avDraw(c, id, x, y, k, f, mic){ const P = AV_PROF[id % AV_PROF.length], col = avColors(id), rows = AVH[P.h].concat(AVL[f ? 1 : 0]);
+  rows.forEach((row, j) => { for(let i = 0; i < row.length; i++){ const ch = row[i]; if(ch === '.' || ((ch === 'M' || ch === 'n') && mic === false)) continue; c.fillStyle = col[ch] || '#fff'; c.fillRect(Math.round(x + i * k), Math.round(y + j * k), Math.ceil(k), Math.ceil(k)); } }); }
+/* <canvas> d'un avatar : k = pixel (3 → 33 × 45) ; animé (jambes) si on appelle avAnim */
+function avCanvas(id, k, cls){ const cv = document.createElement('canvas'); cv.width = Math.round(11 * k + 2 * k); cv.height = Math.round(15 * k + 2 * k); cv.className = cls || 'dav'; cv.dataset.av = id; cv.dataset.k = k; avPaint(cv, 0); return cv; }
+function avPaint(cv, f, mic){ const c = cv.getContext('2d'), k = +cv.dataset.k; c.clearRect(0, 0, cv.width, cv.height); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(cv.width / 2, cv.height - k * .9, k * 5.5, k * 1.1, 0, 0, 7); c.fill(); avDraw(c, +cv.dataset.av, k, k * .2, k, f, mic); }
+let AV_TIMER = 0;
+function avAnim(on){ clearInterval(AV_TIMER); if(!on) return; let f = 0; AV_TIMER = setInterval(() => { f ^= 1; document.querySelectorAll('canvas.dav').forEach(cv => { if(!cv.isConnected) return; const up = cv.dataset.up === '1'; avPaint(cv, f, true); if(up || f){ cv.style.transform = up ? 'translateY(' + (f ? -6 : 0) + 'px)' : ''; } }); }, 420); }
+const avMine = () => { const v = +LS.get('bbx-hero-av', 0); return Number.isFinite(v) && v >= 0 && v < AV_PROF.length ? v : 0; };
+
+/* =====================================================================
    DUEL EN LIGNE (v57) — deux joueurs, deux pièces, la même phrase en même temps.
    Salle Firebase  duels/<CODE>  (CODE = 4 lettres, partagé par lien  ?duel=CODE) :
      h  = uid de l'hôte · t = création · def = la phrase { n, bpm, cyc, niv, m:[[d,'P . K .'],…] } · st = 'lobby' | 'go' · go = heure serveur du 1er clic
@@ -2722,7 +2776,7 @@ async function duelDb(){ const app = await fbApp(true); return { db:app.database
 function duelDetach(){ if(!DUEL) return; try{ DUEL.refs.forEach(r => r.off()); }catch(e){} DUEL.refs = []; }
 function duelLeave(rm){
   if(DUEL){ const D = DUEL; duelDetach(); try{ if(rm && D.role === 'host') D.db.ref('duels/' + D.code).remove(); else if(D.db){ D.db.ref('duels/' + D.code + '/p/' + D.uid).remove(); D.db.ref('duels/' + D.code + '/g').remove(); } }catch(e){} }
-  DUEL = null; $('#dHud').classList.remove('on'); $('#dFog').classList.remove('on'); duelHome(); }
+  DUEL = null; avAnim(false); $('#dHud').classList.remove('on'); $('#dFog').classList.remove('on'); duelHome(); }
 
 /* ---------- construit l'exercice joué (même forme que crsBuild) ---------- */
 function duelBuild(def){
@@ -2731,6 +2785,14 @@ function duelBuild(def){
   return { id:'duel', duel:true, ic:'⚔️', n:def.n || 'Duel', style:def.n || 'Duel', wi:-1, isl:-1, ex:0, lv:lvl, lvl:0, niv:1, lrn:false, pat:def.m.map(z => z[1]), divs:def.m.map(z => z[0]), div:def.m[0][0], bpm:def.bpm, cycles:def.cyc,
     win:ADV_ST[lvl].win, lifeK:ADV_ST[lvl].lifeK, clk:true, boss:false, sounds:sounds.join(' '), mes:lrnMeasures(def.m).length * def.cyc, teach:'', prog:[[36, 'maj'], [36, 'maj'], [43, 'maj'], [36, 'maj']], bass:null, perc:null }; }
 function duelDefOk(d){ try{ return d && d.m && d.m.length && d.m.every(z => [1, 2, 3, 4, 8].includes(+z[0]) && String(z[1]).length < 400 && String(z[1]).split(' ').every(t => CRS_TOK.test(t))) && d.bpm >= 40 && d.bpm <= 200 && d.cyc >= 1 && d.cyc <= 8; }catch(e){ return false; } }
+
+/* ---------- avatars : choix du perso + « salle » ---------- */
+function duelAvPick(box, onPick){ box.innerHTML = ''; AV_PROF.forEach((P, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'dAv' + (i === avMine() ? ' sel' : ''); b.title = P.n; b.appendChild(avCanvas(i, 3, 'dav0'));
+    b.onclick = () => { LS.set('bbx-hero-av', i); [...box.children].forEach((x, j) => x.classList.toggle('sel', j === i)); if(onPick) onPick(i); }; box.appendChild(b); }); }
+const dAvOf = p => (p && Number.isFinite(+p.av) ? +p.av : 0) % AV_PROF.length;
+function duelSlot(p, me, o){ o = o || {}; if(!p) return '<div class="dSlot"><div class="dGhost">?</div><div class="dNm">En attente…</div><div class="dSt blink">⏳</div></div>';
+  return '<div class="dSlot"><div class="dFig"><canvas class="dav" data-av="' + dAvOf(p) + '" data-k="6" width="78" height="102"' + (o.up ? ' data-up="1"' : '') + '></canvas></div><div class="dNm">' + escH(p.n || '?') + (me ? ' <span class="muted">(toi)</span>' : '') + '</div><div class="dSt">' + (o.st || '') + '</div></div>'; }
+function duelPaintAv(){ document.querySelectorAll('#duelB canvas.dav').forEach(cv => { cv.width = 78; cv.height = 102; avPaint(cv, 0, true); }); avAnim(true); }
 
 /* ---------- écrans ---------- */
 const dBox = h => { $('#duelB').innerHTML = h; };
@@ -2741,6 +2803,7 @@ function duelHome(mode, code){
     <p class="small" style="margin:4px 0 8px">Deux joueurs, <b>deux pièces</b>, la même phrase en même temps. Chacun voit le score et la vie de l'autre. <b>8 combos de suite = une attaque</b> envoyée à l'adversaire ; avoir 8 combos quand elle arrive la <b>bloque</b> 🛡. Casque obligatoire !</p>
     ${cal ? '' : '<div class="res no"><b>⚠ Il faut d\'abord la calibration</b> (micro, latence, sons : 1 minute).<br><button class="b-cyan" id="dCal" style="margin-top:6px">Calibrer</button></div>'}
     <p style="margin:8px 0 4px"><b>Ton nom</b></p><input id="dName" maxlength="14" value="${escH(dName() === 'Joueur' && !LS.get('bbx-hero-name', '') ? '' : dName())}" placeholder="Joueur" style="width:100%">
+    <p style="margin:10px 0 4px"><b>Ton perso</b></p><div id="dAvs" class="dAvs"></div>
     <p style="margin:12px 0 4px"><b>Créer un duel</b> <span class="small muted">— choisis la phrase</span></p>
     <select id="dPhr" style="width:100%">${ph.map(o => `<option value="${o.k}">${escH(o.n)}</option>`).join('')}</select>
     <div class="row" style="margin-top:8px"><button class="b-yel big" id="dMk" style="flex:1">➕ Créer la salle</button></div>
@@ -2751,6 +2814,7 @@ function duelHome(mode, code){
   const msg = (t, bad) => { const m = $('#dMsg'); if(m){ m.textContent = t; m.style.color = bad ? '#ffb3bb' : '#fff'; } };
   const nm = () => { const v = $('#dName').value.trim().slice(0, 14); if(v) LS.set('bbx-hero-name', v); return v || 'Joueur'; };
   if($('#dCal')) $('#dCal').onclick = () => { calStep = 0; renderCal(); show('cal'); };
+  duelAvPick($('#dAvs'));
   $('#dBack').onclick = () => { renderHome(); show('home'); };
   $('#dMk').onclick = async () => { if(!getCal()) return msg('Fais d\'abord la calibration.', 1); const k = $('#dPhr').value; let def;
     if(k[0] === 'p'){ const p = DUEL_PRE[+k.slice(1)]; def = { n:p.n, bpm:p.bpm, cyc:p.cyc, niv:p.niv, m:p.m }; }
@@ -2770,13 +2834,13 @@ async function duelCreate(name, def){
   const { db, uid } = await duelDb();
   for(let i = 0; i < 6; i++){ const code = Array.from({ length:4 }, () => DUEL_LETTERS[Math.floor(Math.random() * DUEL_LETTERS.length)]).join('');
     const ex = (await db.ref('duels/' + code).once('value')).val(); if(ex) continue;
-    try{ await db.ref('duels/' + code).set({ h:uid, t:Date.now(), def, st:'lobby', p:{ [uid]:{ n:name, r:0 } } }); }catch(e){ continue; }
+    try{ await db.ref('duels/' + code).set({ h:uid, t:Date.now(), def, st:'lobby', p:{ [uid]:{ n:name, r:0, av:avMine() } } }); }catch(e){ continue; }
     await duelStart(code, 'host', name); return; }
   throw new Error('Impossible de créer la salle (réseau ou règles Firebase « duels » non publiées).'); }
 async function duelJoin(code, name){
   const { db, uid } = await duelDb(); const room = (await db.ref('duels/' + code).once('value')).val();
   if(!room) throw new Error('Aucune salle avec ce code.'); const ids = Object.keys(room.p || {});
-  if(!ids.includes(uid)){ if(ids.length >= 2) throw new Error('Salle pleine.'); if(room.st !== 'lobby') throw new Error('Le duel a déjà commencé.'); try{ await db.ref('duels/' + code + '/g').set(uid); }catch(e){ throw new Error('Salle pleine.'); } await db.ref('duels/' + code + '/p/' + uid).set({ n:name, r:0 }); }
+  if(!ids.includes(uid)){ if(ids.length >= 2) throw new Error('Salle pleine.'); if(room.st !== 'lobby') throw new Error('Le duel a déjà commencé.'); try{ await db.ref('duels/' + code + '/g').set(uid); }catch(e){ throw new Error('Salle pleine.'); } await db.ref('duels/' + code + '/p/' + uid).set({ n:name, r:0, av:avMine() }); }
   await duelStart(code, room.h === uid ? 'host' : 'guest', name); }
 
 const dOpp = R => { const id = Object.keys(R.p || {}).find(k => k !== DUEL.uid); return id ? Object.assign({ id }, R.p[id]) : null; };
@@ -2792,7 +2856,8 @@ function duelRender(){
   const link = location.origin + location.pathname + '?duel=' + D.code, ok = !!getCal(), both = op && me.r && op.r;
   dBox(`<div class="card"><h2>⚔️ Salle <span style="letter-spacing:.25em;font-size:1.5em">${D.code}</span></h2>
     <p class="small" style="margin:2px 0 8px">Phrase : <b>${escH(R.def.n)}</b> · ${R.def.bpm} BPM · ${R.def.cyc} tours · niveau ${R.def.niv}</p>
-    <div class="res"><b>${escH(me.n || D.name)}</b> (toi) ${me.r ? '✅ micro validé, prêt' : '⬜ micro à valider'}<br>${op ? '<b>' + escH(op.n || '?') + '</b> ' + (op.r ? '✅ micro validé, prêt' : '⬜ micro à valider') : '<span class="blink">⏳ En attente d\'un adversaire…</span>'}</div>
+    <div class="dRoom">${duelSlot(me, 1, { st:me.r ? '✅ micro validé' : '⬜ micro à valider', up:!!me.r })}<div class="dVs">VS</div>${duelSlot(op, 0, { st:op ? (op.r ? '✅ micro validé' : '⬜ micro à valider') : '', up:!!(op && op.r) })}</div>
+    ${me.r ? '' : '<div class="small muted" style="margin-top:6px">Change de perso :</div><div id="dAvs2" class="dAvs"></div>'}
     ${op ? '' : `<div class="row" style="margin-top:8px"><input id="dLink" readonly value="${escH(link)}" style="flex:1;font-size:.8rem"><button class="b-cyan" id="dCp">Partager</button></div><div class="small muted">Envoie ce lien (ou le code <b>${D.code}</b>) à ton adversaire.</div>`}
     ${D.chk ? '<div class="res no" style="margin-top:8px">⚠ ' + escH(D.chk) + '<br><button class="b-cyan" id="dCal2" style="margin-top:6px">Refaire la calibration</button></div>' : ''}
     ${ok ? '' : '<div class="res no" style="margin-top:8px">⚠ Calibration manquante : <button class="b-cyan" id="dCal2">Calibrer</button></div>'}
@@ -2801,6 +2866,8 @@ function duelRender(){
     ${D.role === 'guest' && both ? '<div class="small muted" style="margin-top:6px">L\'hôte lance la partie.</div>' : ''}
     <div class="row" style="margin-top:12px"><button class="b-ghost" id="dLv">${D.role === 'host' ? '🗑 Fermer la salle' : '🚪 Quitter'}</button></div></div>`);
   if($('#dCal2')) $('#dCal2').onclick = () => { calStep = 0; renderCal(); show('cal'); };
+  if($('#dAvs2')) duelAvPick($('#dAvs2'), i => D.db.ref('duels/' + D.code + '/p/' + D.uid + '/av').set(i));
+  duelPaintAv();
   if($('#dCp')) $('#dCp').onclick = async () => { try{ if(navigator.share){ await navigator.share({ title:'Duel BBX Hero', text:'Viens me défier en beatbox ! Code ' + D.code, url:link }); } else { await navigator.clipboard.writeText(link); $('#dCp').textContent = 'Copié ✓'; } }catch(e){} };
   $('#dRdy').onclick = async () => { const set = v => D.db.ref('duels/' + D.code + '/p/' + D.uid + '/r').set(v); if(me.r){ set(0); return; }
     const b = $('#dRdy'); b.disabled = true; b.textContent = '🎙 Vérification du micro…'; const c = await duelCheck();
@@ -2825,7 +2892,7 @@ function duelCountdown(go){
   const tick = () => { if(!DUEL || DUEL !== D || D.phase !== 'count') return; const left = (go - dNow()) / 1000;
     dBox(`<div class="card" style="text-align:center"><h2>⚔️ ${escH(D.room && D.room.def ? D.room.def.n : '')}</h2><div style="font-size:5rem;font-weight:900;line-height:1.1">${Math.max(0, Math.ceil(left - 3.5))}</div>
       <p style="margin:6px 0">Casque sur les oreilles, micro à la même distance que pendant la calibration.<br>4 clics de décompte, puis les notes arrivent.</p></div>`);
-    if(left <= 3.6){ D.phase = 'play'; $('#dHud').classList.add('on'); ADV = duelBuild(D.room.def); startGame().then(() => { if(DUEL === D && D.phase === 'play' && !G){ D.phase = 'lobby'; $('#dHud').classList.remove('on'); show('duel'); duelRender(); } }); return; }
+    if(left <= 3.6){ D.phase = 'play'; avAnim(false); $('#dHud').classList.add('on'); ADV = duelBuild(D.room.def); startGame().then(() => { if(DUEL === D && D.phase === 'play' && !G){ D.phase = 'lobby'; $('#dHud').classList.remove('on'); show('duel'); duelRender(); } }); return; }
     setTimeout(tick, 200); };
   show('duel'); tick(); }
 function duelStartT0(){ const D = DUEL; return D && D.goAt ? Math.max(.9, (D.goAt - dNow()) / 1000) : .9; }
@@ -2862,8 +2929,10 @@ function duelEndRender(){
   const title = !of ? '⏳ En attente de ' + escH(op ? op.n || 'l\'adversaire' : 'l\'adversaire') + '…' : w === 'tie' ? '🤝 Égalité !' : w === 'a' ? '🏆 VICTOIRE !' : '😤 Défaite…';
   dBox(`<div class="card"><h2 style="font-size:1.6rem">${title}</h2>
     ${of ? '' : `<p class="small">Score actuel de l'adversaire : <b>${op && op.s || 0}</b> · il joue encore.</p>`}
+    <div class="dRoom">${duelSlot(Object.assign({}, (R.p || {})[D.uid], { n:D.name }), 1, { st:w === 'a' ? '🏆' : w === 'b' ? '😤' : '', up:w === 'a' })}<div class="dVs">VS</div>${duelSlot(op, 0, { st:w === 'b' ? '🏆' : w === 'a' ? '😤' : '', up:w === 'b' })}</div>
     <table class="tb" style="width:100%;text-align:center"><tr><th></th><th>Score</th><th>Précis.</th><th>Parfaits</th><th>Ratés</th><th>Combo max</th></tr>${row(D.name + ' (toi)', mf, w === 'a')}${of ? row(op.n || '?', of, w === 'b') : ''}</table>
     <div class="row" style="margin-top:12px">${D.role === 'host' ? '<button class="b-yel big" id="dRe" style="flex:1" ' + (of ? '' : 'disabled') + '>🔁 Revanche</button>' : '<div class="small muted" style="flex:1">' + (of ? 'L\'hôte peut lancer une revanche.' : '') + '</div>'}<button class="b-ghost big" id="dQ" style="flex:1">${D.role === 'host' ? '🗑 Fermer' : '🚪 Quitter'}</button></div></div>`);
+  duelPaintAv();
   if($('#dRe')) $('#dRe').onclick = () => { const u = { st:'lobby', go:null, a:null }; Object.keys(R.p || {}).forEach(id => { u['p/' + id + '/f'] = null; u['p/' + id + '/r'] = 0; u['p/' + id + '/s'] = 0; u['p/' + id + '/c'] = 0; u['p/' + id + '/l'] = 100; }); D.db.ref('duels/' + D.code).update(u); };
   $('#dQ').onclick = () => duelLeave(D.role === 'host'); }
 
@@ -3708,7 +3777,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v57', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v58', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
