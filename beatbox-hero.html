@@ -134,6 +134,15 @@ body.advon{overflow:hidden;background:#1b63c4}
 .amiS{display:flex;gap:10px;align-items:center;background:#f2f8fc;border-radius:14px;padding:8px 10px;margin:6px 0}.amiS.next{outline:3px solid #ffd23f}
 .amiS .n{font-weight:900;font-size:1.2rem;width:26px;text-align:center;color:var(--mut)}.amiS .b{flex:1;min-width:0}.amiS .t{font-weight:900}.amiS .d{font-size:.8rem;color:var(--mut)}.amiS .s{color:#ffb02e;letter-spacing:2px;font-size:1.1rem}
 #ami .card h2{font-size:1.15rem}
+#profEd,#profBox{position:fixed;inset:0;z-index:99998;background:#0a0620e8;overflow:auto;display:none;padding:10px}#profBox{display:block;z-index:99999}
+.pbox{max-width:560px;margin:0 auto;background:#14264a;border:3px solid #5ef0ff;border-radius:12px;padding:12px;color:#fff}.pbox textarea{width:100%;background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:6px;font:700 .85rem 'Courier New',monospace}
+.ph{display:flex;align-items:center;gap:6px;font-size:1rem;margin-bottom:8px}.ph .pbtn{margin-left:auto}
+.pf{margin:6px 0}.pf label{display:flex;gap:8px;align-items:center;font-weight:800;font-size:.85rem}.pf label input,.pf label textarea{flex:1;background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:5px 7px;font:800 .9rem inherit}.pf.r{gap:14px;display:flex;flex-wrap:wrap}.pf.r label{flex:0 0 auto}.pi{font-size:.8rem;opacity:.8;align-self:center}
+.pb{background:#ffffff12;border:2px solid #ffffff33;border-radius:8px;padding:6px;margin:8px 0}.pbh{display:flex;align-items:center;gap:6px;font-size:.8rem;margin-bottom:5px;flex-wrap:wrap}.pbh select{background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:3px;font:800 .78rem inherit}.pbt{margin-left:auto;display:flex;gap:4px}.pbt button{background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:3px 8px}
+.pcs{display:flex;flex-wrap:wrap;gap:3px}.pc{min-width:34px;height:36px;padding:0 4px;border-radius:5px;border:2px solid #ffffff44;background:#ffffff1c;color:#fff;font:900 .8rem 'Courier New',monospace}.pc:not(.z){background:var(--c,#fff);color:#0b0620;border-color:#fff}.pc.sel{outline:3px solid #ffe27a;outline-offset:1px}.pc.now{filter:brightness(1.4);transform:scale(1.08)}
+.pal{position:sticky;bottom:0;background:#14264a;border-top:2px solid #5ef0ff;padding:6px 0 2px;margin-top:8px}.pas{font-size:.8rem;margin-bottom:4px}.pap{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}.pap button{padding:7px 10px;border-radius:6px;border:2px solid #fff;background:var(--c,#0d2033);color:#0b0620;font:900 .85rem 'Courier New',monospace}.pap button.sil,.pap button[data-mv],.pap button[data-nx]{background:#0d2033;color:#fff;border-color:#ffffff66}
+.pfoot{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.pbtn{padding:8px 12px;border-radius:8px;border:2px solid #fff;background:#0d2033;color:#fff;font:900 .85rem inherit}.pbtn.ok{background:#3fbf6f;color:#06260f}.pbtn:disabled{opacity:.4}
+.lrx .pgear{background:#0d2033;color:#ffe27a;border:2px solid #ffe27a;border-radius:6px;padding:0 6px;font-size:.9rem;margin-left:6px}
 </style></head><body>
 <div class="wrap">
 
@@ -141,7 +150,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 52 · 2 nov. 2026 · joyaux des planètes, château à ouvrir · Défi amis</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 53 · 3 nov. 2026 · mode prof, couleurs par son, joyaux · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
@@ -210,6 +219,8 @@ body.advon{overflow:hidden;background:#1b63c4}
     <div class="row" style="margin-top:8px"><label><input type="checkbox" id="oDie"> Game over quand je n'ai plus de cœurs (5 cœurs)</label></div>
     <div class="row" style="margin-top:4px"><label><input type="checkbox" id="oBoss"> 💀 Mode Boss : aucun cœur récupéré, erreurs ×1,5, 3 tours minimum</label></div>
     <div class="row" style="margin-top:4px"><label><input type="checkbox" id="oUnlock"> 🔓 Tout débloquer (niveaux 2 et 3 sans condition)</label></div>
+    <div class="row" style="margin-top:4px"><label><input type="checkbox" id="oProf"> 🛠 Mode prof : tout voir, et modifier les phrases (roue ⚙ sur chaque exercice)</label></div>
+    <div class="row" id="profBtns" style="margin:2px 0 0 24px;gap:6px"><button class="b-ghost" id="oProfEx" style="padding:6px 10px;font-size:.8rem">📤 Exporter</button><button class="b-ghost" id="oProfIm" style="padding:6px 10px;font-size:.8rem">📥 Importer</button></div>
     <div class="row" style="margin-top:4px"><label><input type="checkbox" id="oStrict" checked> Vérifier le son (grave / medium / aigu)</label></div>
   </div>
 
@@ -945,7 +956,10 @@ const later = (fn, ms) => { const s = SES; return setTimeout(() => { if(s === SE
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const LS = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} } };
-const LC = { grave:'#e0607e', medium:'#8b6fd6', aigu:'#2fb3d9' }, LNAME = { grave:'grave', medium:'medium', aigu:'aigu' };
+/* nuances par son : même famille de couleur (roses = grave, violets = medium, bleus = aigu), un ton à part par son pour les repérer d'un coup d'œil */
+const TOKC = { P:'#e0607e', B:'#e0607e', T:'#2a7ee0', Ts:'#2cd0e4', 'Ts~':'#6fe6f0', 'Th~':'#3a5ad8', K:'#8b6fd6', 'K~':'#b48cf0', Pch:'#c25ad0', Pf:'#6a82e8', L:'#7552b8', Spt:'#a04ee0', Fsh:'#8e9cf0' };
+const hexMixW = (h, f) => '#' + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * (1 - f) + 255 * f).toString(16).padStart(2, '0')).join('');
+const LC = { grave:'#e0607e', medium:'#8b6fd6', aigu:'#2fb3d9' }, tokCol = (tok, lane) => TOKC[tok] || LC[lane], LNAME = { grave:'grave', medium:'medium', aigu:'aigu' };
 // couleurs des verdicts : vert = parfait, jaune = bien, rouge = faux / raté, violet = bon rythme mais mauvais son
 const V_OK = '#2fd073', V_GOOD = '#ffd23f', V_BAD = '#ff4d5e', V_WRONG = '#b05cff';
 
@@ -1801,16 +1815,17 @@ const gemCell = (gx, gy) => { const dx = gx + .5 - 8, hw = gy <= 4 ? 5.2 + gy * 
 function gemPx(R, x, y, s, gi, t, owned, bright){
   const g = GEMS[gi]; if(!g) return; const c = g.c, c2 = g.c2 || null;
   for(let gy = 0; gy < 14; gy++) for(let gx = 0; gx < 16; gx++){ const dx = gemCell(gx, gy); if(dx === null) continue;
-    const edge = gemCell(gx - 1, gy) === null || gemCell(gx + 1, gy) === null || gemCell(gx, gy - 1) === null || gemCell(gx, gy + 1) === null, pav = gy > 4, K = pav && c2 ? c2 : c;
+    const edge = gemCell(gx - 1, gy) === null || gemCell(gx + 1, gy) === null || gemCell(gx, gy - 1) === null || gemCell(gx, gy + 1) === null, pav = gy > 4, K = c;
     let col; if(!owned) col = edge ? '#0d2033' : (dx < 0 ? '#22385e' : '#1a2c4c');
     else if(edge) col = c[3];
     else if(!pav) col = gy <= 1 && Math.abs(dx) <= 3 ? K[0] : Math.abs(dx) <= 3 ? (dx < 0 ? K[0] : K[1]) : dx < 0 ? K[1] : K[2];
-    else col = gy === 5 ? K[2] : Math.abs(dx) < hwP(gy) * .34 ? K[0] : dx < 0 ? K[1] : K[2];
+    else { const j = gy === 5 ? 2 : Math.abs(dx) < hwP(gy) * .34 ? 0 : dx < 0 ? 1 : 2; col = c2 ? gMix(c[j], c2[j], Math.min(1, Math.max(0, (gy - 5) / 7.5))) : c[j]; }
     if(owned && bright){ const sw = (gx + gy * .6 - bright * 30), d = Math.abs(sw); if(d < 1.6 && !edge) col = '#ffffff'; }
     R(x + gx * s, y + gy * s, s, s, col); }
   if(owned){ [[5, 1], [6, 1], [4, 2]].forEach(([a, b]) => R(x + a * s, y + b * s, s, s, '#fff'));
     if(t != null && Math.floor(t * 2.5) % 3 === 0){ const sx = x + 11 * s, sy = y + 2 * s; R(sx, sy, s, s, '#fff'); R(sx - s, sy, s, s, g.c[4]); R(sx + s, sy, s, s, g.c[4]); R(sx, sy - s, s, s, g.c[4]); R(sx, sy + s, s, s, g.c[4]); } } }
 const hwP = gy => 8 * (1 - (gy - 4) / 9.6);
+const gHex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), gMix = (a, b, f) => { const A = gHex(a), B = gHex(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * f).toString(16).padStart(2, '0')).join(''); };
 const GEM_IMG = {};
 function lrnGemImg(gi, owned, s){ const key = gi + (owned ? 'o' : 'x') + s; if(GEM_IMG[key]) return GEM_IMG[key];
   const cv = document.createElement('canvas'); cv.width = 16 * s; cv.height = 14 * s; const x = cv.getContext('2d'); gemPx((xx, yy, w, h, c) => { x.fillStyle = c; x.fillRect(xx, yy, w, h); }, 0, 0, s, gi, null, owned);
@@ -1861,12 +1876,97 @@ function lrnCastleWin(done){
       X.globalAlpha = .26 * u; for(let r = 0; r < 12; r++){ const wd = 5 + r * 3 + (r > 2 ? 0 : 0); R(cx - wd / 2, yb + r * 2 - 1, wd, 3, '#ffe27a'); } X.globalAlpha = 1; }
     /* 3 · le héros s'avance sur la route et entre */
     if(t > 4.2){ const u = Math.min(1, (t - 4.2) / 3.2), y = H - 8 - u * (H - 8 - (yb - 2)), k = 1.5 - u * .85, x = roadX(y), f = Math.floor(t * 6) % 2;
-      if(u < 1){ R(x - 5 * k, y - 1, 11 * k, 2, 'rgba(0,0,0,.25)'); const hx = x - 5.5 * k, hy = y - 23 * k; pat(AV_HERO, hx, hy, ch => AV_COL[ch] || '#fff', k); pat(AV_LEG[f], hx, hy + 16.5 * k, ch => AV_COL[ch] || '#fff', k); } }
+      if(u < 1){ R(x - 5 * k, y - 1, 11 * k, 2, 'rgba(0,0,0,.25)'); const hx = x - 5.5 * k, hy = y - 23 * k; pat(AV_HERO, hx, hy, ch => AV_COL[ch] || '#fff', k); pat(AV_LEG[f], hx, hy + 11 * k, ch => AV_COL[ch] || '#fff', k); } }
     const fl = Math.max(0, (t - 7.3) / .5); if(fl > 0){ X.globalAlpha = Math.min(1, fl); R(0, 0, W, H, '#fff7d8'); X.globalAlpha = 1; }
     if(t > 7.9){ closed = true; cancelAnimationFrame(raf); O.el.remove(); if(done) done(); return; }
     X.globalAlpha = Math.max(0, 1 - t / .7); R(0, 0, W, H, '#0a0620'); X.globalAlpha = 1;
     raf = requestAnimationFrame(frame); };
   advSfx('go'); raf = requestAnimationFrame(frame); }
+
+/* =====================================================================
+   MODE PROF (v53) — Marc peut modifier les phrases des exercices du Tableau 1.
+   Option « 🛠 Mode prof » (Options) : une roue ⚙ apparaît sur chaque exercice ; elle ouvre l'éditeur de grille.
+   Les modifications sont des « surcharges » rangées dans localStorage (clé bbx-prof-ovr), exercice par exercice et niveau par niveau
+   (même clé que les étoiles : « lp:0@2 »). Elles remplacent l'exercice d'origine dans lrnExs (learn.js) ; « ↺ Original » les enlève.
+   Export / import en JSON pour sauvegarder, ou envoyer à Claude qui les intègre au jeu pour tous les élèves.
+   Le Défi amis garde toujours la liste d'origine.
+   ===================================================================== */
+const PROF_LS = 'bbx-prof-ovr';
+let PROF_OV = (() => { const d = LS.get(PROF_LS, null); return d && typeof d === 'object' ? d : {}; })();
+const profSave = () => LS.set(PROF_LS, PROF_OV);
+const PROF_SND = ['P', 'K', 'K~', 'T', 'Ts', 'Ts~', 'Pch', 'Pf', 'L', 'Fsh', 'Spt'];
+let PE = null, PEPLAY = null;
+
+const profCopyM = m => m.map(([d, s]) => [d, s.trim().split(/\s+/)]);
+function profResample(T, d0, d1){ if(d0 === d1) return T.slice(); const beats = T.length / d0, n = Math.max(1, Math.round(beats * d1)), out = Array(n).fill('.');
+  if(d1 > d0){ const r = d1 / d0; T.forEach((tk, j) => { const k = Math.round(j * r); if(k < n) out[k] = tk; }); }
+  else { const r = d0 / d1; for(let k = 0; k < n; k++){ const g = T.slice(Math.round(k * r), Math.round((k + 1) * r)).filter(x => x !== '.'); out[k] = g[0] || '.'; } }
+  return out; }
+
+function profStop(){ const P = PEPLAY; PEPLAY = null; if(P){ cancelAnimationFrame(P.raf); try{ P.bus.gain.setValueAtTime(0, ac.currentTime); P.bus.disconnect(); }catch(e){} }
+  try{ const b = $('#peListen'); if(b) b.textContent = '🔊 Écouter'; $$('#profEd .pc.now').forEach(x => x.classList.remove('now')); }catch(e){} }
+async function profListen(){
+  if(PEPLAY){ profStop(); return; }
+  try{ await hearLoad(); }catch(e){} ensure(); const spb = 60 / (+PE.bpm || 80), bus = ac.createGain(); bus.gain.value = .9; bus.connect(ac.destination);
+  const cl = []; let at = 0; PE.m.forEach(([d, T], b) => { T.forEach((tk, j) => cl.push({ t:at + j / d, b, c:j, tk })); at += T.length / d; });
+  const T0 = ac.currentTime + .1, total = Math.ceil(at); for(let k = 0; k < total; k++) clickAt(T0 + k * spb, k % 4 === 0, bus);
+  cl.forEach(z => { if(z.tk !== '.') sampleAt(T0 + z.t * spb, z.tk, HERO.laneOf(z.tk), bus); });
+  const P = PEPLAY = { bus, raf:0 }; $('#peListen').textContent = '■ Stop'; let last = null;
+  const tick = () => { if(PEPLAY !== P) return; const bt = (ac.currentTime - T0) / spb; if(bt > at + .3){ profStop(); return; }
+    let z = null; for(let q = 0; q < cl.length && cl[q].t <= bt + 1e-6; q++) z = cl[q]; const cur = z ? document.querySelector('#profEd .pc[data-b="' + z.b + '"][data-c="' + z.c + '"]') : null;
+    if(cur !== last){ if(last) last.classList.remove('now'); if(cur) cur.classList.add('now'); last = cur; } P.raf = requestAnimationFrame(tick); };
+  P.raf = requestAnimationFrame(tick); }
+
+function profRender(){
+  const E = PE, root = $('#profEd'); if(!root) return;
+  const beatsTot = E.m.reduce((t, [d, T]) => t + T.length / d, 0);
+  const blocks = E.m.map(([d, T], b) => {
+    const cells = T.map((tk, c) => `<button class="pc ${tk === '.' ? 'z' : ''} ${E.sel && E.sel.b === b && E.sel.c === c ? 'sel' : ''}" data-b="${b}" data-c="${c}" style="${tk === '.' ? '' : '--c:' + tokCol(tk, HERO.laneOf(tk))}${c % d === 0 && c ? ';margin-left:6px' : ''}">${tk === '.' ? '·' : tk}</button>`).join('');
+    return `<div class="pb"><div class="pbh"><b>Bloc ${b + 1}</b> · ${(T.length / d).toString().replace('.', ',')} temps · <select data-d="${b}">${[1, 2, 3, 4, 8].map(x => `<option value="${x}" ${x === d ? 'selected' : ''}>${x === 1 ? '1 case / temps' : x === 2 ? '2 : croches' : x === 3 ? '3 : triolets' : x === 4 ? '4 : doubles' : '8 : triples'}</option>`).join('')}</select>
+      <span class="pbt"><button data-dup="${b}" title="Dupliquer">⧉</button><button data-del="${b}" title="Supprimer" ${E.m.length < 2 ? 'disabled' : ''}>🗑</button></span></div><div class="pcs">${cells}</div></div>`; }).join('');
+  const sel = E.sel ? E.m[E.sel.b][1][E.sel.c] : null;
+  root.innerHTML = `<div class="pbox"><div class="ph"><b>⚙ Éditer l'exercice</b> · ${LRN_I[E.i].ic} ${LRN_I[E.i].n} · ${lrnLvName(E.lv)}<button id="peX" class="pbtn">✕</button></div>
+    <div class="pf"><label>Nom <input id="peN" value="${E.n.replace(/"/g, '&quot;')}"></label></div>
+    <div class="pf"><label>Consigne <textarea id="peT" rows="2">${E.t.replace(/</g, '&lt;')}</textarea></label></div>
+    <div class="pf r"><label>BPM <input id="peB" type="number" min="40" max="220" value="${E.bpm}" style="width:70px"></label><label>Tours <input id="peC" type="number" min="1" max="8" value="${E.cyc}" style="width:56px"></label><span class="pi">${beatsTot} temps · ${E.m.length} bloc${E.m.length > 1 ? 's' : ''}</span></div>
+    <div class="pg">${blocks}<button id="peAdd" class="pbtn" style="margin-top:6px">+ Ajouter un bloc (1 mesure)</button></div>
+    <div class="pal"><div class="pas">${E.sel ? 'Case sélectionnée : <b>' + (sel === '.' ? 'silence' : sel) + '</b> — choisis un son' : 'Touche une case pour la modifier'}</div>
+      <div class="pap">${PROF_SND.map(s => `<button data-s="${s}" style="--c:${tokCol(s, HERO.laneOf(s))}">${s}</button>`).join('')}<button data-s="." class="sil">· silence</button></div>
+      <div class="pap"><button data-mv="-1">◀ décaler</button><button data-mv="1">décaler ▶</button><button data-nx="-1">⟵ case</button><button data-nx="1">case ⟶</button></div></div>
+    <div class="pfoot"><button id="peListen" class="pbtn">🔊 Écouter</button><button id="peSave" class="pbtn ok">💾 Enregistrer</button><button id="peRes" class="pbtn" ${PROF_OV[E.key] ? '' : 'disabled'}>↺ Original</button></div></div>`;
+  const rd = () => { E.n = $('#peN').value; E.t = $('#peT').value; E.bpm = $('#peB').value; E.cyc = $('#peC').value; };
+  $$('#profEd .pc').forEach(b => b.onclick = () => { rd(); E.sel = { b:+b.dataset.b, c:+b.dataset.c }; profRender(); });
+  $$('#profEd [data-s]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); const T = E.m[E.sel.b][1]; T[E.sel.c] = b.dataset.s; if(b.dataset.s !== '.' && PEPLAY == null){ try{ sampleAt(ac.currentTime + .02, b.dataset.s, HERO.laneOf(b.dataset.s), (() => { const g = ac.createGain(); g.gain.value = .9; g.connect(ac.destination); return g; })()); }catch(e){} }
+    const bl = E.m[E.sel.b], nx = E.sel.c + 1; if(nx < bl[1].length) E.sel = { b:E.sel.b, c:nx }; profRender(); });
+  $$('#profEd [data-mv]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); const T = E.m[E.sel.b][1], k = E.sel.c, n = k + +b.dataset.mv; if(n < 0 || n >= T.length) return; [T[k], T[n]] = [T[n], T[k]]; E.sel.c = n; profRender(); });
+  $$('#profEd [data-nx]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); const T = E.m[E.sel.b][1], n = E.sel.c + +b.dataset.nx; if(n >= 0 && n < T.length) E.sel.c = n; profRender(); });
+  $$('#profEd select[data-d]').forEach(s => s.onchange = () => { rd(); const b = +s.dataset.d, d1 = +s.value, [d0, T] = E.m[b]; E.m[b] = [d1, profResample(T, d0, d1)]; E.sel = null; profRender(); });
+  $$('#profEd [data-dup]').forEach(b => b.onclick = () => { rd(); const k = +b.dataset.dup; E.m.splice(k + 1, 0, [E.m[k][0], E.m[k][1].slice()]); profRender(); });
+  $$('#profEd [data-del]').forEach(b => b.onclick = () => { rd(); if(E.m.length > 1){ E.m.splice(+b.dataset.del, 1); E.sel = null; profRender(); } });
+  $('#peAdd').onclick = () => { rd(); const d = E.m[E.m.length - 1][0]; E.m.push([d, Array(4 * d).fill('.')]); profRender(); };
+  $('#peListen').onclick = () => { rd(); profListen(); };
+  $('#peX').onclick = profClose;
+  $('#peRes').onclick = () => { if(!PROF_OV[E.key]) return; if(!confirm('Revenir à la phrase d\'origine ?')) return; delete PROF_OV[E.key]; profSave(); profClose(true); };
+  $('#peSave').onclick = () => { rd(); const bpm = Math.round(+E.bpm), cyc = Math.round(+E.cyc);
+    if(!(bpm >= 40 && bpm <= 220)){ alert('BPM entre 40 et 220.'); return; } if(!(cyc >= 1 && cyc <= 8)){ alert('Tours entre 1 et 8.'); return; }
+    if(!E.m.some(([, T]) => T.some(x => x !== '.'))){ alert('La phrase est vide : mets au moins un son.'); return; }
+    PROF_OV[E.key] = { n:E.n.trim() || E.n0, t:E.t.trim(), bpm, cyc, m:E.m.map(([d, T]) => [d, T.join(' ')]) }; profSave(); profClose(true); }; }
+
+function profEdit(i, e){
+  const lv = LRNLV, X = lrnExs(i, lv)[e], key = lrnKey(i, e, lv);
+  PE = { i, e, lv, key, n:X.n, n0:X.n, t:X.t || '', bpm:X.bpm, cyc:X.cyc || 2, m:profCopyM(X.m), sel:null };
+  let el = $('#profEd'); if(!el){ el = document.createElement('div'); el.id = 'profEd'; document.body.appendChild(el); }
+  el.style.display = 'block'; profRender(); }
+function profClose(saved){ profStop(); const el = $('#profEd'); if(el){ el.style.display = 'none'; el.innerHTML = ''; } PE = null; if(saved === true && LR && LR.isl >= 0) lrnOpenPl(LR.isl, true); }
+
+/* export / import (JSON) */
+function profBox(title, text, onOk, okLabel){ let el = $('#profBox'); if(el) el.remove(); el = document.createElement('div'); el.id = 'profBox';
+  el.innerHTML = `<div class="pbox"><div class="ph"><b>${title}</b><button class="pbtn" id="pbX">✕</button></div><textarea id="pbT" rows="10" spellcheck="false"></textarea><div class="pfoot"><button class="pbtn" id="pbCp">📋 Copier</button>${onOk ? `<button class="pbtn ok" id="pbOk">${okLabel || 'OK'}</button>` : ''}</div></div>`;
+  document.body.appendChild(el); $('#pbT').value = text; $('#pbX').onclick = () => el.remove();
+  $('#pbCp').onclick = () => { const t = $('#pbT'); t.select(); try{ navigator.clipboard.writeText(t.value); }catch(e){ try{ document.execCommand('copy'); }catch(er){} } $('#pbCp').textContent = '✓ Copié'; };
+  if(onOk) $('#pbOk').onclick = () => { if(onOk($('#pbT').value) !== false) el.remove(); }; }
+const profExport = () => profBox('📤 Exporter mes phrases (' + Object.keys(PROF_OV).length + ' modifiées)', JSON.stringify({ v:1, ovr:PROF_OV }), null);
+const profImport = () => profBox('📥 Importer des phrases', '', t => { try{ const d = JSON.parse(t); if(!d || typeof d.ovr !== 'object') throw 0; Object.assign(PROF_OV, d.ovr); profSave(); alert('Importé : ' + Object.keys(d.ovr).length + ' phrase(s).'); return true; }catch(e){ alert('Texte non reconnu.'); return false; } }, 'Importer');
 
 /* =====================================================================
    TABLEAU 1 — LES SONS : le parcours d'apprentissage des débutants.
@@ -1876,7 +1976,7 @@ function lrnCastleWin(done){
    Dans les mesures : « $ » = le son de l'île, « . » = silence. Une mesure = 4 temps (div 1 → 4 cases, 2 → 8, 4 → 16, 8 → 32).
    ===================================================================== */
 const LRN_LS = 'bbx-lrn';
-const lrnOpenAll = () => !!CFG.unlock; // progression réelle ; la case « Tout débloquer » (CFG.unlock) ouvre tout pour les tests. Fonction : CFG n'existe pas encore au chargement de ce fichier.
+const lrnOpenAll = () => !!CFG.unlock || !!CFG.prof; // progression réelle ; la case « Tout débloquer » (CFG.unlock) ouvre tout pour les tests. Fonction : CFG n'existe pas encore au chargement de ce fichier.
 const lrnSub = (e, S) => Object.assign({}, e, { m:e.m.map(([d, s]) => [d, s.replace(/\$/g, S)]) });
 const E = (n, t, bpm, lv, m, o) => Object.assign({ n, t, bpm, lv, m, cyc:2, mus:1 }, o || {});
 
@@ -1988,7 +2088,8 @@ const LRW = 192, LRPS = 106, LRWH = 320 + LRN_PN * LRPS,
 const lrnData = () => { const d = LS.get(LRN_LS, null); return d && d.s ? d : { s:{}, b:{} }; };
 /* v48 : 3 niveaux (+ Hardcore). Niveau 1 = clés d'avant (« lp:0 »), niveaux suivants « lp:0@2 »… */
 const lrnKey = (i, e, lv) => { lv = lv || LRNLV; return LRN_I[i].id + ':' + e + (lv > 1 ? '@' + lv : ''); };
-const lrnExs = (i, lv) => LRN_X[lv || LRNLV][i];
+/* v53 : mode prof — les phrases modifiées (PROF_OV, prof.js) remplacent celles d'origine */
+const lrnExs = (i, lv) => { const L = lv || LRNLV, A = LRN_X[L][i]; if(!A || !Object.keys(PROF_OV).length) return A; return A.map((X, e) => { const o = PROF_OV[lrnKey(i, e, L)]; return o ? Object.assign({}, X, o) : X; }); };
 const lrnStars = (i, e, lv) => lrnData().s[lrnKey(i, e, lv)] || 0;
 /* v52 : les 6 premières planètes s'ouvrent dans l'ordre qu'on veut, chacune donne un joyau ; le château (PTK) demande les 6 joyaux */
 const LRN_CASTLE = LRN_PL.findIndex(P => P.k === 'PTK'), lrnGemsAll = lv => LRN_PL.slice(0, LRN_CASTLE).every((_, pi) => lrnPlDone(pi, lv)), lrnGemsN = lv => LRN_PL.slice(0, LRN_CASTLE).filter((_, pi) => lrnPlDone(pi, lv)).length;
@@ -2036,7 +2137,7 @@ function lrnInit(){
   cv.addEventListener('pointerdown', ev => { A.drag = { y0:ev.clientY, c0:A.cam, moved:false }; try{ cv.setPointerCapture(ev.pointerId); }catch(e){} });
   cv.addEventListener('pointermove', ev => { const d = A.drag; if(!d) return; if(Math.abs(ev.clientY - d.y0) > 6) d.moved = true; if(d.moved){ A.free = true; A.cam = lrnClampCam(d.c0 - (ev.clientY - d.y0) / A.sc); } });
   cv.addEventListener('pointerup', ev => { const d = A.drag; A.drag = null; if(!d || d.moved || $('#lrnIsl').classList.contains('on')) return; const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * LRW, y = (ev.clientY - r.top) / r.height * A.hv + A.cam; let bi = -1, bd = 1e9;
-    LRNN.forEach((n, i) => { const dd = Math.hypot(n.x - x, n.y - y); if(dd < bd){ bd = dd; bi = i; } }); if(bi >= 0 && bd < 40) lrnSelect(bi); });
+    LRNN.forEach((n, i) => { const dd = Math.hypot(n.x - x, n.y - y); if(dd < bd){ bd = dd; bi = i; } }); if(bi >= 0 && bd < 40) lrnSelect(bi, bi !== A.sel); });
   cv.addEventListener('wheel', ev => { A.free = true; A.cam = lrnClampCam(A.cam + ev.deltaY / 4); ev.preventDefault(); }, { passive:false });
   $('#lrnBack').onclick = () => { advMusic(null); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){} renderHome(); show('home'); };
   $('#lrnSnd').onclick = () => { advSndToggle(); lrnSndBtn(); };
@@ -2086,7 +2187,7 @@ function lrnPanelH(){ const A = LR; requestAnimationFrame(() => { const p = $('#
 /* l'intérieur d'une planète : écouter, comprendre, les exercices (une section par île quand la planète en regroupe deux) */
 function lrnExRows(i){ const EX = lrnExs(i);
   return EX.map((X, e) => { const open = lrnExOpen(i, e), st = lrnStars(i, e), best = lrnData().b[lrnKey(i, e)], sn = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))].join(' ');
-    return `<div class="lrx ${open ? '' : 'lk'}" data-i="${i}" data-e="${e}"><div class="lrxn">${open ? e + 1 : '🔒'}</div><div class="lrxb"><div class="lrxt">${X.n}</div><div class="lrxd">${open ? X.t : 'Réussis l\'exercice précédent.'}</div><div class="lrxs"><span class="${st >= 4 ? 'b' : 'g'}">${'★'.repeat(Math.min(3, st))}</span><span class="d">${'★'.repeat(3 - Math.min(3, st))}</span> <small>${sn} · ${X.bpm} BPM${best != null ? ' · ' + best + ' %' : ''}</small></div></div>${open ? '<button class="lrs" title="Écouter l\'exercice">🔊</button>' : ''}<button class="b-pink" ${open ? '' : 'disabled'}>▶</button>${open ? lrnStrip(X) : ''}</div>`; }).join(''); }
+    return `<div class="lrx ${open ? '' : 'lk'}" data-i="${i}" data-e="${e}"><div class="lrxn">${open ? e + 1 : '🔒'}</div><div class="lrxb"><div class="lrxt">${X.n}${PROF_OV[lrnKey(i, e)] ? ' <small title="phrase modifiée">✎</small>' : ''}${CFG.prof ? ' <button class="pgear" data-prof="1" title="Modifier la phrase">⚙</button>' : ''}</div><div class="lrxd">${open ? X.t : 'Réussis l\'exercice précédent.'}</div><div class="lrxs"><span class="${st >= 4 ? 'b' : 'g'}">${'★'.repeat(Math.min(3, st))}</span><span class="d">${'★'.repeat(3 - Math.min(3, st))}</span> <small>${sn} · ${X.bpm} BPM${best != null ? ' · ' + best + ' %' : ''}</small></div></div>${open ? '<button class="lrs" title="Écouter l\'exercice">🔊</button>' : ''}<button class="b-pink" ${open ? '' : 'disabled'}>▶</button>${open ? lrnStrip(X) : ''}</div>`; }).join(''); }
 function lrnOpenPl(pi, noAnim){
   if(pi === LRN_CASTLE && !noAnim && lrnPlOpen(pi) && !LS.get('bbx-castle-seen', 0)){ LS.set('bbx-castle-seen', 1); lrnCastleWin(() => lrnOpenPl(pi, true)); return; }
   const P = LRN_PL[pi]; if(!lrnPlOpen(pi)) return; const el = $('#lrnIsl'); LR.isl = pi; advSfx('sel');
@@ -2098,7 +2199,7 @@ function lrnOpenPl(pi, noAnim){
     <div class="advt" style="font-size:.88rem">${P.how}</div><div class="lrhr"><button class="lrl" id="lrnClk2" style="flex:1 1 100%">${lrnClkTxt()}</button></div>
     <div class="lrg">LES EXERCICES · ${lrnLvName()} (${nEx})</div><div class="lrlg"><i class="a"></i>sur le temps (1 2 3 4) <i class="b"></i>« & » = contretemps <i class="c"></i>« e » et « a » = doubles croches · 🔊 écouter · la case claire qui bouge = où on en est</div>${secs}`;
   el.classList.add('on'); $$('#lrnIslB .lrl[data-t]').forEach(b => { b.onclick = () => lrnHear(b.dataset.t); }); $('#lrnClk2').onclick = lrnToggleClk;
-  $$('#lrnIslB .lrx').forEach(r => { const i = +r.dataset.i, e = +r.dataset.e; r.querySelector('.b-pink').onclick = () => lrnPlay(i, e); const sb = r.querySelector('.lrs'); if(sb) sb.onclick = () => lrnListen(i, e); }); el.scrollTop = 0; }
+  $$('#lrnIslB .lrx').forEach(r => { const i = +r.dataset.i, e = +r.dataset.e; r.querySelector('.b-pink').onclick = () => lrnPlay(i, e); const pg = r.querySelector('[data-prof]'); if(pg) pg.onclick = () => profEdit(i, e); const sb = r.querySelector('.lrs'); if(sb) sb.onclick = () => lrnListen(i, e); }); el.scrollTop = 0; }
 
 function lrnCloseIsl(quiet){ lrnStopListen(); const el = $('#lrnIsl'); if(el) el.classList.remove('on'); if(LR) LR.isl = -1; if(!quiet && LR) lrnPanel(); }
 /* écouter le son : 4 coups du vrai sample */
@@ -2116,7 +2217,7 @@ function lrnStrip(X){
       for(let b = 0; b < sg.T.length / d; b++){ let lab = '', cel = '';
         for(let j = 0; j < d; j++){ const tk = sg.T[b * d + j], c = d === 3 ? 'c' : lrnCls(j, d), id = ci++;
           lab += `<i class="${c}">${j === 0 ? bn + 1 : lrnLab(j, d)}</i>`;
-          cel += `<span class="sc ${c} ${tk === '.' ? 'z' : ''}" data-m="${k}" data-c="${id}"${tk === '.' ? '' : ` style="--c:${LC[HERO.laneOf(tk)]}"`}>${tk === '.' ? '' : tk}</span>`; }
+          cel += `<span class="sc ${c} ${tk === '.' ? 'z' : ''}" data-m="${k}" data-c="${id}"${tk === '.' ? '' : ` style="--c:${tokCol(tk, HERO.laneOf(tk))}"`}>${tk === '.' ? '' : tk}</span>`; }
         h += `<div class="lrbt"><div class="lrlb">${lab}</div><div class="lrcl">${cel}</div></div>`; bn++; } });
     return `<div class="lrm d${Math.max.apply(null, M.map(z => z.d))}"><b class="lrmn">${k + 1}</b>${h}</div>`; }).join('') + '</div>'; }
 function lrnStopListen(){
@@ -2130,12 +2231,12 @@ async function lrnListen(i, e){
   ensure(); const X = lrnExs(i)[e], spb = 60 / X.bpm, bus = ac.createGain(); bus.gain.value = .9; bus.connect(ac.destination);
   const MS = lrnMeasures(X.m), nM = MS.length, cyc = X.cyc, cl = []; // cl = toutes les cases d'un tour : { t (temps depuis le début du tour), k (mesure), c (case) , tk }
   MS.forEach((M, k) => { let at = k * 4, ci = 0; M.forEach(sg => { sg.T.forEach((tk, j) => { cl.push({ t:at + j / sg.d, k, c:ci++, tk }); }); at += sg.beats; }); });
-  const T = ac.currentTime + .1, total = 4 + cyc * nM * 4;
+  const T = ac.currentTime + .1, total = cyc * nM * 4; // écoute : on part tout de suite, sans « 1 2 3 4 » (le décompte reste avant de jouer pour de vrai)
   for(let b = 0; b < total; b++) clickAt(T + b * spb, b % 4 === 0, bus);
-  for(let c = 0; c < cyc; c++) cl.forEach(z => { if(z.tk !== '.') sampleAt(T + (4 + c * nM * 4 + z.t) * spb, z.tk, HERO.laneOf(z.tk), bus); });
+  for(let c = 0; c < cyc; c++) cl.forEach(z => { if(z.tk !== '.') sampleAt(T + (c * nM * 4 + z.t) * spb, z.tk, HERO.laneOf(z.tk), bus); });
   const L = LRL = { i, e, bus, raf:0 }; if(btn){ btn.textContent = '■'; btn.classList.add('on'); }
   const cells = row ? [...row.querySelectorAll('.sc')] : []; let last = null;
-  const tick = () => { if(LRL !== L) return; const bt = (ac.currentTime - T) / spb - 4;
+  const tick = () => { if(LRL !== L) return; const bt = (ac.currentTime - T) / spb;
     if(bt > cyc * nM * 4 + .5){ lrnStopListen(); return; }
     let cur = null; if(bt >= 0){ const u = bt % (nM * 4); let z = cl[0]; for(let q = 0; q < cl.length && cl[q].t <= u + 1e-6; q++) z = cl[q]; cur = cells.find(x => +x.dataset.m === z.k && +x.dataset.c === z.c) || null; }
     if(cur !== last){ if(last) last.classList.remove('now'); if(cur) cur.classList.add('now'); last = cur; }
@@ -2407,7 +2508,7 @@ function amiRecord(a, stars, pct, why){
   amiSave(); return { tour, newDone, round:AMI.round, newBest:oldB == null || pct > oldB }; }
 function amiNoLink(){ show('ami'); $('#amiB').innerHTML = '<div class="card"><h2>🔗 Lien incomplet</h2><p>Ce lien ne contient pas ton invitation personnelle. Reprends le lien exact que Marc t\'a envoyé (il se termine par <b>?i=…</b>).</p></div>'; }
 
-const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, songId:'bj120', kck:'P', snr:'K', hat:'T', part:'beat', guide:true, mus:true, clk:true, mvol:.55, audOff:0, audBpm:0, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
+const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, prof:false, songId:'bj120', kck:'P', snr:'K', hat:'T', part:'beat', guide:true, mus:true, clk:true, mvol:.55, audOff:0, audBpm:0, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
 const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
 if(CFG.dv !== 15){ CFG.die = true; CFG.dv = 15; saveCfg(); } // v15 : cœurs, game over activé par défaut
 const styleOf = () => STYLES.find(s => s.id === CFG.style) || STYLES[1];
@@ -2644,7 +2745,7 @@ function refreshStatus(){
 function toks(pat){ const G = RY.grid(pat); const by = []; G.cells.forEach(c => { const k = Math.floor(c.b + 1e-6); (by[k] = by[k] || []).push(c); }); return by; }
 function renderPrev(){
   const pat = patOf(), by = toks(pat);
-  $('#prev').innerHTML = by.map((b, k) => '<span class="beat"' + (k && k % 4 === 0 ? ' style="margin-left:12px"' : '') + '>' + (b || []).map(c => c.ev ? `<span class="tk" style="--c:${LC[HERO.laneOf(c.tok)]}">${c.tok}</span>` : '<span class="tk sil">·</span>').join('') + '</span>').join('');
+  $('#prev').innerHTML = by.map((b, k) => '<span class="beat"' + (k && k % 4 === 0 ? ' style="margin-left:12px"' : '') + '>' + (b || []).map(c => c.ev ? `<span class="tk" style="--c:${tokCol(c.tok, HERO.laneOf(c.tok))}">${c.tok}</span>` : '<span class="tk sil">·</span>').join('') + '</span>').join('');
   const G = RY.grid(pat); $('#prevInfo').textContent = G.cells.length ? G.P + ' temps par tour · ' + G.ev.length + ' sons · Parfait ±' + Math.round(1000 * (HERO.LEVELS[CFG.niv] || HERO.LEVELS[1])[0]) + ' ms' : 'Phrase vide';
 }
 const bestAll = () => LS.get('bbx-hero-best', {});
@@ -2659,7 +2760,7 @@ function renderHome(){ ADV = null; stopHear(); setTimeout(() => { try{ marquee()
   $('#sndBox').open = ['kck', 'snr', 'hat'].some((k, i) => CFG[k] && CFG[k] !== ['P', 'K', 'T'][i]);
   $('#persoBox').open = CFG.style === 'perso'; $('#pTok').value = CFG.ptok; $('#pDiv').value = CFG.pdiv;
   const S = styleOf(); $('#speeds').innerHTML = ['Lent', 'Moyen', 'Rapide'].map((n, i) => `<button data-sp="${i}" class="${CFG.speed === i ? 'on' : ''}">${n} · ${S.bpm[i]}</button>`).join('') + `<button data-sp="3" class="${CFG.speed === 3 ? 'on' : ''}">Perso</button>`;
-  $('#bpm').value = CFG.speed === 3 ? (CFG.bpm || 85) : S.bpm[CFG.speed]; $('#cycles').value = CFG.cycles; $('#oDie').checked = CFG.die; $('#oBoss').checked = CFG.boss; $('#oUnlock').checked = CFG.unlock; $('#oStrict').checked = CFG.strict;
+  $('#bpm').value = CFG.speed === 3 ? (CFG.bpm || 85) : S.bpm[CFG.speed]; $('#cycles').value = CFG.cycles; $('#oDie').checked = CFG.die; $('#oBoss').checked = CFG.boss; $('#oUnlock').checked = CFG.unlock; $('#oProf').checked = CFG.prof; $('#profBtns').style.display = CFG.prof ? '' : 'none'; $('#oStrict').checked = CFG.strict;
   renderPrev(); refreshStatus();
 }
 $('#styles').onclick = e => { const b = e.target.closest('[data-s]'); if(!b) return; CFG.style = b.dataset.s; if(CFG.speed !== 3) CFG.speed = Math.min(CFG.speed, 2); saveCfg(); renderHome(); };
@@ -2691,6 +2792,8 @@ $('#bpm').oninput = e => { CFG.speed = 3; CFG.bpm = Math.max(50, Math.min(150, +
 $('#cycles').onchange = e => { CFG.cycles = +e.target.value; saveCfg(); };
 $('#oBoss').onchange = e => { CFG.boss = e.target.checked; saveCfg(); };
 $('#oUnlock').onchange = e => { CFG.unlock = e.target.checked; saveCfg(); renderHome(); };
+$('#oProf').onchange = e => { CFG.prof = e.target.checked; saveCfg(); $('#profBtns').style.display = CFG.prof ? '' : 'none'; renderHome(); };
+$('#oProfEx').onclick = profExport; $('#oProfIm').onclick = profImport;
 $('#oDie').onchange = e => { CFG.die = e.target.checked; saveCfg(); };
 $('#oStrict').onchange = e => { CFG.strict = e.target.checked; saveCfg(); };
 $('#oSend').checked = !!LS.get('bbx-hero-send', false); $('#oSend').onchange = e => LS.set('bbx-hero-send', e.target.checked);
@@ -3035,7 +3138,7 @@ function draw(g, now){
       ctx.globalAlpha = 1; continue; }
     if(y < topY - 30 || y > H + 40) continue;
     const li = LORDER.indexOf(n.lane), cx = X0 + li * LW + LW / 2, w = LW * .72;
-    let fill = '#f3fafe', edge = LC[n.lane], txt = LC[n.lane], al = 1, bw = 4, glow = LC[n.lane], gb = 9;
+    const tc = tokCol(n.tok, n.lane); let fill = hexMixW(tc, .88), edge = tc, txt = tc, al = 1, bw = 4, glow = tc, gb = 9;
     if(n.state !== 0){ const age = n.fxAt ? (tNow - n.fxAt) / 1000 : 0; al = Math.max(0, 1 - Math.max(0, age - .45) / .6); if(al <= 0) continue;
       fill = n.state === 1 ? (n.grade === 'perfect' ? V_OK : V_GOOD) : n.state === 2 ? V_BAD : V_WRONG; glow = fill; gb = 18; edge = '#fff'; bw = 3; txt = (n.state === 1 && n.grade === 'good') ? '#17324a' : '#fff'; }
     ctx.globalAlpha = al; ctx.shadowColor = glow; ctx.shadowBlur = gb;
@@ -3179,7 +3282,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v52', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v53', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -3256,7 +3359,7 @@ function renderEnd(){
     h += '<h2 style="margin:12px 0 4px">Ta grille</h2><div class="small muted" style="margin-bottom:4px">🟢 réussi · 🟡 parfois · 🔴 souvent raté · 🟣 son confondu · chiffre = décalage (ms)</div><div>';
     cells.forEach((c, i) => { const r = a.cells[i], mg = (c.b % 1 < .001 && c.b > 0) ? 'margin-left:8px;' : '';
       if(!c.ev) h += `<span class="cell x" style="${mg}">${r && r.x ? '+' + r.x : '·'}</span>`;
-      else h += `<span class="cell ${cellClass(r)}" style="${mg}--c:${LC[HERO.laneOf(c.tok)]}">${c.tok}<small>${r.h ? (r.r > 0 ? '+' : '') + r.r : '✕'}${r.x ? ' +' + r.x : ''}</small></span>`; });
+      else h += `<span class="cell ${cellClass(r)}" style="${mg}--c:${tokCol(c.tok, HERO.laneOf(c.tok))}">${c.tok}<small>${r.h ? (r.r > 0 ? '+' : '') + r.r : '✕'}${r.x ? ' +' + r.x : ''}</small></span>`; });
     h += '</div>';
     const bad = cells.map((c, i) => ({ c, r:a.cells[i], i })).filter(z => z.c.ev && z.r.m > 0), conf = cells.map((c, i) => ({ c, r:a.cells[i] })).filter(z => z.c.ev && z.r.f > 0);
     if(bad.length) h += '<h2 style="margin:12px 0 2px">Notes à travailler</h2><ul class="l">' + bad.sort((p, q) => q.r.m - p.r.m).slice(0, 5).map(z => `<li>Case ${z.i + 1} (<b>${z.c.tok}</b>) : ratée ${z.r.m} fois sur ${z.r.h + z.r.m}</li>`).join('') + '</ul>';
