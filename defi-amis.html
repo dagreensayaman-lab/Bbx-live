@@ -166,20 +166,35 @@ body.advon{overflow:hidden;background:#1b63c4}
 .dNm{margin-top:4px;font:900 15px Nunito,system-ui;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dSt{font:800 12px Nunito,system-ui;color:#ffe27a;min-height:16px}
 .dVs{font:900 20px Nunito,system-ui;color:#ffe27a;padding-bottom:42px}
+
+#ptToast{display:none;position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;background:#ffd23f;color:#3a2a00;border-radius:18px;padding:9px 18px;font:900 16px Nunito,system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.4);max-width:92vw;text-align:center}
+#ptToast.on{display:block}
+.vPrev{display:flex;justify-content:center;background:linear-gradient(180deg,#3b2f7a 0,#5a4aa0 70%,#2b2260 70%);border-radius:16px;margin:8px 0;padding:8px}
+.vPrev canvas{image-rendering:pixelated}
+.vTabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin:4px 0}
+.vTab{flex:none;background:#e6eefa;color:#17324a;border:0;border-radius:12px;padding:6px 10px;font:800 13px Nunito,system-ui,sans-serif}
+.vTab.on{background:#ffe27a;color:#3a2a00}
+.vGrid{display:flex;flex-wrap:wrap;gap:6px}
+.vOpt{background:#eef4fb;border:3px solid transparent;border-radius:12px;padding:3px;line-height:1;width:68px;color:#17324a}
+.vOpt.sel{border-color:#ffb000;background:#fff3c4}
+.vOpt.lock canvas{opacity:.45}
+.vOpt .vLb{color:#17324a;font:800 10px Nunito,system-ui,sans-serif;min-height:12px;margin-top:2px}
 </style></head><body>
+<div id="ptToast"></div>
 <div class="wrap">
 
 <!-- ================= ACCUEIL ================= -->
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 58 · 3 nov. 2026 · duel en ligne + avatars, intensité fort/faible, Mes cours · Défi amis</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 58 · 3 nov. 2026 · duel en ligne, vestiaire de persos, intensité fort/faible, Mes cours · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
     <div class="small" style="opacity:.92">Le parcours des débutants, de planète en planète : kick, charleys, caisses claires, puis les beats. Écoute, comprends, puis joue en rythme. Ramasse les étoiles pour ouvrir la suite.</div>
     <div class="row" style="margin-top:10px"><button class="b-yel big" id="bLrn">▶ LES SONS</button><span id="lrnHomeSt" class="small" style="font-weight:800"></span></div>
     <div class="row" style="margin-top:8px"><button class="b-cyan" id="bCrs">📚 MES COURS</button><span id="crsHomeSt" class="small" style="font-weight:800"></span></div>
+    <div class="row" style="margin-top:8px"><button class="b-cyan" id="bAv">👕 MON PERSO</button><span id="avHomeSt" class="small" style="font-weight:800"></span></div>
     <div class="row" style="margin-top:8px"><button class="b-pink" id="bDuel">⚔️ DUEL EN LIGNE</button><span class="small" style="font-weight:800;opacity:.85">à deux, chacun chez soi</span></div>
   </div>
 
@@ -296,6 +311,12 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="duel" class="scr">
   <h1>⚔️ BBX Hero</h1>
   <div id="duelB"></div>
+</div>
+
+<!-- ================= VESTIAIRE ================= -->
+<div id="vest" class="scr">
+  <h1>👕 BBX Hero</h1>
+  <div id="vestB"></div>
 </div>
 
 <!-- ================= DÉFI AMIS ================= -->
@@ -2711,45 +2732,97 @@ const crsHomeSt = () => { const e = $('#crsHomeSt'); if(e) e.textContent = CRS.c
 { const b = $('#bCrs'); if(b) b.onclick = () => crsShow('home'); const m = $('#lrnCrs'); if(m) m.onclick = () => { try{ advMusic(null); }catch(e){} crsShow('lrn'); }; crsHomeSt(); }
 
 /* =====================================================================
-   AVATARS (v58) — les persos des joueurs (même style pixel-art que le héros de l'histoire : 11 × 15 pixels).
-   Un profil = une forme de tête/cheveux (AVH) + des couleurs (peau, cheveux, haut, pantalon, détails). Choix mémorisé : localStorage « bbx-hero-av ».
-   avDraw(ctx, id, x, y, k, frame, mic) dessine le perso (x, y = coin haut-gauche, k = taille d'un pixel) ; avCanvas(id, k) crée un <canvas> prêt à l'emploi.
-   Lettres : s peau · h cheveux · H cheveux foncés (mèches) · r/R casquette ou bonnet · g/G casque audio · w haut · W haut (ombre) · b pantalon · k baskets · e yeux · m bouche · M/n micro
+   AVATARS (v58) — le perso du joueur, en pièces détachées (pixel-art 11 × 15, comme le héros de l'histoire), + le vestiaire.
+   Un perso = un petit objet d'indices : { lk, sk, hs, hc, ht, hk, tp, tc, bt, bc, ac }
+     lk look (garçon / fille / neutre : cils et lèvres) · sk peau · hs coiffure · hc couleur des cheveux · ht couvre-chef · hk couleur du couvre-chef
+     tp haut · tc couleur du haut · bt bas · bc couleur du bas · ac accessoire
+   Pièces payantes : débloquées avec des pièces 🪙 gagnées en jouant (solo +3 à +13 par partie, duel +12 / +30). Toutes les teintes de peau sont gratuites.
+   Stockage : localStorage « bbx-hero-avc » (perso), « bbx-hero-pts » ({ c:pièces, t:total gagné, u:[« cat:indice » débloqués] }). Local = non infalsifiable (cosmétique seulement).
+   Un perso reçu d'Internet passe toujours par avClean() (indices bornés).
    ===================================================================== */
-const AVH = { // 11 colonnes × 11 lignes (tête + buste)
-  cap:   ['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.RRRRRRRRRR', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
-  phones:['...hhhhh...', '..hhhhhhh..', '.ghhhhhhhg.', 'gghhhhhhhgg', 'gghsssssHgg'.replace('H', 'h'), 'gghsesesh.g'.replace('.', 'h'), '.hhsssmsshh', '.hh.sssss.h', '.hwwwwwwwwM', 'hswwwwwwwsn', 'hswwwwwwwwn'],
-  afro:  ['..hhhhhhh..', '.hhhhhhhhh.', 'hhhhhhhhhhh', 'hhhhhhhhhhh', 'hhsssssssh.'.replace('.', 'h'), 'hhsesssesh.'.replace('.', 'h'), '.hsssmssh..'.replace('..', 'h.'), '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
-  spiky: ['.h..h.h..h.', '..hhhhhhh..', '.hhhhhhhhh.', '.hhHHHHHhh.', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
-  scarf: ['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.rrsssssrr.', '.rrsesesrr.', '.rrssmssrr.', '.rrrsssrrr.', '..rrrrrrr.M', '.rrwwwwwrrM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
-  bun:   ['....hhh....', '..hhhhhhh..', '.hhhhhhhhh.', '.hhhhhhhhh.', '.hhsssssHh.'.replace('H', 'h'), '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
-  beanie:['...rrrrr...', '..rrrrrrr..', '.rrrrrrrrr.', '.RRRRRRRRR.', '.hsssssssh.', '.hsesssesh.', '..sssmsss..', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'],
-  locs:  ['..hhhhhhh..', '.hhhhhhhhh.', 'hhhhhhhhhhh', 'hhhsssssshh'.slice(0, 11), 'hhsesssesh.'.replace('.', 'h'), 'h.sssmsss.h', 'h.sssssss.h', '...sssss..M', '.wwwwwwwwwM', 'swwwwwwwwsn', 'swwwwwwwwwn'] };
-const AVL = [['.bbbbbbbbb.', '.bbbb.bbbb.', '.bbbb.bbbb.', 'kkkk...kkkk'], ['.bbbbbbbbb.', 'bbbb...bbbb', 'bbb.....bbb', 'kkk.....kkk']];
-const AV_SK = { a:'#ffdcb8', b:'#f1c27d', c:'#d49a62', d:'#a8693a', e:'#7a4a28', f:'#4e3020' }; // du plus clair au plus foncé
-const AV_PROF = [ // n = nom du profil (info-bulle)
-  { n:'Casquette',      h:'cap',    sk:'a', hair:'#2b1d14', r:'#e23a3a', w:'#f6f6f6', b:'#2f5fc4' },
-  { n:'Casquette',      h:'cap',    sk:'d', hair:'#1a1410', r:'#2f9e5b', w:'#fff3b0', b:'#3a3a52' },
-  { n:'Casque audio',   h:'phones', sk:'a', hair:'#7a4a28', g:'#ff5ec4', w:'#7fe9ff', b:'#3b2f7a' },
-  { n:'Casque audio',   h:'phones', sk:'e', hair:'#161018', g:'#ffd23f', w:'#ff8fb8', b:'#2f5fc4' },
-  { n:'Afro',           h:'afro',   sk:'f', hair:'#120d0c', w:'#ffd23f', b:'#2f5fc4' },
-  { n:'Pointes',        h:'spiky',  sk:'b', hair:'#14141f', w:'#e23a3a', b:'#3a3a52' },
-  { n:'Foulard',        h:'scarf',  sk:'c', r:'#8a5cff', w:'#f6f6f6', b:'#3a3a52' },
-  { n:'Chignon',        h:'bun',    sk:'b', hair:'#14141f', w:'#2fd073', b:'#2f5fc4' },
-  { n:'Bonnet',         h:'beanie', sk:'a', hair:'#c8562a', r:'#2f5fc4', w:'#e23a3a', b:'#3a3a52' },
-  { n:'Locks',          h:'locs',   sk:'d', hair:'#2b1d14', w:'#7fe9ff', b:'#3b2f7a' },
-  { n:'Casque audio',   h:'phones', sk:'c', hair:'#e8b030', g:'#8a5cff', w:'#f6f6f6', b:'#2f5fc4' },
-  { n:'Pointes',        h:'spiky',  sk:'e', hair:'#ff5ec4', w:'#fff3b0', b:'#3b2f7a' } ];
-function avColors(id){ const P = AV_PROF[id % AV_PROF.length], sk = AV_SK[P.sk], shade = (c, f) => '#' + [1, 3, 5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(c.substr(i, 2), 16) * f))).toString(16).padStart(2, '0')).join('');
-  return { s:sk, m:shade(sk, .68), e:'#1a1a2e', h:P.hair || '#2b1d14', H:shade(P.hair || '#2b1d14', 1.5), r:P.r || '#e23a3a', R:shade(P.r || '#e23a3a', .72), g:P.g || '#7fe9ff', w:P.w, W:shade(P.w, .8), b:P.b, k:'#ffffff', M:'#c9d1d9', n:'#3a3a46' }; }
-function avDraw(c, id, x, y, k, f, mic){ const P = AV_PROF[id % AV_PROF.length], col = avColors(id), rows = AVH[P.h].concat(AVL[f ? 1 : 0]);
-  rows.forEach((row, j) => { for(let i = 0; i < row.length; i++){ const ch = row[i]; if(ch === '.' || ((ch === 'M' || ch === 'n') && mic === false)) continue; c.fillStyle = col[ch] || '#fff'; c.fillRect(Math.round(x + i * k), Math.round(y + j * k), Math.ceil(k), Math.ceil(k)); } }); }
-/* <canvas> d'un avatar : k = pixel (3 → 33 × 45) ; animé (jambes) si on appelle avAnim */
-function avCanvas(id, k, cls){ const cv = document.createElement('canvas'); cv.width = Math.round(11 * k + 2 * k); cv.height = Math.round(15 * k + 2 * k); cv.className = cls || 'dav'; cv.dataset.av = id; cv.dataset.k = k; avPaint(cv, 0); return cv; }
-function avPaint(cv, f, mic){ const c = cv.getContext('2d'), k = +cv.dataset.k; c.clearRect(0, 0, cv.width, cv.height); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(cv.width / 2, cv.height - k * .9, k * 5.5, k * 1.1, 0, 0, 7); c.fill(); avDraw(c, +cv.dataset.av, k, k * .2, k, f, mic); }
+const AV_SK = ['#ffdcb8', '#f1c27d', '#e0ac69', '#c68642', '#a8693a', '#8d5524', '#7a4a28', '#4e3020'];
+const AV_HAIRC = ['#14141f', '#2b1d14', '#5a3a22', '#8a5a2b', '#e8b030', '#c8562a', '#d8d8e0', '#7a7a88', '#ff5ec4', '#3a8bff', '#2fd073', '#8a5cff'];
+const AV_CLOTH = ['#f6f6f6', '#e23a3a', '#2f5fc4', '#2fd073', '#ffd23f', '#7fe9ff', '#ff8fb8', '#3a3a52', '#ff7a1a', '#8a5cff', '#14141f', '#ffd700'];
+const AV_BOTC = ['#2f5fc4', '#3a3a52', '#3b2f7a', '#a82424', '#2f9e5b', '#8a7a5a', '#f6f6f6', '#ff8fb8', '#14141f', '#ffd700'];
+const avO = (n, y0, rows, p) => ({ n, y0, rows, p:p || 0 }), avE = '...........';
+const AV_OPT = {
+  lk:[{ n:'Garçon', p:0 }, { n:'Fille', p:0 }, { n:'Neutre', p:0 }],
+  sk:AV_SK.map((c, i) => ({ c, p:0, n:'Teinte ' + (i + 1) })),
+  hs:[avO('Aucun', 0, []), avO('Courts', 0, ['...hhhhh...', '..hhhhhhh..', '.hhhhhhhhh.', '.hhhhhhhhh.', '.h.......h.', '.h.......h.']),
+      avO('Afro', 0, ['..hhhhhhh..', '.hhhhhhhhh.', 'hhhhhhhhhhh', 'hhhhhhhhhhh', 'hhh.....hhh', 'hhh.....hhh', '.hh.....hh.']),
+      avO('Longs', 0, ['...hhhhh...', '..hhhhhhh..', '.hhhhhhhhh.', '.hhhhhhhhh.', '.hh.....hh.', '.hh.....hh.', '.hh.....hh.', '.hh.....hh.', 'hh.......hh']),
+      avO('Pointes', 0, ['.h..h.h..h.', '..hhhhhhh..', '.hhhhhhhhh.', '.hhhhhhhhh.', '.h.......h.']),
+      avO('Chignon', 0, ['....hhh....', '..hhhhhhh..', '.hhhhhhhhh.', '.hhhhhhhhh.', '.h.......h.']),
+      avO('Rasés', 0, [avE, '...hhhhh...', '..hhhhhhh..']),
+      avO('Crête', 0, ['.....h.....', '....hhh....', '....hhh....', '....hhh....']),
+      avO('Locks', 0, ['..hhhhhhh..', '.hhhhhhhhh.', 'hhhhhhhhhhh', 'hhhhhhhhhhh', 'hh.......hh', 'h.........h', 'h.........h', 'h.........h'], 40)],
+  hc:AV_HAIRC.map((c, i) => ({ c, p:i >= 8 ? 30 : 0, n:'' })),
+  ht:[avO('Aucun', 0, []), avO('Casquette', 0, ['...ccccc...', '..ccccccc..', '.ccccccccc.', '.CCCCCCCCCC']), avO('Bonnet', 0, ['...ccccc...', '..ccccccc..', '.ccccccccc.', '.CCCCCCCCC.']),
+      avO('Casque audio', 0, [avE, '..ggggggg..', '.g.......g.', 'gg.......gg', 'gg.......gg', 'gg.......gg']), avO('Foulard', 0, ['...ccccc...', '..ccccccc..', '.ccccccccc.', '.cc.....cc.', '.cc.....cc.', '.cc.....cc.', '.ccc...ccc.', '..ccccccc..', '..cc...cc..']),
+      avO('Bandeau', 3, ['.ccccccccc.']), avO('Oreilles de chat', 0, ['.cc.....cc.', '.ccc...ccc.'], 50), avO('Couronne', 0, ['..a.a.a.a..', '..aaaaaaa..'], 120)],
+  hk:AV_CLOTH.map((c, i) => ({ c, p:i === 11 ? 60 : 0, n:'' })),
+  tp:[avO('T-shirt', 8, ['.wwwwwwwww.', 'swwwwwwwwws', 'swwwwwwwwws']), avO('Sweat', 7, ['..wwsssww..', 'wwwwwwwwwww', 'wwwwWWWwwww', 'swwwWWWwwws']), avO('Maillot', 8, ['.wwwwwwwww.', 'swwWWWWWwws', 'swwwwwwwwws']),
+      avO('Débardeur', 8, ['ssswwwwwsss', 'sswwwwwwwss', 'sswwwwwwwss'], 20), avO('Veste', 8, ['.wwwwWwwww.', 'wwwwwWwwwww', 'swwwwWwwwws'], 40)],
+  tc:AV_CLOTH.map((c, i) => ({ c, p:i >= 8 ? 15 : 0, n:'' })).map((o, i) => (i === 11 ? Object.assign(o, { p:60 }) : o)),
+  bt:[{ n:'Baggy', p:0, f:[['.bbbbbbbbb.', '.bbbb.bbbb.', '.bbbb.bbbb.', 'kkkk...kkkk'], ['.bbbbbbbbb.', 'bbbb...bbbb', 'bbb.....bbb', 'kkk.....kkk']] },
+      { n:'Slim', p:15, f:[['.bbbbbbbbb.', '..bbb.bbb..', '..bbb.bbb..', '.kkkk.kkkk.'], ['.bbbbbbbbb.', '..bbb..bbb.', '..bb....bb.', '.kkk....kkk']] },
+      { n:'Short', p:0, f:[['.bbbbbbbbb.', '.bbbb.bbbb.', '..ss...ss..', '.kkk...kkk.'], ['.bbbbbbbbb.', '.bbbb.bbbb.', '.ss.....ss.', 'kkk.....kkk']] },
+      { n:'Jupe', p:0, f:[['.bbbbbbbbb.', 'bbbbbbbbbbb', '..ss...ss..', '.kkk...kkk.'], ['.bbbbbbbbb.', 'bbbbbbbbbbb', '.ss.....ss.', 'kkk.....kkk']] }],
+  bc:AV_BOTC.map((c, i) => ({ c, p:i === 9 ? 60 : i >= 8 ? 15 : 0, n:'' })),
+  ac:[avO('Aucun', 0, []), avO('Micro', 7, ['..........M', '..........M', '..........n', '..........n']), avO('Lunettes', 4, ['..yyy.yyy..', '..yey.yey..', '..yyy.yyy..'], 25), avO('Boucles', 5, ['.a.......a.', '.a.......a.'], 25), avO('Chaîne', 8, ['...a...a...', '....aaa....'], 40)] };
+const AV_CATS = [['lk', 'Look'], ['sk', 'Peau'], ['hs', 'Cheveux'], ['hc', 'Couleur'], ['ht', 'Couvre-chef'], ['hk', 'Couleur'], ['tp', 'Haut'], ['tc', 'Couleur'], ['bt', 'Bas'], ['bc', 'Couleur'], ['ac', 'Accessoire']];
+const AV_DEF = { lk:0, sk:0, hs:1, hc:1, ht:1, hk:1, tp:0, tc:0, bt:0, bc:0, ac:1 }; // le héros de l'histoire : casquette rouge, tee blanc, baggy bleu, micro
+const avClean = c => { const o = {}; Object.keys(AV_DEF).forEach(k => { const v = c && Number.isInteger(+c[k]) ? +c[k] : AV_DEF[k]; o[k] = v >= 0 && v < AV_OPT[k].length ? v : AV_DEF[k]; }); return o; };
+const avShade = (c, f) => '#' + [1, 3, 5].map(i => Math.max(0, Math.min(255, Math.round(parseInt(c.substr(i, 2), 16) * f))).toString(16).padStart(2, '0')).join('');
+const AV_BASE = [avE, E, E, '..sssssss..', '..sssssss..', '..sessses..', '..sssmsss..', '...sssss...'];
+function avGrid(cfg){
+  cfg = avClean(cfg); const g = Array.from({ length:15 }, () => Array(11).fill('.')); const put = (y0, rows, rep) => rows.forEach((r, j) => { if(!r) return; for(let i = 0; i < 11; i++){ const ch = r[i]; if(ch && ch !== '.') g[y0 + j][i] = rep && rep[ch] ? rep[ch] : ch; } });
+  put(0, AV_BASE); const bt = AV_OPT.bt[cfg.bt]; put(11, bt.f[0]); const tp = AV_OPT.tp[cfg.tp]; put(tp.y0, tp.rows); const hs = AV_OPT.hs[cfg.hs]; put(hs.y0, hs.rows);
+  const ht = AV_OPT.ht[cfg.ht]; put(ht.y0, ht.rows); if(cfg.lk === 1){ g[4][3] = 'e'; g[4][7] = 'e'; g[6][5] = 'p'; } const ac = AV_OPT.ac[cfg.ac]; put(ac.y0, ac.rows);
+  return { g, bt, cfg }; }
+function avDraw(c, cfg, x, y, k, f, mic){
+  const { g, bt, cfg:C } = avGrid(cfg), sk = AV_SK[C.sk], hc = AV_HAIRC[C.hc], hk = AV_CLOTH[C.hk], tc = AV_CLOTH[C.tc], bc = AV_BOTC[C.bc];
+  const col = { s:sk, m:avShade(sk, .68), e:'#1a1a2e', h:hc, H:avShade(hc, 1.5), c:hk, C:avShade(hk, .72), g:hk, w:tc, W:avShade(tc, .8), b:bc, k:'#ffffff', M:'#c9d1d9', n:'#3a3a46', a:'#ffd23f', y:'#1a1a2e', p:'#d6455f' };
+  const leg = bt.f[f ? 1 : 0]; leg.forEach((r, j) => { for(let i = 0; i < 11; i++) g[11 + j][i] = r[i] === '.' ? '.' : r[i]; });
+  g.forEach((row, j) => row.forEach((ch, i) => { if(ch === '.' || ((ch === 'M' || ch === 'n') && mic === false)) return; c.fillStyle = col[ch] || '#fff'; c.fillRect(Math.round(x + i * k), Math.round(y + j * k), Math.ceil(k), Math.ceil(k)); })); }
+function avPaint(cv, f, mic){ const c = cv.getContext('2d'), k = +cv.dataset.k; let cfg = cv._cfg; if(!cfg){ try{ cfg = JSON.parse(cv.dataset.cfg); }catch(e){ cfg = AV_DEF; } cv._cfg = cfg; }
+  c.clearRect(0, 0, cv.width, cv.height); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(cv.width / 2, cv.height - k * .9, k * 5.5, k * 1.1, 0, 0, 7); c.fill(); avDraw(c, cfg, k, k * .2, k, f, mic); }
+function avCanvas(cfg, k, cls){ const cv = document.createElement('canvas'); cv.width = Math.round(13 * k); cv.height = Math.round(17 * k); cv.className = cls || 'dav'; cv.dataset.k = k; cv._cfg = avClean(cfg); cv.dataset.cfg = JSON.stringify(cv._cfg); avPaint(cv, 0); return cv; }
 let AV_TIMER = 0;
-function avAnim(on){ clearInterval(AV_TIMER); if(!on) return; let f = 0; AV_TIMER = setInterval(() => { f ^= 1; document.querySelectorAll('canvas.dav').forEach(cv => { if(!cv.isConnected) return; const up = cv.dataset.up === '1'; avPaint(cv, f, true); if(up || f){ cv.style.transform = up ? 'translateY(' + (f ? -6 : 0) + 'px)' : ''; } }); }, 420); }
-const avMine = () => { const v = +LS.get('bbx-hero-av', 0); return Number.isFinite(v) && v >= 0 && v < AV_PROF.length ? v : 0; };
+function avAnim(on){ clearInterval(AV_TIMER); AV_TIMER = 0; if(!on) return; let f = 0; AV_TIMER = setInterval(() => { f ^= 1; document.querySelectorAll('canvas.dav').forEach(cv => { if(!cv.isConnected) return; avPaint(cv, f, true); if(cv.dataset.up === '1') cv.style.transform = f ? 'translateY(-6px)' : ''; }); }, 420); }
+
+/* ---------- pièces et déblocages ---------- */
+const AV_PTS = 'bbx-hero-pts';
+const avWallet = () => { const w = LS.get(AV_PTS, null); return w && typeof w.c === 'number' ? w : { c:0, t:0, u:[] }; };
+const avCfg = () => avClean(LS.get('bbx-hero-avc', AV_DEF));
+const avSaveCfg = c => LS.set('bbx-hero-avc', avClean(c));
+const avKey = (cat, i) => cat + ':' + i, avPrice = (cat, i) => AV_OPT[cat][i].p || 0;
+const avOwned = (cat, i) => avPrice(cat, i) === 0 || avWallet().u.includes(avKey(cat, i));
+function avEarn(n, why){ n = Math.max(0, Math.round(n)); if(!n) return; const w = avWallet(); w.c += n; w.t = (w.t || 0) + n; LS.set(AV_PTS, w); const e = $('#ptToast'); if(e){ e.textContent = '+' + n + ' 🪙' + (why ? ' · ' + why : ''); e.classList.add('on'); clearTimeout(avEarn.k); avEarn.k = setTimeout(() => e.classList.remove('on'), 3200); } }
+function avBuy(cat, i){ const w = avWallet(), p = avPrice(cat, i); if(avOwned(cat, i)) return true; if(w.c < p) return false; w.c -= p; w.u.push(avKey(cat, i)); LS.set(AV_PTS, w); return true; }
+function avRandom(){ const c = {}; Object.keys(AV_DEF).forEach(k => { const ok = AV_OPT[k].map((_, i) => i).filter(i => avOwned(k, i)); c[k] = ok[Math.floor(Math.random() * ok.length)]; }); return c; }
+
+/* ---------- vestiaire ---------- */
+let VEST = { cat:'hs', back:null };
+function vestShow(back){ VEST.back = back || (() => { renderHome(); show('home'); }); show('vest'); vestRender(); }
+function vestRender(){
+  const cfg = avCfg(), w = avWallet(), B = $('#vestB'), cat = VEST.cat, cats = AV_CATS.map(([k, n], j) => `<button class="vTab${k === cat ? ' on' : ''}" data-c="${k}">${(k === 'hc' || k === 'hk' || k === 'tc' || k === 'bc') ? '🎨 ' : ''}${n}</button>`).join('');
+  B.innerHTML = `<div class="card"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">👕 Mon perso</h2><b style="font-size:1.1rem">🪙 ${w.c}</b></div>
+    <div id="vPrev" class="vPrev"></div>
+    <div class="row" style="justify-content:center;gap:8px;margin:6px 0"><button class="b-cyan" id="vRnd">🎲 Au hasard</button><button class="b-ghost" id="vRst">↺ Perso de base</button></div>
+    <div class="vTabs">${cats}</div><div id="vGrid" class="vGrid"></div>
+    <div class="small muted" style="margin-top:6px">🔒 = à débloquer avec des pièces 🪙 : tu en gagnes en jouant (+3 à +13 par partie, +12 par duel, +30 si tu gagnes). Toutes les teintes de peau sont gratuites.</div>
+    <div class="row" style="margin-top:10px"><button class="b-yel big" id="vOk" style="flex:1">✔ Terminé</button></div></div>`;
+  const pv = avCanvas(cfg, 9, 'dav'); $('#vPrev').appendChild(pv); avAnim(true);
+  const G = $('#vGrid'); AV_OPT[cat].forEach((o, i) => { const b = document.createElement('button'); b.type = 'button'; const own = avOwned(cat, i); b.className = 'vOpt' + (cfg[cat] === i ? ' sel' : '') + (own ? '' : ' lock'); const mc = Object.assign({}, cfg, { [cat]:i }); if(cat === 'hs' || cat === 'hc') mc.ht = 0; const mini = avCanvas(mc, 4, 'dav0'); b.appendChild(mini);
+    const lb = document.createElement('div'); lb.className = 'vLb'; lb.textContent = own ? (o.n || '') : '🔒 ' + o.p + ' 🪙'; b.appendChild(lb);
+    b.onclick = () => { if(!own){ const w2 = avWallet(); if(w2.c < o.p){ vestMsg('Il te faut ' + o.p + ' 🪙 (tu en as ' + w2.c + '). Joue pour en gagner !'); return; } if(!confirm('Débloquer « ' + (o.n || 'cette couleur') + ' » pour ' + o.p + ' 🪙 ?')) return; avBuy(cat, i); }
+      const c = avCfg(); c[cat] = i; avSaveCfg(c); vestRender(); }; G.appendChild(b); });
+  B.querySelectorAll('.vTab').forEach(t => t.onclick = () => { VEST.cat = t.dataset.c; vestRender(); });
+  $('#vRnd').onclick = () => { avSaveCfg(avRandom()); vestRender(); }; $('#vRst').onclick = () => { avSaveCfg(AV_DEF); vestRender(); };
+  $('#vOk').onclick = () => { avAnim(false); const f = VEST.back; VEST.back = null; if(f) f(); }; }
+function vestMsg(t){ const e = $('#ptToast'); if(!e) return; e.textContent = t; e.classList.add('on'); clearTimeout(avEarn.k); avEarn.k = setTimeout(() => e.classList.remove('on'), 3200); }
+{ const b = $('#bAv'); if(b) b.onclick = () => vestShow(); }
 
 /* =====================================================================
    DUEL EN LIGNE (v57) — deux joueurs, deux pièces, la même phrase en même temps.
@@ -2787,12 +2860,10 @@ function duelBuild(def){
 function duelDefOk(d){ try{ return d && d.m && d.m.length && d.m.every(z => [1, 2, 3, 4, 8].includes(+z[0]) && String(z[1]).length < 400 && String(z[1]).split(' ').every(t => CRS_TOK.test(t))) && d.bpm >= 40 && d.bpm <= 200 && d.cyc >= 1 && d.cyc <= 8; }catch(e){ return false; } }
 
 /* ---------- avatars : choix du perso + « salle » ---------- */
-function duelAvPick(box, onPick){ box.innerHTML = ''; AV_PROF.forEach((P, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'dAv' + (i === avMine() ? ' sel' : ''); b.title = P.n; b.appendChild(avCanvas(i, 3, 'dav0'));
-    b.onclick = () => { LS.set('bbx-hero-av', i); [...box.children].forEach((x, j) => x.classList.toggle('sel', j === i)); if(onPick) onPick(i); }; box.appendChild(b); }); }
-const dAvOf = p => (p && Number.isFinite(+p.av) ? +p.av : 0) % AV_PROF.length;
+const dAvOf = p => avClean(p && p.av);
 function duelSlot(p, me, o){ o = o || {}; if(!p) return '<div class="dSlot"><div class="dGhost">?</div><div class="dNm">En attente…</div><div class="dSt blink">⏳</div></div>';
-  return '<div class="dSlot"><div class="dFig"><canvas class="dav" data-av="' + dAvOf(p) + '" data-k="6" width="78" height="102"' + (o.up ? ' data-up="1"' : '') + '></canvas></div><div class="dNm">' + escH(p.n || '?') + (me ? ' <span class="muted">(toi)</span>' : '') + '</div><div class="dSt">' + (o.st || '') + '</div></div>'; }
-function duelPaintAv(){ document.querySelectorAll('#duelB canvas.dav').forEach(cv => { cv.width = 78; cv.height = 102; avPaint(cv, 0, true); }); avAnim(true); }
+  return '<div class="dSlot"><div class="dFig"><canvas class="dav" data-cfg="' + escH(JSON.stringify(dAvOf(p))) + '" data-k="6" width="78" height="102"' + (o.up ? ' data-up="1"' : '') + '></canvas></div><div class="dNm">' + escH(p.n || '?') + (me ? ' <span class="muted">(toi)</span>' : '') + '</div><div class="dSt">' + (o.st || '') + '</div></div>'; }
+function duelPaintAv(){ document.querySelectorAll('#duelB canvas.dav').forEach(cv => { cv.width = 78; cv.height = 102; cv._cfg = null; avPaint(cv, 0, true); }); avAnim(true); }
 
 /* ---------- écrans ---------- */
 const dBox = h => { $('#duelB').innerHTML = h; };
@@ -2803,7 +2874,7 @@ function duelHome(mode, code){
     <p class="small" style="margin:4px 0 8px">Deux joueurs, <b>deux pièces</b>, la même phrase en même temps. Chacun voit le score et la vie de l'autre. <b>8 combos de suite = une attaque</b> envoyée à l'adversaire ; avoir 8 combos quand elle arrive la <b>bloque</b> 🛡. Casque obligatoire !</p>
     ${cal ? '' : '<div class="res no"><b>⚠ Il faut d\'abord la calibration</b> (micro, latence, sons : 1 minute).<br><button class="b-cyan" id="dCal" style="margin-top:6px">Calibrer</button></div>'}
     <p style="margin:8px 0 4px"><b>Ton nom</b></p><input id="dName" maxlength="14" value="${escH(dName() === 'Joueur' && !LS.get('bbx-hero-name', '') ? '' : dName())}" placeholder="Joueur" style="width:100%">
-    <p style="margin:10px 0 4px"><b>Ton perso</b></p><div id="dAvs" class="dAvs"></div>
+    <p style="margin:10px 0 4px"><b>Ton perso</b></p><div class="row" style="align-items:center;gap:12px"><div id="dAvs"></div><button class="b-cyan" id="dEdit">👕 Personnaliser</button></div>
     <p style="margin:12px 0 4px"><b>Créer un duel</b> <span class="small muted">— choisis la phrase</span></p>
     <select id="dPhr" style="width:100%">${ph.map(o => `<option value="${o.k}">${escH(o.n)}</option>`).join('')}</select>
     <div class="row" style="margin-top:8px"><button class="b-yel big" id="dMk" style="flex:1">➕ Créer la salle</button></div>
@@ -2814,7 +2885,7 @@ function duelHome(mode, code){
   const msg = (t, bad) => { const m = $('#dMsg'); if(m){ m.textContent = t; m.style.color = bad ? '#ffb3bb' : '#fff'; } };
   const nm = () => { const v = $('#dName').value.trim().slice(0, 14); if(v) LS.set('bbx-hero-name', v); return v || 'Joueur'; };
   if($('#dCal')) $('#dCal').onclick = () => { calStep = 0; renderCal(); show('cal'); };
-  duelAvPick($('#dAvs'));
+  $('#dAvs').appendChild(avCanvas(avCfg(), 5, 'dav')); avAnim(true); $('#dEdit').onclick = () => vestShow(() => duelShow());
   $('#dBack').onclick = () => { renderHome(); show('home'); };
   $('#dMk').onclick = async () => { if(!getCal()) return msg('Fais d\'abord la calibration.', 1); const k = $('#dPhr').value; let def;
     if(k[0] === 'p'){ const p = DUEL_PRE[+k.slice(1)]; def = { n:p.n, bpm:p.bpm, cyc:p.cyc, niv:p.niv, m:p.m }; }
@@ -2834,13 +2905,13 @@ async function duelCreate(name, def){
   const { db, uid } = await duelDb();
   for(let i = 0; i < 6; i++){ const code = Array.from({ length:4 }, () => DUEL_LETTERS[Math.floor(Math.random() * DUEL_LETTERS.length)]).join('');
     const ex = (await db.ref('duels/' + code).once('value')).val(); if(ex) continue;
-    try{ await db.ref('duels/' + code).set({ h:uid, t:Date.now(), def, st:'lobby', p:{ [uid]:{ n:name, r:0, av:avMine() } } }); }catch(e){ continue; }
+    try{ await db.ref('duels/' + code).set({ h:uid, t:Date.now(), def, st:'lobby', p:{ [uid]:{ n:name, r:0, av:avCfg() } } }); }catch(e){ continue; }
     await duelStart(code, 'host', name); return; }
   throw new Error('Impossible de créer la salle (réseau ou règles Firebase « duels » non publiées).'); }
 async function duelJoin(code, name){
   const { db, uid } = await duelDb(); const room = (await db.ref('duels/' + code).once('value')).val();
   if(!room) throw new Error('Aucune salle avec ce code.'); const ids = Object.keys(room.p || {});
-  if(!ids.includes(uid)){ if(ids.length >= 2) throw new Error('Salle pleine.'); if(room.st !== 'lobby') throw new Error('Le duel a déjà commencé.'); try{ await db.ref('duels/' + code + '/g').set(uid); }catch(e){ throw new Error('Salle pleine.'); } await db.ref('duels/' + code + '/p/' + uid).set({ n:name, r:0, av:avMine() }); }
+  if(!ids.includes(uid)){ if(ids.length >= 2) throw new Error('Salle pleine.'); if(room.st !== 'lobby') throw new Error('Le duel a déjà commencé.'); try{ await db.ref('duels/' + code + '/g').set(uid); }catch(e){ throw new Error('Salle pleine.'); } await db.ref('duels/' + code + '/p/' + uid).set({ n:name, r:0, av:avCfg() }); }
   await duelStart(code, room.h === uid ? 'host' : 'guest', name); }
 
 const dOpp = R => { const id = Object.keys(R.p || {}).find(k => k !== DUEL.uid); return id ? Object.assign({ id }, R.p[id]) : null; };
@@ -2857,7 +2928,7 @@ function duelRender(){
   dBox(`<div class="card"><h2>⚔️ Salle <span style="letter-spacing:.25em;font-size:1.5em">${D.code}</span></h2>
     <p class="small" style="margin:2px 0 8px">Phrase : <b>${escH(R.def.n)}</b> · ${R.def.bpm} BPM · ${R.def.cyc} tours · niveau ${R.def.niv}</p>
     <div class="dRoom">${duelSlot(me, 1, { st:me.r ? '✅ micro validé' : '⬜ micro à valider', up:!!me.r })}<div class="dVs">VS</div>${duelSlot(op, 0, { st:op ? (op.r ? '✅ micro validé' : '⬜ micro à valider') : '', up:!!(op && op.r) })}</div>
-    ${me.r ? '' : '<div class="small muted" style="margin-top:6px">Change de perso :</div><div id="dAvs2" class="dAvs"></div>'}
+    ${me.r ? '' : '<div class="row" style="margin-top:6px"><button class="b-cyan" id="dEdit2">👕 Changer de perso</button></div>'}
     ${op ? '' : `<div class="row" style="margin-top:8px"><input id="dLink" readonly value="${escH(link)}" style="flex:1;font-size:.8rem"><button class="b-cyan" id="dCp">Partager</button></div><div class="small muted">Envoie ce lien (ou le code <b>${D.code}</b>) à ton adversaire.</div>`}
     ${D.chk ? '<div class="res no" style="margin-top:8px">⚠ ' + escH(D.chk) + '<br><button class="b-cyan" id="dCal2" style="margin-top:6px">Refaire la calibration</button></div>' : ''}
     ${ok ? '' : '<div class="res no" style="margin-top:8px">⚠ Calibration manquante : <button class="b-cyan" id="dCal2">Calibrer</button></div>'}
@@ -2866,7 +2937,8 @@ function duelRender(){
     ${D.role === 'guest' && both ? '<div class="small muted" style="margin-top:6px">L\'hôte lance la partie.</div>' : ''}
     <div class="row" style="margin-top:12px"><button class="b-ghost" id="dLv">${D.role === 'host' ? '🗑 Fermer la salle' : '🚪 Quitter'}</button></div></div>`);
   if($('#dCal2')) $('#dCal2').onclick = () => { calStep = 0; renderCal(); show('cal'); };
-  if($('#dAvs2')) duelAvPick($('#dAvs2'), i => D.db.ref('duels/' + D.code + '/p/' + D.uid + '/av').set(i));
+  if($('#dEdit2')) $('#dEdit2').onclick = () => vestShow(() => duelShow());
+  if(me.n && JSON.stringify(dAvOf(me)) !== JSON.stringify(avCfg()) && !D.avSent){ D.avSent = 1; D.db.ref('duels/' + D.code + '/p/' + D.uid + '/av').set(avCfg()).then(() => { D.avSent = 0; }).catch(() => { D.avSent = 0; }); }
   duelPaintAv();
   if($('#dCp')) $('#dCp').onclick = async () => { try{ if(navigator.share){ await navigator.share({ title:'Duel BBX Hero', text:'Viens me défier en beatbox ! Code ' + D.code, url:link }); } else { await navigator.clipboard.writeText(link); $('#dCp').textContent = 'Copié ✓'; } }catch(e){} };
   $('#dRdy').onclick = async () => { const set = v => D.db.ref('duels/' + D.code + '/p/' + D.uid + '/r').set(v); if(me.r){ set(0); return; }
@@ -2925,6 +2997,7 @@ function duelQuit(g, silent){ const D = DUEL; $('#dHud').classList.remove('on');
 function duelWinner(a, b){ if(!a || !b) return null; const bad = x => x.dead || x.q; if(bad(a) !== bad(b)) return bad(a) ? 'b' : 'a'; return a.s === b.s ? 'tie' : a.s > b.s ? 'a' : 'b'; }
 function duelEndRender(){
   const D = DUEL; if(!D || !D.fin) return; const R = D.room || {}, op = dOpp(R), mf = D.fin, of = op && op.f, w = of ? duelWinner(mf, of) : null;
+  if(of && !D.paid){ D.paid = 1; if(!mf.q){ avEarn(w === 'a' ? 30 : w === 'b' ? 12 : 20, w === 'a' ? 'victoire !' : 'duel joué'); } }
   const pct = x => Math.round(x.a || 0) + ' %', row = (n, f, win) => `<tr${win ? ' style="background:rgba(255,226,122,.25)"' : ''}><td><b>${escH(n)}</b>${f.dead ? ' 💀' : f.q ? ' 🚪' : ''}</td><td>${f.s}</td><td>${pct(f)}</td><td>${f.pf}</td><td>${f.ms}</td><td>${f.mx}</td></tr>`;
   const title = !of ? '⏳ En attente de ' + escH(op ? op.n || 'l\'adversaire' : 'l\'adversaire') + '…' : w === 'tie' ? '🤝 Égalité !' : w === 'a' ? '🏆 VICTOIRE !' : '😤 Défaite…';
   dBox(`<div class="card"><h2 style="font-size:1.6rem">${title}</h2>
@@ -3719,6 +3792,7 @@ async function endGame(why){
   const sr = ac.sampleRate, tStart = g.f0 / sr, first = g.T0 - tStart;
   let a = null, err = '';
   if(why !== 'dead' && !g.pitch){ try{ a = RY.analyze(x, sr, { bpm:g.bpm, pat:g.pat, start:first + 4 * g.spb + g.lat, cycles:g.cycles, c0:first + g.lat, clicks:false }); }catch(e){ err = String(e.message || e); } }
+  try{ const J = g.J; avEarn(why === 'dead' ? 2 : 3 + Math.round((J.accuracy() || 0) / 10), why === 'dead' ? '' : 'bien joué'); }catch(e){}
   LASTRES = { g, a, x, sr, why, err }; renderEnd();
 }
 function cellClass(c){ if(c.f > 0) return 'conf'; const t = c.h + c.m; if(!t) return ''; const r = c.h / t; return r >= .85 ? 'ok' : r >= .5 ? 'mid' : 'low'; }
