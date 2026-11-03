@@ -162,6 +162,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 .dSlot{flex:1;text-align:center;min-width:0}
 .dFig{height:112px;display:flex;align-items:flex-end;justify-content:center}
 .dFig canvas{width:78px;height:102px;transition:transform .2s}
+.dFig canvas.boss{width:112px}
 .dGhost{height:112px;display:flex;align-items:center;justify-content:center;font:900 44px Nunito,system-ui;color:rgba(255,255,255,.3)}
 .dNm{margin-top:4px;font:900 15px Nunito,system-ui;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dSt{font:800 12px Nunito,system-ui;color:#ffe27a;min-height:16px}
@@ -187,7 +188,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 59 · 3 nov. 2026 · duel en ligne, bots et arcade, vestiaire, intensité fort/faible, Mes cours · Défi amis</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 60 · 3 nov. 2026 · arcade 6 combattants + boss, duel en ligne, vestiaire, intensité fort/faible, Mes cours · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
@@ -2785,7 +2786,10 @@ function avDraw(c, cfg, x, y, k, f, mic){
   const col = { s:sk, m:avShade(sk, .68), e:'#1a1a2e', h:hc, H:avShade(hc, 1.5), c:hk, C:avShade(hk, .72), g:hk, w:tc, W:avShade(tc, .8), b:bc, k:'#ffffff', M:'#c9d1d9', n:'#3a3a46', a:'#ffd23f', y:'#1a1a2e', p:'#d6455f' };
   const leg = bt.f[f ? 1 : 0]; leg.forEach((r, j) => { for(let i = 0; i < 11; i++) g[11 + j][i] = r[i] === '.' ? '.' : r[i]; });
   g.forEach((row, j) => row.forEach((ch, i) => { if(ch === '.' || ((ch === 'M' || ch === 'n') && mic === false)) return; c.fillStyle = col[ch] || '#fff'; c.fillRect(Math.round(x + i * k), Math.round(y + j * k), Math.ceil(k), Math.ceil(k)); })); }
-function avPaint(cv, f, mic){ const c = cv.getContext('2d'), k = +cv.dataset.k; let cfg = cv._cfg; if(!cfg){ try{ cfg = JSON.parse(cv.dataset.cfg); }catch(e){ cfg = AV_DEF; } cv._cfg = cfg; }
+const AV_DRAGON = ['r..............r', 'rr...kGGGGk...rr', 'rrr.kGGGGGGk.rrr', 'rrrkGGwGGwGGkrrr', '.rrkGGkGGkGGkrr.', '..kGGGGGGGGGGk..', '..kGGyyyyyyGGk..', '...kGyyyyyyGk...', '...kGGyyyyGGk...', '..kGGGyyyyGGGk..', '..kGGGGyyGGGGk..', '...kGGk..kGGk...', '...kkk....kkk...'];
+function avDragon(c, x, y, k, f){ const col = { r:'#e23a3a', G:'#2fa86b', y:'#ffe27a', w:'#ffffff', k:'#1a1a2e', o:'#ff9d2e' }; AV_DRAGON.forEach((row, j) => { for(let i = 0; i < 16; i++){ const ch = row[i]; if(ch === '.') continue; c.fillStyle = col[ch] || '#fff'; c.fillRect(Math.round(x + i * k), Math.round(y + (j + (f && j > 10 ? -.4 : 0)) * k), Math.ceil(k), Math.ceil(k)); } }); if(f){ c.fillStyle = col.o; c.fillRect(Math.round(x + 7 * k), Math.round(y + 5.2 * k), Math.ceil(k), Math.ceil(k)); } }
+function avPaint(cv, f, mic){ const c = cv.getContext('2d'), k = +cv.dataset.k;
+  if(cv.dataset.boss){ c.clearRect(0, 0, cv.width, cv.height); c.fillStyle = 'rgba(0,0,0,.28)'; c.beginPath(); c.ellipse(cv.width / 2, cv.height - k * .9, k * 7, k * 1.2, 0, 0, 7); c.fill(); avDragon(c, (cv.width - 16 * k) / 2, cv.height - 13 * k - k * 1.6, k, f); return; } let cfg = cv._cfg; if(!cfg){ try{ cfg = JSON.parse(cv.dataset.cfg); }catch(e){ cfg = AV_DEF; } cv._cfg = cfg; }
   c.clearRect(0, 0, cv.width, cv.height); c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(cv.width / 2, cv.height - k * .9, k * 5.5, k * 1.1, 0, 0, 7); c.fill(); avDraw(c, cfg, k, k * .2, k, f, mic); }
 function avCanvas(cfg, k, cls){ const cv = document.createElement('canvas'); cv.width = Math.round(13 * k); cv.height = Math.round(17 * k); cv.className = cls || 'dav'; cv.dataset.k = k; cv._cfg = avClean(cfg); cv.dataset.cfg = JSON.stringify(cv._cfg); avPaint(cv, 0); return cv; }
 let AV_TIMER = 0;
@@ -2861,9 +2865,9 @@ function duelDefOk(d){ try{ return d && d.m && d.m.length && d.m.every(z => [1, 
 
 /* ---------- avatars : choix du perso + « salle » ---------- */
 const dAvOf = p => avClean(p && p.av);
-function duelSlot(p, me, o){ o = o || {}; if(!p) return '<div class="dSlot"><div class="dGhost">?</div><div class="dNm">En attente…</div><div class="dSt blink">⏳</div></div>';
-  return '<div class="dSlot"><div class="dFig"><canvas class="dav" data-cfg="' + escH(JSON.stringify(dAvOf(p))) + '" data-k="6" width="78" height="102"' + (o.up ? ' data-up="1"' : '') + '></canvas></div><div class="dNm">' + escH(p.n || '?') + (me ? ' <span class="muted">(toi)</span>' : '') + '</div><div class="dSt">' + (o.st || '') + '</div></div>'; }
-function duelPaintAv(){ document.querySelectorAll('#duelB canvas.dav').forEach(cv => { cv.width = 78; cv.height = 102; cv._cfg = null; avPaint(cv, 0, true); }); avAnim(true); }
+function duelSlot(p, me, o){ o = o || {}; const bs = p && p.boss; if(!p) return '<div class="dSlot"><div class="dGhost">?</div><div class="dNm">En attente…</div><div class="dSt blink">⏳</div></div>';
+  return '<div class="dSlot"><div class="dFig"><canvas class="dav' + (bs ? ' boss' : '') + '"' + (bs ? ' data-boss="1"' : '') + ' data-cfg="' + escH(JSON.stringify(dAvOf(p))) + '" data-k="6" width="78" height="102"' + (o.up ? ' data-up="1"' : '') + '></canvas></div><div class="dNm">' + escH(p.n || '?') + (me ? ' <span class="muted">(toi)</span>' : '') + '</div><div class="dSt">' + (o.st || '') + '</div></div>'; }
+function duelPaintAv(){ document.querySelectorAll('#duelB canvas.dav').forEach(cv => { cv.width = cv.dataset.boss ? 112 : 78; cv.height = 102; cv._cfg = null; avPaint(cv, 0, true); }); avAnim(true); }
 
 /* ---------- écrans ---------- */
 const dBox = h => { $('#duelB').innerHTML = h; };
@@ -2880,7 +2884,8 @@ function duelHome(mode, code){
     <div class="row" style="margin-top:8px"><button class="b-yel big" id="dMk" style="flex:1">➕ Créer la salle</button></div>
     <p style="margin:14px 0 4px"><b>🤖 Jouer contre un bot</b> <span class="small muted">— même phrase, tu choisis son niveau</span></p>
     <div class="row" style="flex-wrap:wrap;gap:6px"><button class="b-cyan" data-bot="easy">😊 Facile</button><button class="b-yel" data-bot="normal">😎 Normal</button><button class="b-pink" data-bot="hard">🔥 Difficile</button><button class="b-ghost" data-bot="super">👑 Super difficile</button><button class="b-yel" data-bot="rand">🎲 Aléatoire</button></div>
-    <div class="row" style="margin-top:6px"><button class="b-pink big" data-bot="arcade" style="flex:1">🕹 MODE ARCADE — 4 combats d'affilée</button></div>
+    <div class="row" style="margin-top:6px"><button class="b-pink big" data-bot="arcade" style="flex:1">🕹 MODE ARCADE — 6 combattants + le BOSS</button></div>
+    <div class="small muted" style="margin-top:2px">Tu perds un combat → tu repars du début. Record : combat ${duelArcRec().best || 0} / 7${duelArcRec().clears ? ' · 🐉 boss vaincu ×' + duelArcRec().clears : ''}</div>
     <p style="margin:14px 0 4px"><b>Rejoindre</b> <span class="small muted">— le code de 4 lettres de ton adversaire</span></p>
     <div class="row"><input id="dCode" maxlength="4" value="${escH(code || '')}" placeholder="ABCD" style="flex:1;text-transform:uppercase;letter-spacing:.3em;text-align:center;font-weight:900"><button class="b-pink big" id="dJoin" style="flex:1">🚪 Rejoindre</button></div>
     <div id="dMsg" class="small" style="margin-top:8px;font-weight:800"></div>
@@ -2969,7 +2974,13 @@ async function duelCheck(){
 function duelCountdown(go){
   const D = DUEL; D.phase = 'count'; D.goAt = go; D.sent = 0; D.dq = null;
   const tick = () => { if(!DUEL || DUEL !== D || D.phase !== 'count') return; const left = (go - dNow()) / 1000;
-    dBox(`<div class="card" style="text-align:center"><h2>⚔️ ${escH(D.room && D.room.def ? D.room.def.n : '')}</h2><div style="font-size:5rem;font-weight:900;line-height:1.1">${Math.max(0, Math.ceil(left - 3.5))}</div>
+    if(D.bot && D.bot.arc){ const B = D.bot, F = B.F, p = D.room.p, dots = [0, 1, 2, 3, 4, 5, 6].map(i => i < B.st ? '✅' : i === B.st ? (i === 6 ? '🐉' : '⚔️') : i === 6 ? '🐉' : '⬜').join(' ');
+      dBox(`<div class="card" style="text-align:center;background:linear-gradient(180deg,${F.bg[0]},${F.bg[1]});color:#fff"><div style="font:900 .95rem Nunito;letter-spacing:.1em">${F.boss ? '🐉 COMBAT FINAL' : 'COMBAT ' + (B.st + 1) + ' / 7'}</div><div style="margin:2px 0;font-size:1.1rem">${dots}</div><div style="font-weight:800;opacity:.95">${escH(F.w)} · ${D.room.def.bpm} BPM</div>
+        <div class="dRoom" style="background:rgba(0,0,0,.28)">${duelSlot(p.me, 1, {})}<div class="dVs">VS</div>${duelSlot(p.bot, 0, {})}</div>
+        <div style="font:900 1.15rem Nunito">${escH(F.n)} <span style="opacity:.8;font-weight:800;font-size:.9rem">— ${escH(F.t)}</span></div>
+        <p style="margin:6px 0;font-style:italic">« ${escH(F.taunt)} »</p><p class="small" style="margin:4px 0;opacity:.92">${escH(F.story)}</p>
+        <div style="font-size:3.4rem;font-weight:900;line-height:1.1">${Math.max(0, Math.ceil(left - 3.5))}</div><div class="small">Casque sur les oreilles · 4 clics de décompte${F.boss ? ' · il attaque deux fois plus fort !' : ''}</div></div>`); duelPaintAv(); }
+    else dBox(`<div class="card" style="text-align:center"><h2>⚔️ ${escH(D.room && D.room.def ? D.room.def.n : '')}</h2><div style="font-size:5rem;font-weight:900;line-height:1.1">${Math.max(0, Math.ceil(left - 3.5))}</div>
       <p style="margin:6px 0">Casque sur les oreilles, micro à la même distance que pendant la calibration.<br>4 clics de décompte, puis les notes arrivent.</p></div>`);
     if(left <= 3.6){ D.phase = 'play'; avAnim(false); $('#dHud').classList.add('on'); ADV = duelBuild(D.room.def); startGame().then(() => { if(DUEL === D && D.phase === 'play' && !G){ D.phase = 'lobby'; $('#dHud').classList.remove('on'); show('duel'); duelRender(); } }); return; }
     setTimeout(tick, 200); };
@@ -2990,7 +3001,7 @@ function duelTick(g){
   while(D.inq.length){ const a = D.inq.shift(), A = DUEL_ATK[a.k]; if(!A) continue;
     if(J.combo >= 8){ duelToast('🛡 BLOQUÉ : ' + A.n + ' de ' + (a.n || '?'), '#2f7be0'); continue; }
     duelToast(A.ic + ' ' + A.n + ' de ' + (a.n || '?') + ' !', '#d6334a'); try{ navigator.vibrate && navigator.vibrate([60, 40, 60]); }catch(e){}
-    if(a.k === 'fog'){ q.fog = now + A.ms; } else { q.tight = now + A.ms; } }
+    if(a.k === 'fog'){ q.fog = now + A.ms * (a.x || 1); } else { q.tight = now + A.ms * (a.x || 1); } }
   if(D.bot) duelBotStep(g);
   const fogOn = q.fog && now < q.fog, f = $('#dFog');
   if(fogOn !== f.classList.contains('on')){ if(fogOn){ const lineY = Math.min(VH * .70, VH - 232); f.style.top = '64px'; f.style.height = Math.max(40, lineY - 64 - 120) + 'px'; } f.classList.toggle('on', !!fogOn); }
@@ -3003,25 +3014,43 @@ const DUEL_BOT = {
   hard:  { n:'Difficile', ic:'🔥', pp:.77, pg:.17, coin:22, names:['Flow Master', 'Turbo K', 'Snare King', 'Hi-Hat Queen'] },
   super: { n:'Super difficile', ic:'👑', pp:.90, pg:.085, coin:35, names:['Légende', 'Maître Beat', 'Mega Drop', 'Sensei'] } };
 function duelBotCfg(){ const c = {}; Object.keys(AV_DEF).forEach(k => { c[k] = Math.floor(Math.random() * AV_OPT[k].length); }); return c; }
-const DUEL_ARC = ['easy', 'normal', 'hard', 'super'];
+/* ---------- ARCADE : 6 combattants (un monde chacun, comme dans Adventure) puis le BOSS final. Histoires = brouillons à réécrire avec Marc. ---------- */
+const DUEL_ROSTER = [
+  { n:'Tic', t:'L\'apprenti de la plage', w:'🏝 Plage Pixel', bg:['#1d8fb8', '#f2d28a'], pp:.40, pg:.32, atk:12, coin:6, cfg:{ lk:0, sk:0, hs:6, hc:1, ht:2, hk:2, tp:0, tc:3, bt:2, bc:0, ac:1 },
+    story:'Tic traîne sur la Plage Pixel depuis toujours. Il ne connaît qu\'un rythme, le reggae, et il rêve de battre un vrai beatboxer pour quitter le sable.', taunt:'Un petit match ? Promis, je suis gentil !' },
+  { n:'Luna', t:'La danseuse de la forêt', w:'🌴 Forêt des Tambours', bg:['#1f6b3a', '#7ac26a'], pp:.52, pg:.30, atk:10, coin:9, cfg:{ lk:1, sk:3, hs:5, hc:8, ht:0, hk:0, tp:2, tc:6, bt:3, bc:7, ac:3 },
+    story:'Luna a grandi au cœur de la Forêt des Tambours. Les kicks décalés n\'ont aucun secret pour elle : elle les joue en dansant.', taunt:'Suis le groove… si tu y arrives !' },
+  { n:'Kenji K', t:'Le maître des cerisiers', w:'🌸 Vallée des Cerisiers', bg:['#8a3a62', '#f6b8cf'], pp:.62, pg:.26, atk:9, coin:13, cfg:{ lk:0, sk:2, hs:4, hc:0, ht:5, hk:1, tp:1, tc:7, bt:0, bc:1, ac:2 },
+    story:'Kenji frappe ses K-snares comme des coups de taiko. Chaque printemps, il défie les voyageurs sous les cerisiers en fleurs.', taunt:'Ta snare manque de caractère.' },
+  { n:'Mama Snare', t:'La reine de la cantina', w:'🌶 Cantina del Sol', bg:['#b8481a', '#ffcf5a'], pp:.72, pg:.22, atk:8, coin:18, cfg:{ lk:1, sk:6, hs:2, hc:1, ht:4, hk:9, tp:4, tc:4, bt:1, bc:2, ac:4 },
+    story:'Personne ne sert un contretemps aussi épicé que Mama Snare. Sa cantina ne désemplit pas : on y vient pour la salsa… et pour la perdre.', taunt:'Viens, mon grand, je t\'offre la soupe !' },
+  { n:'Turbo T', t:'Le roi des charleys', w:'🛰 Station Orbitale', bg:['#1a1f4a', '#4ad0ff'], pp:.82, pg:.15, atk:6, coin:24, cfg:{ lk:0, sk:5, hs:8, hc:1, ht:3, hk:8, tp:3, tc:8, bt:2, bc:8, ac:3 },
+    story:'En orbite, Turbo T a inventé le charley le plus rapide du système solaire. Il lance ses attaques plus vite que ta respiration.', taunt:'T-T-T-T… tu suis ?' },
+  { n:'Maître Ts', t:'Le champion de la Cité', w:'🌃 Cité Néon', bg:['#1b1038', '#ff3fa8'], pp:.90, pg:.085, atk:8, coin:32, cfg:{ lk:2, sk:4, hs:7, hc:11, ht:0, hk:0, tp:4, tc:10, bt:1, bc:8, ac:2 },
+    story:'Maître Ts règne sur la Cité Néon depuis dix ans. Boom bap, charleys d\'acier : il n\'a jamais perdu un duel sur son toit.', taunt:'Le toit est à moi. Monte si tu l\'oses.' } ];
+const DUEL_BOSS = { n:'Dragon Beat', t:'Le dragon du château', w:'🏰 Château du Dragon', bg:['#2a0610', '#c42a2a'], pp:.96, pg:.03, atk:6, coin:80, boss:1,
+  story:'Au sommet du Château du Dragon dort le Dragon Beat, gardien du rythme secret. Il n\'a jamais été battu : seul un beatboxer presque parfait peut le faire taire.', taunt:'GRAOUUUH ! Montre-moi ton rythme secret…' };
+const duelArcF = st => st < 6 ? DUEL_ROSTER[st] : DUEL_BOSS;
+const duelArcRec = () => LS.get('bbx-hero-arc', { best:0, clears:0 });
 function duelBotLaunch(key, def, name, stage){
-  const arc = key === 'arcade', st = arc ? (stage || 0) : 0, rand = key === 'rand', lv = arc ? DUEL_ARC[st] : rand ? DUEL_ARC[Math.floor(Math.random() * 4)] : key, L = DUEL_BOT[lv], bn = L.names[Math.floor(Math.random() * L.names.length)];
+  const arc = key === 'arcade', st = arc ? (stage || 0) : 0, rand = key === 'rand', F = arc ? duelArcF(st) : null, lv = arc ? 'arc' : rand ? ['easy', 'normal', 'hard', 'super'][Math.floor(Math.random() * 4)] : key,
+    L = arc ? { n:F.t, ic:F.boss ? '🐉' : '🕹', pp:F.pp, pg:F.pg, coin:F.coin } : DUEL_BOT[lv], bn = arc ? F.n : L.names[Math.floor(Math.random() * L.names.length)], base = def;
+  if(arc) def = Object.assign({}, def, { bpm:Math.min(200, def.bpm + (F.boss ? 18 : st * 3)) }); // le tempo monte à chaque combat
   const noop = () => ({ update:() => Promise.resolve(), set:() => Promise.resolve(), push:() => Promise.resolve(), remove:() => Promise.resolve(), on(){}, off(){}, once:() => Promise.resolve({ val:() => null }) });
   duelDetach(); DUEL = { code:'BOT', role:'host', name:name, db:{ ref:noop }, uid:'me', off:0, refs:[], phase:'lobby', inq:[], avSent:1,
-    bot:{ key, lv, L, rand, arc, st, name:bn, i:0, s:0, c:0, l:100, ch:0, dead:0, mal:0, nxt:8, pf:0, gd:0, ms:0, mx:0 },
-    room:{ h:'me', t:Date.now(), def, st:'lobby', p:{ me:{ n:name, r:1, av:avCfg() }, bot:{ n:rand ? '❓ Mystère' : bn, r:1, av:duelBotCfg(), l:100 } } } };
-  if(arc) duelToast('🕹 Combat ' + (st + 1) + ' / 4 — ' + L.ic + ' ' + L.n, '#7a3cff');
+    bot:{ key, lv, L, rand, arc, st, F, base, name:bn, i:0, s:0, c:0, l:100, ch:0, dead:0, mal:0, nxt:(F && F.atk) || 8, step:(F && F.atk) || 8, pf:0, gd:0, ms:0, mx:0 },
+    room:{ h:'me', t:Date.now(), def, st:'lobby', p:{ me:{ n:name, r:1, av:avCfg() }, bot:{ n:rand ? '❓ Mystère' : bn, r:1, av:arc ? (F.cfg || {}) : duelBotCfg(), l:100, boss:arc && F.boss ? 1 : 0 } } } };
   duelCountdown(Date.now() + 5600); }
 function duelBotStep(g, all){
   const D = DUEL, b = D.bot; if(!b || b.done) return; const J = g.J, N = g.B.notes, t = ac.currentTime, L = b.L; let ch = false;
   while(b.i < N.length && (all || t >= N[b.i].tc + .08) && !b.dead){ const n = N[b.i++], m = b.mal > performance.now();
-    const pp = L.pp * (m ? .6 : 1), pg = L.pg * (m ? .9 : 1), r = Math.random(), mult = (b.c >= 50 ? 4 : b.c >= 25 ? 3 : b.c >= 10 ? 2 : 1) + (b.ch >= 100 ? 1 : 0), k = J.lifeK || 1; ch = true;
+    const pp = L.pp * (m ? .6 : 1) + (b.F && b.F.boss && J.score > b.s ? .03 : 0), pg = L.pg * (m ? .9 : 1), r = Math.random(), mult = (b.c >= 50 ? 4 : b.c >= 25 ? 3 : b.c >= 10 ? 2 : 1) + (b.ch >= 100 ? 1 : 0), k = J.lifeK || 1; ch = true;
     if(r < pp){ b.c++; b.s += 100 * mult; b.ch = Math.min(100, b.ch + 10); b.l = Math.min(100, b.l + 1.5); b.pf++; }
     else if(r < pp + pg){ b.c++; b.s += 60 * mult; b.l = Math.min(100, b.l + .75); b.gd++; }
     else { b.c = 0; b.ch = 0; b.l = Math.max(0, b.l - 10 * k); b.ms++; if(b.l <= 0 && J.lifeDie) b.dead = 1; }
     if(b.c > b.mx) b.mx = b.c;
-    if(b.c < b.nxt - 8) b.nxt = Math.max(8, Math.floor(b.c / 8) * 8 + 8);
-    if(!all && b.c >= b.nxt){ b.nxt += 8; D.inq.push({ k:Math.random() < .5 ? 'fog' : 'tight', f:'bot', n:b.name, t:dNow() }); } }
+    if(b.c < b.nxt - b.step) b.nxt = Math.max(b.step, Math.floor(b.c / b.step) * b.step + b.step);
+    if(!all && b.c >= b.nxt){ b.nxt += b.step; if(b.F && b.F.boss){ ['fog', 'tight'].forEach(k => D.inq.push({ k, f:'bot', n:b.name, t:dNow(), x:1.3 })); } else D.inq.push({ k:Math.random() < .5 ? 'fog' : 'tight', f:'bot', n:b.name, t:dNow() }); } }
   if(ch){ const p = D.room.p.bot; p.s = b.s; p.c = b.c; p.l = Math.round(b.l); duelHudUpdate(); }
   if(b.dead && !b.done){ b.done = 1; } }
 function duelBotHit(k){ const b = DUEL.bot; if(!b) return; if(b.c >= 8){ duelToast('🛡 ' + b.name + ' a bloqué ton attaque !', '#2f7be0'); return; } b.mal = performance.now() + DUEL_ATK[k].ms; duelToast('💥 ' + b.name + ' est touché !', '#2fa86b'); }
@@ -3037,17 +3066,18 @@ function duelQuit(g, silent){ const D = DUEL; $('#dHud').classList.remove('on');
 function duelWinner(a, b){ if(!a || !b) return null; const bad = x => x.dead || x.q; if(bad(a) !== bad(b)) return bad(a) ? 'b' : 'a'; return a.s === b.s ? 'tie' : a.s > b.s ? 'a' : 'b'; }
 function duelEndRender(){
   const D = DUEL; if(!D || !D.fin) return; const R = D.room || {}, op = dOpp(R), mf = D.fin, of = op && op.f, w = of ? duelWinner(mf, of) : null;
-  const arcWin = D.bot && D.bot.arc && w === 'a', arcEnd = arcWin && D.bot.st >= 3;
-  if(of && !D.paid){ D.paid = 1; if(!mf.q){ if(D.bot){ avEarn((w === 'a' ? D.bot.L.coin : 4) + (arcEnd ? 50 : 0), arcEnd ? 'arcade terminé !' : w === 'a' ? 'victoire contre ' + D.bot.L.n : 'bien essayé'); } else avEarn(w === 'a' ? 30 : w === 'b' ? 12 : 20, w === 'a' ? 'victoire !' : 'duel joué'); } }
+  const arcWin = D.bot && D.bot.arc && w === 'a', arcEnd = arcWin && D.bot.st >= 6;
+  if(of && !D.paid){ D.paid = 1; if(!mf.q){ if(D.bot && D.bot.arc){ const r = duelArcRec(); if(w === 'a'){ r.best = Math.max(r.best || 0, D.bot.st + 1); if(arcEnd) r.clears = (r.clears || 0) + 1; LS.set('bbx-hero-arc', r); } }
+    if(D.bot){ avEarn((w === 'a' ? D.bot.L.coin : 4) + (arcEnd ? 50 : 0), arcEnd ? 'arcade terminé !' : w === 'a' ? 'victoire contre ' + D.bot.L.n : 'bien essayé'); } else avEarn(w === 'a' ? 30 : w === 'b' ? 12 : 20, w === 'a' ? 'victoire !' : 'duel joué'); } }
   const pct = x => Math.round(x.a || 0) + ' %', row = (n, f, win) => `<tr${win ? ' style="background:rgba(255,226,122,.25)"' : ''}><td><b>${escH(n)}</b>${f.dead ? ' 💀' : f.q ? ' 🚪' : ''}</td><td>${f.s}</td><td>${pct(f)}</td><td>${f.pf}</td><td>${f.ms}</td><td>${f.mx}</td></tr>`;
-  const title = D.bot && D.bot.arc ? (arcEnd ? '👑 ARCADE TERMINÉ !' : arcWin ? '✅ Combat ' + (D.bot.st + 1) + ' / 4 gagné !' : w === 'tie' ? '🤝 Égalité (on rejoue)' : '💥 Fin de l\'arcade au combat ' + (D.bot.st + 1) + ' / 4') : !of ? '⏳ En attente de ' + escH(op ? op.n || 'l\'adversaire' : 'l\'adversaire') + '…' : w === 'tie' ? '🤝 Égalité !' : w === 'a' ? '🏆 VICTOIRE !' : '😤 Défaite…';
+  const title = D.bot && D.bot.arc ? (arcEnd ? '🐉 BOSS VAINCU ! ARCADE TERMINÉ' : arcWin ? '✅ Combat ' + (D.bot.st + 1) + ' / 7 gagné !' : w === 'tie' ? '🤝 Égalité (on rejoue)' : '💥 Battu au combat ' + (D.bot.st + 1) + ' / 7 : on repart du début !') : !of ? '⏳ En attente de ' + escH(op ? op.n || 'l\'adversaire' : 'l\'adversaire') + '…' : w === 'tie' ? '🤝 Égalité !' : w === 'a' ? '🏆 VICTOIRE !' : '😤 Défaite…';
   dBox(`<div class="card"><h2 style="font-size:1.6rem">${title}</h2>
     ${of ? '' : `<p class="small">Score actuel de l'adversaire : <b>${op && op.s || 0}</b> · il joue encore.</p>`}
     <div class="dRoom">${duelSlot(Object.assign({}, (R.p || {})[D.uid], { n:D.name }), 1, { st:w === 'a' ? '🏆' : w === 'b' ? '😤' : '', up:w === 'a' })}<div class="dVs">VS</div>${duelSlot(op, 0, { st:w === 'b' ? '🏆' : w === 'a' ? '😤' : '', up:w === 'b' })}</div>
     <table class="tb" style="width:100%;text-align:center"><tr><th></th><th>Score</th><th>Précis.</th><th>Parfaits</th><th>Ratés</th><th>Combo max</th></tr>${row(D.name + ' (toi)', mf, w === 'a')}${of ? row(op.n || '?', of, w === 'b') : ''}</table>
-    <div class="row" style="margin-top:12px">${D.role === 'host' ? '<button class="b-yel big" id="dRe" style="flex:1" ' + (of ? '' : 'disabled') + '>' + (arcEnd ? '🔁 Rejouer l\'arcade' : arcWin ? '▶ Combat suivant' : D.bot && D.bot.arc ? '🔁 Recommencer l\'arcade' : '🔁 Revanche') + '</button>' : '<div class="small muted" style="flex:1">' + (of ? 'L\'hôte peut lancer une revanche.' : '') + '</div>'}<button class="b-ghost big" id="dQ" style="flex:1">${D.role === 'host' ? '🗑 Fermer' : '🚪 Quitter'}</button></div></div>`);
+    <div class="row" style="margin-top:12px">${D.role === 'host' ? '<button class="b-yel big" id="dRe" style="flex:1" ' + (of ? '' : 'disabled') + '>' + (arcEnd ? '🔁 Rejouer l\'arcade' : arcWin ? '▶ Combat suivant' : D.bot && D.bot.arc ? '🔁 Recommencer depuis le début' : '🔁 Revanche') + '</button>' : '<div class="small muted" style="flex:1">' + (of ? 'L\'hôte peut lancer une revanche.' : '') + '</div>'}<button class="b-ghost big" id="dQ" style="flex:1">${D.role === 'host' ? '🗑 Fermer' : '🚪 Quitter'}</button></div></div>`);
   duelPaintAv();
-  if($('#dRe')) $('#dRe').onclick = () => { if(D.bot){ const b = D.bot, win = b.arc && w === 'a' && b.st < 3; duelBotLaunch(b.key, R.def, D.name, b.arc ? (win ? b.st + 1 : w === 'tie' ? b.st : 0) : 0); return; } const u = { st:'lobby', go:null, a:null }; Object.keys(R.p || {}).forEach(id => { u['p/' + id + '/f'] = null; u['p/' + id + '/r'] = 0; u['p/' + id + '/s'] = 0; u['p/' + id + '/c'] = 0; u['p/' + id + '/l'] = 100; }); D.db.ref('duels/' + D.code).update(u); };
+  if($('#dRe')) $('#dRe').onclick = () => { if(D.bot){ const b = D.bot, win = b.arc && w === 'a' && b.st < 6; duelBotLaunch(b.key, b.base || R.def, D.name, b.arc ? (win ? b.st + 1 : w === 'tie' ? b.st : 0) : 0); return; } const u = { st:'lobby', go:null, a:null }; Object.keys(R.p || {}).forEach(id => { u['p/' + id + '/f'] = null; u['p/' + id + '/r'] = 0; u['p/' + id + '/s'] = 0; u['p/' + id + '/c'] = 0; u['p/' + id + '/l'] = 100; }); D.db.ref('duels/' + D.code).update(u); };
   $('#dQ').onclick = () => duelLeave(D.role === 'host'); }
 
 /* ---------- accueil + lien direct ---------- */
@@ -3892,7 +3922,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v59', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v60', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
