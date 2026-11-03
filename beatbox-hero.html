@@ -2792,18 +2792,32 @@ function duelRender(){
   const link = location.origin + location.pathname + '?duel=' + D.code, ok = !!getCal(), both = op && me.r && op.r;
   dBox(`<div class="card"><h2>⚔️ Salle <span style="letter-spacing:.25em;font-size:1.5em">${D.code}</span></h2>
     <p class="small" style="margin:2px 0 8px">Phrase : <b>${escH(R.def.n)}</b> · ${R.def.bpm} BPM · ${R.def.cyc} tours · niveau ${R.def.niv}</p>
-    <div class="res"><b>${escH(me.n || D.name)}</b> (toi) ${me.r ? '✅ prêt' : '⬜ pas prêt'}<br>${op ? '<b>' + escH(op.n || '?') + '</b> ' + (op.r ? '✅ prêt' : '⬜ pas prêt') : '<span class="blink">⏳ En attente d\'un adversaire…</span>'}</div>
+    <div class="res"><b>${escH(me.n || D.name)}</b> (toi) ${me.r ? '✅ micro validé, prêt' : '⬜ micro à valider'}<br>${op ? '<b>' + escH(op.n || '?') + '</b> ' + (op.r ? '✅ micro validé, prêt' : '⬜ micro à valider') : '<span class="blink">⏳ En attente d\'un adversaire…</span>'}</div>
     ${op ? '' : `<div class="row" style="margin-top:8px"><input id="dLink" readonly value="${escH(link)}" style="flex:1;font-size:.8rem"><button class="b-cyan" id="dCp">Partager</button></div><div class="small muted">Envoie ce lien (ou le code <b>${D.code}</b>) à ton adversaire.</div>`}
+    ${D.chk ? '<div class="res no" style="margin-top:8px">⚠ ' + escH(D.chk) + '<br><button class="b-cyan" id="dCal2" style="margin-top:6px">Refaire la calibration</button></div>' : ''}
     ${ok ? '' : '<div class="res no" style="margin-top:8px">⚠ Calibration manquante : <button class="b-cyan" id="dCal2">Calibrer</button></div>'}
-    <div class="row" style="margin-top:10px"><button class="${me.r ? 'b-ghost' : 'b-yel'} big" id="dRdy" style="flex:1" ${ok ? '' : 'disabled'}>${me.r ? 'Pas prêt' : '✅ Je suis prêt (casque !)'}</button>
+    <div class="row" style="margin-top:10px"><button class="${me.r ? 'b-ghost' : 'b-yel'} big" id="dRdy" style="flex:1" ${ok ? '' : 'disabled'}>${me.r ? 'Annuler' : '🎧 Valider mon micro (casque !)'}</button>
     ${D.role === 'host' ? `<button class="b-pink big" id="dGo" style="flex:1" ${both ? '' : 'disabled'}>▶ Lancer</button>` : ''}</div>
     ${D.role === 'guest' && both ? '<div class="small muted" style="margin-top:6px">L\'hôte lance la partie.</div>' : ''}
     <div class="row" style="margin-top:12px"><button class="b-ghost" id="dLv">${D.role === 'host' ? '🗑 Fermer la salle' : '🚪 Quitter'}</button></div></div>`);
   if($('#dCal2')) $('#dCal2').onclick = () => { calStep = 0; renderCal(); show('cal'); };
   if($('#dCp')) $('#dCp').onclick = async () => { try{ if(navigator.share){ await navigator.share({ title:'Duel BBX Hero', text:'Viens me défier en beatbox ! Code ' + D.code, url:link }); } else { await navigator.clipboard.writeText(link); $('#dCp').textContent = 'Copié ✓'; } }catch(e){} };
-  $('#dRdy').onclick = () => D.db.ref('duels/' + D.code + '/p/' + D.uid + '/r').set(me.r ? 0 : 1);
+  $('#dRdy').onclick = async () => { const set = v => D.db.ref('duels/' + D.code + '/p/' + D.uid + '/r').set(v); if(me.r){ set(0); return; }
+    const b = $('#dRdy'); b.disabled = true; b.textContent = '🎙 Vérification du micro…'; const c = await duelCheck();
+    if(!c.ok){ D.chk = c.msg; duelRender(); return; } D.chk = null; set(1); };
   if($('#dGo')) $('#dGo').onclick = () => { if(!(D.room.p && both)) return; D.db.ref('duels/' + D.code).update({ st:'go', go:dNow() + 8000 }); };
   $('#dLv').onclick = () => duelLeave(D.role === 'host'); }
+
+/* ---------- validation du micro AVANT d'être prêt : fréquence audio identique à la calibration, micro autorisé et qui envoie du son ---------- */
+async function duelCheck(){
+  try{ const cal = getCal(); if(!cal) return { ok:false, msg:'Calibration manquante : fais d\'abord la calibration.', recal:1 };
+    ensure(); try{ await ac.resume(); }catch(e){}
+    if(cal.sr && cal.sr !== ac.sampleRate) return { ok:false, recal:1, msg:'Ton appareil travaille maintenant à ' + ac.sampleRate + ' Hz, alors que ta calibration a été faite à ' + cal.sr + ' Hz (changement de casque, de micro ou de réglage audio). Refais le test de sons, puis reviens dans la salle.' };
+    let n = 0, mic = null; try{ mic = await Promise.race([micOpen(() => { n++; }), new Promise((_, no) => setTimeout(() => no(new Error('délai : le micro ne répond pas')), 6000))]); }
+    catch(e){ return { ok:false, msg:'Micro indisponible : ' + (e.message || e) + '. Autorise le micro dans le navigateur, puis réessaie.' }; }
+    const t = Date.now(); while(n < 3 && Date.now() - t < 2500) await sleep(30); try{ mic.close(); }catch(e){}
+    if(n < 3) return { ok:false, msg:'Le micro ne donne aucun son. Vérifie qu\'il n\'est pas coupé ou utilisé par une autre appli.' };
+    return { ok:true }; }catch(e){ return { ok:false, msg:String(e.message || e) }; } }
 
 /* ---------- compte à rebours puis départ synchronisé ---------- */
 function duelCountdown(go){
