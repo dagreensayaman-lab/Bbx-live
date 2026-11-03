@@ -140,7 +140,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 .pf{margin:6px 0}.pf label{display:flex;gap:8px;align-items:center;font-weight:800;font-size:.85rem}.pf label input,.pf label textarea{flex:1;background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:5px 7px;font:800 .9rem inherit}.pf.r{gap:14px;display:flex;flex-wrap:wrap}.pf.r label{flex:0 0 auto}.pi{font-size:.8rem;opacity:.8;align-self:center}
 .pm{background:#ffffff10;border:2px solid #ffffff33;border-radius:8px;padding:6px;margin:8px 0}.pmh{display:flex;align-items:center;gap:6px;font-size:.8rem;margin-bottom:4px}.pmh .pbt{margin-left:auto;display:flex;gap:4px}.pmh .pbt button{background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:3px 8px}.pbs{display:flex;gap:0;overflow-x:auto}
 .pbt2{border-left:3px solid #ffffff66;padding:0 2px 0 3px;display:flex;flex-direction:column}.pbt2:first-child{border-left-color:#ffe27a}.pbt2.cur{background:#ffe27a18}.pbt2 .pcs{display:flex;gap:2px;flex-wrap:nowrap}.pbt2 .pc{flex:1 1 0;min-width:0;height:46px;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}.pc .ptk{font:900 .8rem 'Courier New',monospace}.pc i{font:800 .55rem Nunito,sans-serif;font-style:normal;opacity:.65;margin-top:2px}.pdv{font-size:.6rem;font-weight:800;text-align:center;color:#9fd8ff;margin-top:2px}.pdv.t{color:#ffe27a}
-.pleg{font-size:.72rem;opacity:.85;margin:4px 0}.pleg code{background:#0d2033;padding:1px 4px;border-radius:4px}.pdvb{align-items:center}.pdvb span{font-size:.7rem;font-weight:800;min-width:50px}.pap button:not([data-s]){color:#fff}.pap button[data-s]{padding:4px 8px}.pap{gap:3px}.pap.pdvb button{padding:2px 5px;font:800 .64rem Nunito,sans-serif;line-height:1.1;border-width:1px}.pap.pdvb button.on{background:#ffe27a;color:#0b0620}.pap button{padding:4px 7px}.pc.z .ptk{opacity:.45}.pdvb button small{display:none}
+.pleg{font-size:.72rem;opacity:.85;margin:4px 0}.pleg code{background:#0d2033;padding:1px 4px;border-radius:4px}.pdvb{align-items:center}.pdvb span{font-size:.7rem;font-weight:800;min-width:50px}.pap button:not([data-s]){color:#fff}.pap button[data-s]{padding:4px 8px}.pap{gap:3px}.pap.pdvb button{padding:2px 5px;font:800 .64rem Nunito,sans-serif;line-height:1.1;border-width:1px}.pap.pdvb button.on{background:#ffe27a;color:#0b0620}.pap button{padding:4px 7px}.pc.z .ptk{opacity:.45}.pc.i2{border-width:3px;border-color:#fff;box-shadow:0 0 8px #fff}.pc.i2 .ptk{font-size:.95rem}.pc.i0{opacity:.65}.pc.i0 .ptk{font-size:.62rem}.pdvb button small{display:none}
 .pb{background:#ffffff12;border:2px solid #ffffff33;border-radius:8px;padding:6px;margin:8px 0}.pbh{display:flex;align-items:center;gap:6px;font-size:.8rem;margin-bottom:5px;flex-wrap:wrap}.pbh select{background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:3px;font:800 .78rem inherit}.pbt{margin-left:auto;display:flex;gap:4px}.pbt button{background:#0d2033;color:#fff;border:2px solid #ffffff55;border-radius:6px;padding:3px 8px}
 .pcs{display:flex;flex-wrap:wrap;gap:3px}.pc{min-width:34px;height:36px;padding:0 4px;border-radius:5px;border:2px solid #ffffff44;background:#ffffff1c;color:#fff;font:900 .8rem 'Courier New',monospace}.pc:not(.z){background:var(--c,#fff);color:#0b0620;border-color:#fff}.pc.sel{outline:3px solid #ffe27a;outline-offset:1px}.pc.now{filter:brightness(1.4);transform:scale(1.08)}
 .pal{position:sticky;bottom:0;background:#14264a;border-top:2px solid #5ef0ff;padding:6px 0 2px;margin-top:8px}.pas{font-size:.8rem;margin-bottom:4px}.pap{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}.pap button{padding:7px 10px;border-radius:6px;border:2px solid #fff;background:var(--c,#0d2033);color:#0b0620;font:900 .85rem 'Courier New',monospace}.pap button.sil,.pap button[data-mv],.pap button[data-nx]{background:#0d2033;color:#fff;border-color:#ffffff66}
@@ -153,7 +153,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 55 · 3 nov. 2026 · Mes cours (import/export), éditeur par temps, joyaux · Défi amis</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 56 · 3 nov. 2026 · intensité fort/faible, Mes cours, éditeur par temps · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
@@ -658,8 +658,11 @@ const HERO = (() => {
   const HANN = {}; const hann = n => HANN[n] || (HANN[n] = Float32Array.from({ length:n }, (_, i) => .5 - .5 * Math.cos(2 * Math.PI * i / (n - 1))));
 
   // piste d'un son : famille du moteur, + Fsh / Spt (snares) que le moteur ne connaît pas / classe mal
+  /* intensité (v56) : « P+ » = fort, « P- » = faible, « P » = normal. Le « - » seul reste un silence. */
+  function stripInt(t){ t = String(t == null ? '' : t); return t.length > 1 ? t.replace(/[+-]$/, '') : t; }
+  function intOf(t){ t = String(t == null ? '' : t); if(t.length < 2) return null; const c = t[t.length - 1]; return c === '+' ? 2 : c === '-' ? 0 : null; }
   function laneOf(tok){
-    const k = String(tok || '').toLowerCase();
+    tok = stripInt(tok); const k = String(tok || '').toLowerCase();
     if(k === 'fsh' || k === 'spt') return 'medium';
     return RY.famOf(tok) || 'medium';
   }
@@ -668,10 +671,12 @@ const HERO = (() => {
   // fenêtres [Parfait, Bien] en secondes selon le niveau : plus on monte, plus c'est exigeant
   const LEVELS = { 1:[.055, .11], 2:[.04, .09], 3:[.03, .07], 4:[.085, .17], 5:[.05, .11] }; // 4 et 5 : Beatbox Adventure niv 1 (débutant, très indulgent) et niv 2
   function buildNotes(pat, bpm, cycles, niv){
+    const ints = []; let anyInt = false; // intensités demandées (par case) ; sans aucune marque + / - la phrase se joue comme avant
+    pat = (pat || []).map(p => ({ div:p.div, tok:String(p.tok || '').trim().split(/\s+/).filter(Boolean).map(t => { const v = intOf(t); ints.push(v); if(v != null) anyInt = true; return stripInt(t); }).join(' ') }));
     const spb = 60 / bpm, G = RY.grid(pat), notes = [], L = LEVELS[niv] || LEVELS[1];
     for(let c = 0; c < cycles; c++) G.ev.forEach(e => {
       const beat = 4 + c * G.P + e.b;
-      notes.push({ i:notes.length, cyc:c, cell:e.i, tok:e.tok, lane:laneOf(e.tok), long:RY.isLong(e.tok), beat, rel:beat * spb, W:Math.min(.42 * e.st * spb, L[1]), P:Math.min(L[0], .5 * Math.min(.42 * e.st * spb, L[1])) });
+      notes.push({ i:notes.length, cyc:c, cell:e.i, tok:e.tok, int:anyInt ? (ints[e.i] == null ? 1 : ints[e.i]) : undefined, lane:laneOf(e.tok), long:RY.isLong(e.tok), beat, rel:beat * spb, W:Math.min(.42 * e.st * spb, L[1]), P:Math.min(L[0], .5 * Math.min(.42 * e.st * spb, L[1])) });
     });
     return { notes, cells:G.cells, P:G.P, spb, endBeat:4 + cycles * G.P };
   }
@@ -776,12 +781,17 @@ const HERO = (() => {
       this.cnt = { perfect:0, good:0, miss:0, wrong:0, extra:0 }; this.learned = {}; this.log = []; this.lastHit = null; this.hitDb = []; this.by = {};
       if(o.fp) Object.keys(o.fp).forEach(f => { this.by[f] = o.fp[f].slice(); });
       this.lvl = typeof o.lvl === 'number' ? o.lvl : null; // niveau (dB) de tes vrais sons au test de calibration
+      this.cint = o.cint || null; this.dyn = notes.some(n => n.int != null); this.icnt = { ok:0, hi:0, lo:0 }; // intensité : niveaux calibrés par famille {w, n, s} = faible / normal / fort
       this.gLog = this.by.grave && this.by.grave.length ? median(this.by.grave.map(v => v[0])) : Math.log2(300); // centre (log2 Hz) de ton kick
     }
     // niveau de référence des vrais sons : calibration + sons joués jusque-là
     ref(){ const h = this.hitDb.slice(-16); if(this.lvl == null) return h.length >= 4 ? median(h) : -20; return median(Array(6).fill(this.lvl).concat(h)); }
     // bruit de fond / grondement : bien plus faible que tes vrais sons, ou très grave (sous ton kick) et faible. Ne doit jamais prendre la place d'une case.
-    _weak(z){ const r = this.ref(); if(z.db < r - 14) return true; return Math.log2(Math.max(60, z.c)) < this.gLog - 1 && z.lo > .85 && z.db < r - 8; }
+    // niveaux (dB) d'un son faible / normal / fort pour une famille : calibration « Intensité », sinon écarts moyens autour du niveau normal
+    lev(lane){ const I = this.cint && this.cint[lane] || {}, n = I.n != null ? I.n : this.lvl != null ? this.lvl : -20; return { w:Math.min(I.w != null ? I.w : n - 9, n - 5), n, s:Math.max(I.s != null ? I.s : n + 5, n + 4) }; }
+    icls(lane, db){ const L = this.lev(lane); return db >= (L.n + L.s) / 2 ? 2 : db <= (L.w + L.n) / 2 ? 0 : 1; }
+    _weak(z){ if(this.dyn){ const mw = Math.min(...['grave', 'medium', 'aigu'].map(l => this.lev(l).w)); return z.db < mw - 9 || (Math.log2(Math.max(60, z.c)) < this.gLog - 1 && z.lo > .85 && z.db < mw - 3); }
+      const r = this.ref(); if(z.db < r - 14) return true; return Math.log2(Math.max(60, z.c)) < this.gLog - 1 && z.lo > .85 && z.db < r - 8; }
     mult(){ const c = this.combo; return (c >= 50 ? 4 : c >= 25 ? 3 : c >= 10 ? 2 : 1) + (this.charge >= 100 ? 1 : 0); } // barre pleine (électrique) : +1 au multiplicateur
     // barre électrique : +10 par Parfait, « Bien » = neutre, toute erreur (raté, mauvais son, son en trop) la remet à zéro
     _err(){ if(this.charge >= 100) this.zaps++; this.charge = 0; }
@@ -820,14 +830,19 @@ const HERO = (() => {
           let nd = S.dist(v, S.cen[best.lane]), nf = best.lane; S.fs.forEach(f => { const dd = S.dist(v, S.cen[f]); if(dd < nd - mg){ nd = dd; nf = f; } });
           if(nf !== best.lane && !(z.band === BAND[best.lane] && nd > 0 && S.dist(v, S.cen[best.lane]) - nd < mg + 1.2)) heard = nf; } }
         // son très faible (souffle, bruit de bouche, queue d'un autre son) tombé dans la fenêtre d'une note : on ne le juge pas « mauvais son »
-        if(heard && this.hitDb.length >= 4 && z.db < median(this.hitDb.slice(-16)) - 12){ z.verdict = 'noise'; this.log.push(z); return ev; }
+        if(heard && !this.dyn && this.hitDb.length >= 4 && z.db < median(this.hitDb.slice(-16)) - 12){ z.verdict = 'noise'; this.log.push(z); return ev; }
+        // intensité : on compare la force entendue à celle demandée (fort / normal / faible) pour cette famille
+        let ih = null, ic = null; if(best.int != null && !heard){ ic = this.icls(best.lane, z.db); z.ic = ic; if(ic !== best.int) ih = ic > best.int ? 'fort' : 'faible'; else this.icnt.ok++; }
+        const far = ih != null && Math.abs(ic - best.int) >= 2 && !this.soft; // fort au lieu de faible (ou l'inverse) : compté faux, sauf niveau débutant
         best.res = { d, z, heard }; this.lastHit = { note:best, z }; this.hitDb.push(z.db); z.verdict = heard ? 'wrong' : 'hit'; z.note = best.i;
-        if(heard){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-10); this._err(); ev.push({ type:'wrong', note:best, d, z, heard }); }
+        if(ih){ this.icnt[ih === 'fort' ? 'hi' : 'lo']++; best.ihint = ih; }
+        if(far){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-10); this._err(); best.grade = 'wrong'; ev.push({ type:'wrong', note:best, d, z, heard:null, ihint:ih }); }
+        else if(heard){ best.state = 3; this.cnt.wrong++; this.combo = 0; this._life(-10); this._err(); ev.push({ type:'wrong', note:best, d, z, heard }); }
         else {
           best.state = 1; this.learned[best.lane] = (this.learned[best.lane] || 0) + 1; (this.by[best.lane] = this.by[best.lane] || []).push(this.vec(z)); if(this.by[best.lane].length > 30) this.by[best.lane].shift();
-          const perfect = Math.abs(d) <= (best.P != null ? best.P : .5 * best.W), m = this.mult(); this.combo++; if(this.combo > this.maxCombo) this.maxCombo = this.combo;
+          const perfect = Math.abs(d) <= (best.P != null ? best.P : .5 * best.W) && !ih, m = this.mult(); this.combo++; if(this.combo > this.maxCombo) this.maxCombo = this.combo;
           this.score += (perfect ? 100 : 60) * m; this.cnt[perfect ? 'perfect' : 'good']++; this._life(perfect ? 1.5 : .75);
-          if(perfect){ this.charge = Math.min(100, this.charge + 10); if(this.charge >= 100) this.maxCharged++; } best.grade = perfect ? 'perfect' : 'good'; ev.push({ type:best.grade, note:best, d, z });
+          if(perfect){ this.charge = Math.min(100, this.charge + 10); if(this.charge >= 100) this.maxCharged++; } best.grade = perfect ? 'perfect' : 'good'; ev.push({ type:best.grade, note:best, d, z, ihint:ih });
         }
       } else if(this._tail(z)) z.verdict = 'tail';
       else if(this._noise(z)) z.verdict = 'noise';
@@ -955,7 +970,7 @@ const HERO = (() => {
     let dur = 300; for(let t = 5; t < 300; t += 5){ if(db(rms(ms(t), ms(t + 5))) < -20){ dur = t; break; } }
     return A.map(v => v - ref).concat(B.map(v => v - ref), env, [z / n30 * 100, dur]).map(v => +v.toFixed(1)); }
 
-  return { soundVec, PitchTracker, PitchJudge, stemNotes, circ, LEVELS, crossCheck, tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
+  return { stripInt, intOf, soundVec, PitchTracker, PitchJudge, stemNotes, circ, LEVELS, crossCheck, tune, LANES, laneOf, buildNotes, LiveDetector, Judge, toWav, fingerprints, median, mean, std, pct };
 })();
 
 </script>
@@ -969,7 +984,7 @@ const LS = { get(k, d){ try{ const v = localStorage.getItem(k); return v == null
 /* nuances par son : même famille de couleur (roses = grave, violets = medium, bleus = aigu), un ton à part par son pour les repérer d'un coup d'œil */
 const TOKC = { P:'#e0607e', B:'#e0607e', T:'#2a7ee0', Ts:'#2cd0e4', 'Ts~':'#6fe6f0', 'Th~':'#3a5ad8', K:'#8b6fd6', 'K~':'#b48cf0', Pch:'#c25ad0', Pf:'#6a82e8', L:'#7552b8', Spt:'#a04ee0', Fsh:'#8e9cf0' };
 const hexMixW = (h, f) => '#' + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * (1 - f) + 255 * f).toString(16).padStart(2, '0')).join('');
-const LC = { grave:'#e0607e', medium:'#8b6fd6', aigu:'#2fb3d9' }, tokCol = (tok, lane) => TOKC[tok] || LC[lane], LNAME = { grave:'grave', medium:'medium', aigu:'aigu' };
+const LC = { grave:'#e0607e', medium:'#8b6fd6', aigu:'#2fb3d9' }, stripInt = t => HERO.stripInt(t), intOf = t => HERO.intOf(t), patPlain = pat => pat.map(p => ({ div:p.div, tok:String(p.tok || '').trim().split(/\s+/).filter(Boolean).map(stripInt).join(' ') })), tokCol = (tok, lane) => TOKC[stripInt(tok)] || LC[lane], LNAME = { grave:'grave', medium:'medium', aigu:'aigu' };
 // couleurs des verdicts : vert = parfait, jaune = bien, rouge = faux / raté, violet = bon rythme mais mauvais son
 const V_OK = '#2fd073', V_GOOD = '#ffd23f', V_BAD = '#ff4d5e', V_WRONG = '#b05cff';
 
@@ -1905,6 +1920,7 @@ function lrnCastleWin(done){
 const PROF_LS = 'bbx-prof-ovr';
 let PROF_OV = (() => { const d = LS.get(PROF_LS, null); return d && typeof d === 'object' ? d : {}; })();
 const profSave = () => LS.set(PROF_LS, PROF_OV);
+const PROF_SFX = ['-', '', '+'];
 const PROF_SND = ['P', 'K', 'K~', 'T', 'Ts', 'Ts~', 'Pch', 'Pf', 'L', 'Fsh', 'Spt'];
 let PE = null, PEPLAY = null;
 
@@ -1926,8 +1942,8 @@ function profStop(){ const P = PEPLAY; PEPLAY = null; if(P){ cancelAnimationFram
 async function profListen(){
   if(PEPLAY){ profStop(); return; }
   try{ await hearLoad(); }catch(e){} ensure(); const spb = 60 / (+PE.bpm || 80), bus = ac.createGain(); bus.gain.value = .9; bus.connect(ac.destination);
-  const cl = []; PE.bt.forEach((b, k) => b.c.forEach((tk, c) => cl.push({ t:k + c / b.d, k, c, tk }))); const at = PE.bt.length;
-  const sched = T0 => { for(let k = 0; k < at; k++) clickAt(T0 + k * spb, k % 4 === 0, bus); cl.forEach(z => { if(z.tk !== '.') sampleAt(T0 + z.t * spb, z.tk, HERO.laneOf(z.tk), bus); }); };
+  const cl = []; PE.bt.forEach((b, k) => b.c.forEach((tk, c) => cl.push({ t:k + c / b.d, k, c, tk }))); const at = PE.bt.length, dynE = cl.some(z => intOf(z.tk) != null);
+  const sched = T0 => { for(let k = 0; k < at; k++) clickAt(T0 + k * spb, k % 4 === 0, bus); cl.forEach(z => { if(z.tk !== '.') sampleAt(T0 + z.t * spb, z.tk, HERO.laneOf(z.tk), bus, dynE); }); };
   const P = PEPLAY = { bus, raf:0, T0:ac.currentTime + .1, nxt:false }; sched(P.T0); $('#peListen').textContent = '■ Stop'; let last = null;
   const tick = () => { if(PEPLAY !== P) return; const now = ac.currentTime;
     if(PE.loop){ if(!P.nxt && now > P.T0 + at * spb - .6){ sched(P.T0 + at * spb); P.nxt = true; } if(P.nxt && now >= P.T0 + at * spb){ P.T0 += at * spb; P.nxt = false; } }
@@ -1938,7 +1954,7 @@ async function profListen(){
 
 function profText(){ return PE.bt.map((b, k) => (k % 4 === 0 && k ? '\n' : '') + b.c.join(' ')).join(' | ').replace(/ \| \n/g, '\n'); }
 function profParse(txt){ const beats = []; const lines = txt.split(/\n+/).map(s => s.trim()).filter(Boolean); let err = '';
-  lines.forEach(L => { const bs = L.split('|').map(s => s.trim()).filter(s => s !== ''); bs.forEach(s => { const c = s.split(/\s+/); if(![1, 2, 3, 4, 8].includes(c.length)) err = err || ('Un temps a ' + c.length + ' case(s) : « ' + s + ' ». Il en faut 1, 2, 3, 4 ou 8.'); c.forEach(x => { if(!/^(\.|[A-Za-z][A-Za-z~]{0,3})$/.test(x)) err = err || ('Son inconnu : « ' + x + ' »'); }); beats.push({ d:c.length, c }); }); });
+  lines.forEach(L => { const bs = L.split('|').map(s => s.trim()).filter(s => s !== ''); bs.forEach(s => { const c = s.split(/\s+/); if(![1, 2, 3, 4, 8].includes(c.length)) err = err || ('Un temps a ' + c.length + ' case(s) : « ' + s + ' ». Il en faut 1, 2, 3, 4 ou 8.'); c.forEach(x => { if(!/^(\.|[A-Za-z][A-Za-z~]{0,3}[+-]?)$/.test(x)) err = err || ('Son inconnu : « ' + x + ' »'); }); beats.push({ d:c.length, c }); }); });
   if(err) return { err }; if(!beats.length) return { err:'Rien à lire.' }; while(beats.length % 4) beats.push({ d:1, c:['.'] }); return { bt:beats }; }
 
 function profRender(){
@@ -1946,7 +1962,7 @@ function profRender(){
   const sk = E.sel ? E.sel.k : -1, bars = [];
   for(let q = 0; q < nBars; q++){
     const beats = E.bt.slice(q * 4, q * 4 + 4).map((b, j) => { const k = q * 4 + j, sub = PROF_SUB[b.d](j + 1);
-      return `<div class="pbt2 ${k === sk ? 'cur' : ''}" style="flex:${b.d} 1 0;min-width:${b.d * 23}px"><div class="pcs">${b.c.map((tk, c) => `<button class="pc ${tk === '.' ? 'z' : ''} ${E.sel && E.sel.k === k && E.sel.c === c ? 'sel' : ''}" data-k="${k}" data-c="${c}" style="${tk === '.' ? '' : '--c:' + tokCol(tk, HERO.laneOf(tk))}"><span class="ptk">${tk === '.' ? '·' : tk}</span><i>${sub[c]}</i></button>`).join('')}</div><div class="pdv ${b.d === 3 ? 't' : ''}">${b.d === 1 ? '&nbsp;' : PROF_DIV[b.d]}</div></div>`; }).join('');
+      return `<div class="pbt2 ${k === sk ? 'cur' : ''}" style="flex:${b.d} 1 0;min-width:${b.d * 23}px"><div class="pcs">${b.c.map((tk, c) => `<button class="pc ${tk === '.' ? 'z' : ''} ${intOf(tk) === 2 ? 'i2' : intOf(tk) === 0 ? 'i0' : ''} ${E.sel && E.sel.k === k && E.sel.c === c ? 'sel' : ''}" data-k="${k}" data-c="${c}" style="${tk === '.' ? '' : '--c:' + tokCol(tk, HERO.laneOf(tk))}"><span class="ptk">${tk === '.' ? '·' : tk}</span><i>${sub[c]}</i></button>`).join('')}</div><div class="pdv ${b.d === 3 ? 't' : ''}">${b.d === 1 ? '&nbsp;' : PROF_DIV[b.d]}</div></div>`; }).join('');
     bars.push(`<div class="pm"><div class="pmh"><b>Mesure ${q + 1}</b><span class="pbt"><button data-dup="${q}" title="Dupliquer la mesure">⧉</button><button data-clr="${q}" title="Vider la mesure">⌫</button><button data-del="${q}" title="Supprimer la mesure" ${nBars < 2 ? 'disabled' : ''}>🗑</button></span></div><div class="pbs">${beats}</div></div>`); }
   const selTk = E.sel ? E.bt[E.sel.k].c[E.sel.c] : null, sb = E.sel ? E.bt[E.sel.k] : null;
   const divBtns = (attr, cur) => [1, 2, 3, 4, 8].map(d => `<button ${attr}="${d}" class="${cur === d ? 'on' : ''}">${PROF_DIV[d]}<small>${d === 1 ? '1/temps' : d + '/temps'}</small></button>`).join('');
@@ -1959,13 +1975,15 @@ function profRender(){
     <div class="pal"><div class="pas">${E.sel ? 'Temps <b>' + ((E.sel.k % 4) + 1) + '</b> de la mesure <b>' + (Math.floor(E.sel.k / 4) + 1) + '</b> · case ' + (E.sel.c + 1) + '/' + sb.d + ' : <b>' + (selTk === '.' ? 'silence' : selTk) + '</b>' : 'Touche une case pour la modifier'}</div>
       <div class="pap pdvb"><span>Temps :</span>${divBtns('data-dv', sb ? sb.d : 0)}</div>
       <div class="pap pdvb"><span>Mesure :</span>${[1, 2, 3, 4].map(d => `<button data-bar="${d}">${PROF_DIV[d]}</button>`).join('')}</div>
+      <div class="pap pdvb"><span>Force :</span>${[[0, '− faible'], [1, 'normal'], [2, '+ fort']].map(([v, n]) => `<button data-iv="${v}" class="${(E.iv == null ? 1 : E.iv) === v ? 'on' : ''}">${n}</button>`).join('')}</div>
       <div class="pap">${PROF_SND.map(s => `<button data-s="${s}" style="--c:${tokCol(s, HERO.laneOf(s))}">${s}</button>`).join('')}<button data-s="." class="sil">· silence</button></div>
       <div class="pap"><button data-nx="-1">⟵</button><button data-nx="1">⟶</button><button data-mv="-1">◀ décaler</button><button data-mv="1">décaler ▶</button><button id="peUn" ${E.undo.length ? '' : 'disabled'}>↶ Annuler</button></div></div>
     <div class="pfoot"><button id="peListen" class="pbtn">🔊 Écouter</button><label class="pbtn" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="peLoop" ${E.loop ? 'checked' : ''}> ↻ boucle</label><button id="peSave" class="pbtn ok">💾 Enregistrer</button>${E.custom ? '' : `<button id="peRes" class="pbtn" ${PROF_OV[E.key] ? '' : 'disabled'}>↺ Original</button>`}</div></div>`;
   const rd = () => { E.n = $('#peN').value; E.t = $('#peT').value; E.bpm = $('#peB').value; E.cyc = $('#peC').value; if($('#peV')) E.niv = +$('#peV').value; E.loop = $('#peLoop').checked; };
   $$('#profEd .pc').forEach(b => b.onclick = () => { rd(); const k = +b.dataset.k, c = +b.dataset.c; if(E.sel && E.sel.k === k && E.sel.c === c && E.bt[k].c[c] !== '.'){ profSnap(); E.bt[k].c[c] = '.'; } E.sel = { k, c }; profRender(); });
-  $$('#profEd [data-s]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); profSnap(); E.bt[E.sel.k].c[E.sel.c] = b.dataset.s;
-    if(b.dataset.s !== '.' && !PEPLAY){ try{ ensure(); const g = ac.createGain(); g.gain.value = .9; g.connect(ac.destination); sampleAt(ac.currentTime + .02, b.dataset.s, HERO.laneOf(b.dataset.s), g); }catch(e){} }
+  $$('#profEd [data-iv]').forEach(b => b.onclick = () => { rd(); E.iv = +b.dataset.iv; if(E.sel){ const T = E.bt[E.sel.k].c, tk = T[E.sel.c]; if(tk !== '.'){ profSnap(); T[E.sel.c] = stripInt(tk) + PROF_SFX[E.iv]; } } profRender(); });
+  $$('#profEd [data-s]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); profSnap(); const tk = b.dataset.s === '.' ? '.' : b.dataset.s + PROF_SFX[E.iv == null ? 1 : E.iv]; E.bt[E.sel.k].c[E.sel.c] = tk;
+    if(tk !== '.' && !PEPLAY){ try{ ensure(); const g = ac.createGain(); g.gain.value = .9; g.connect(ac.destination); sampleAt(ac.currentTime + .02, tk, HERO.laneOf(tk), g, true); }catch(e){} }
     E.sel = profNext(E.sel, 1); profRender(); });
   $$('#profEd [data-mv]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); const n = profNext(E.sel, +b.dataset.mv); if(n === E.sel) return; profSnap(); const a = E.bt[E.sel.k].c, z = E.bt[n.k].c, t = a[E.sel.c]; a[E.sel.c] = z[n.c]; z[n.c] = t; E.sel = n; profRender(); });
   $$('#profEd [data-nx]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); E.sel = profNext(E.sel, +b.dataset.nx); profRender(); });
@@ -2148,7 +2166,7 @@ const lrnHcOpen = () => lrnOpenAll() || lrnMaxed();
 /* un exercice → un « niveau » pour le moteur de jeu (même forme que advBuild) */
 function lrnBuild(i, e, lv){ // sans lv : liste d'origine (Défi amis) ; avec lv (1-3, 4 = Hardcore) : liste du niveau
   const I = LRN_I[i], X = lv ? lrnExs(i, lv)[e] : I.ex[e], lvl = X.lv, order = ['P', 'K', 'K~', 'T', 'Ts', 'Pch', 'Pf', 'Spt', 'Fsh', 'L'], ix = x => { const k = order.indexOf(x); return k < 0 ? 99 : k; };
-  const sounds = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))].sort((a, b) => ix(a) - ix(b));
+  const sounds = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.').map(stripInt))].sort((a, b) => ix(a) - ix(b));
   return { id:I.id, ic:I.ic, n:I.n, style:X.n, wi:i, isl:i, ex:e, lv:lvl, lvl:lv || 0, niv:e + 1, lrn:true, pat:X.m.map(z => z[1]), divs:X.m.map(z => z[0]), div:X.m[0][0], bpm:X.bpm, cycles:X.cyc, win:ADV_ST[lvl].win, lifeK:ADV_ST[lvl].lifeK,
     clk:lv ? CFG.clk !== false : true, boss:false, sounds:sounds.join(' '), mes:lrnMeasures(X.m).length * X.cyc, teach:X.t,
     prog:[[36, 'maj'], [36, 'maj'], [43, 'maj'], [36, 'maj']], bass:X.mus ? [[0, .9, 0], [2, .9, 0]] : null, perc:X.mus ? () => [0, 1, 2, 3].map(b => [b + .5, 's']) : null }; }
@@ -2167,7 +2185,7 @@ function lrnBanner(g, stars, why){
   const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
   const msg = why === 'dead' ? 'Plus de cœurs… respire, écoute le clic et retente !' : blue ? 'Rien de faux, tout pile : tu maîtrises !' : stars === 3 ? '3 étoiles : tout est bien dans le temps !' : stars === 2 ? 'Bravo ! Vise maintenant « Parfait » sur chaque son.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour passer. Retente !';
   const LV = r.lv || 1, nx = r.hc ? '<div class="res ok" style="font-weight:900;text-align:center">🔥 TOUT EST MAXÉ ! Le mode HARDCORE est débloqué : choisis-le sur la carte.</div>' : r.all ? '<div class="res ok" style="font-weight:900;text-align:center">' + (LV === 1 ? '🌌 Tous les sons sont à toi ! Une nouvelle planète apparaît à l\'horizon…' : LV === 4 ? '🔥 Hardcore terminé : légende !' : '🏆 Niveau ' + LV + ' terminé !') + '</div>' : r.plGem != null ? '<div class="res ok" style="font-weight:900;text-align:center">💎 ' + GEMS[r.plGem].n + ' obtenu !' + (r.castle ? ' 🏰 Le château s\'ouvre !' : '') + '</div>' : r.islDone ? '<div class="res ok" style="font-weight:900;text-align:center">🪐 ' + a.n + ' terminée !' + (lrnNextIsl(a.isl) != null ? ' 🔓 ' + LRN_I[lrnNextIsl(a.isl)].ic + ' ' + LRN_I[lrnNextIsl(a.isl)].n : '') + '</div>' : r.newEx ? '<div class="res ok" style="font-weight:900;text-align:center">🔓 Exercice suivant débloqué : ' + lrnExs(a.isl, LV)[a.ex + 1].n + '</div>' : '';
-  return `<div class="advend"><div class="advk">${a.ic} ${a.n.toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">${LV === 4 ? '🔥 HARDCORE' : 'NIV ' + LV} · Exercice ${a.ex + 1}/${lrnExs(a.isl, LV).length} · ${a.style}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nx}`; }
+  return `<div class="advend"><div class="advk">${a.ic} ${a.n.toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">${LV === 4 ? '🔥 HARDCORE' : 'NIV ' + LV} · Exercice ${a.ex + 1}/${lrnExs(a.isl, LV).length} · ${a.style}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div>${intLine(g)}</div>${nx}`; }
 
 /* ---------- écran : la carte du Tableau 1 + l'écran d'île ---------- */
 let LR = null;
@@ -2273,7 +2291,7 @@ async function lrnListen(i, e){
   MS.forEach((M, k) => { let at = k * 4, ci = 0; M.forEach(sg => { sg.T.forEach((tk, j) => { cl.push({ t:at + j / sg.d, k, c:ci++, tk }); }); at += sg.beats; }); });
   const T = ac.currentTime + .1, total = cyc * nM * 4; // écoute : on part tout de suite, sans « 1 2 3 4 » (le décompte reste avant de jouer pour de vrai)
   for(let b = 0; b < total; b++) clickAt(T + b * spb, b % 4 === 0, bus);
-  for(let c = 0; c < cyc; c++) cl.forEach(z => { if(z.tk !== '.') sampleAt(T + (c * nM * 4 + z.t) * spb, z.tk, HERO.laneOf(z.tk), bus); });
+  const dynL = cl.some(z => intOf(z.tk) != null); for(let c = 0; c < cyc; c++) cl.forEach(z => { if(z.tk !== '.') sampleAt(T + (c * nM * 4 + z.t) * spb, z.tk, HERO.laneOf(z.tk), bus, dynL); });
   const L = LRL = { i, e, bus, raf:0 }; if(btn){ btn.textContent = '■'; btn.classList.add('on'); }
   const cells = row ? [...row.querySelectorAll('.sc')] : []; let last = null;
   const tick = () => { if(LRL !== L) return; const bt = (ac.currentTime - T) / spb;
@@ -2562,7 +2580,7 @@ const CRS_LS = 'bbx-crs';
 let CRS = (() => { const d = LS.get(CRS_LS, null); return d && Array.isArray(d.courses) ? Object.assign({ s:{}, b:{} }, d) : { v:1, courses:[], s:{}, b:{} }; })(), CRS_BACK = 'home', CRS_OPEN = null;
 const crsSave = () => { LS.set(CRS_LS, CRS); try{ crsHomeSt(); }catch(e){} };
 const crsId = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
-const CRS_TOK = /^(\.|[A-Za-z][A-Za-z~]{0,3})$/, CRS_DS = [1, 2, 3, 4, 8];
+const CRS_TOK = /^(\.|[A-Za-z][A-Za-z~]{0,3}[+-]?)$/, CRS_DS = [1, 2, 3, 4, 8];
 
 /* texte « Workout » → blocs [d,'sons'] (une mesure = 4 temps) */
 function crsParseTxt(txt, d0){ const out = [];
@@ -2626,7 +2644,7 @@ function crsRender(){ const B = $('#crsB'); if(!B) return; const prof = !!CFG.pr
   if(!CRS.courses.length) h += `<div class="card"><div class="small">Aucun cours pour l'instant. Clique sur <b>📥 Importer</b> et colle un pack de cours (fichier JSON exporté depuis Classroom).${prof ? '' : ' Pour écrire tes propres phrases ici, coche « 🛠 Mode prof » dans Options.'}</div></div>`;
   CRS.courses.forEach((C, ci) => { const tot = C.phrases.length * 3, got = C.phrases.reduce((t, P) => t + crsStars(C, P), 0), open = CRS_OPEN === C.id;
     h += `<div class="card"><div class="row" style="gap:8px"><div style="flex:1;min-width:0"><div style="font-weight:900;font-size:1.05rem">${escH(C.nom)}</div><div class="small muted">${C.phrases.length} phrase${C.phrases.length > 1 ? 's' : ''} · N${C.niv} · ★ ${got}/${tot}</div></div><button class="b-ghost" data-tg="${ci}" style="padding:6px 10px">${open ? '▴' : '▾'}</button></div>`;
-    if(open){ C.phrases.forEach((P, pi) => { const sn = [...new Set(P.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))], st = crsStars(C, P), bb = CRS.b[C.id + ':' + P.id];
+    if(open){ C.phrases.forEach((P, pi) => { const sn = [...new Set(P.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.').map(stripInt))], st = crsStars(C, P), bb = CRS.b[C.id + ':' + P.id];
         h += `<div class="amiS"><div class="n">${st ? '✓' : pi + 1}</div><div class="b"><div class="t">${escH(P.n)}${P.place ? ' <span class="small muted">· remplace ' + escH(P.place.isl) + ':' + (P.place.ex + 1) + '</span>' : ''}</div><div class="d">${sn.map(t => `<span class="tk" style="--c:${tokCol(t, HERO.laneOf(t))}">${escH(t)}</span>`).join('')} ${P.bpm} BPM · N${P.niv}${bb != null ? ' · record ' + bb + ' %' : ''}</div></div><div class="s">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</div>
           ${prof ? `<button class="b-ghost" data-ed="${ci}.${pi}" style="padding:4px 8px" title="Éditer">⚙</button><button class="b-ghost" data-rm="${ci}.${pi}" style="padding:4px 8px" title="Supprimer">🗑</button>` : ''}<button class="b-yel" data-pl="${ci}.${pi}" style="padding:6px 12px">▶</button></div>`; });
       h += `<div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="b-ghost" data-ce="${ci}">📤 Exporter ce cours</button>${prof ? `<button class="b-ghost" data-pa="${ci}">➕ Phrase</button><button class="b-ghost" data-rn="${ci}">✏ Renommer</button><button class="b-ghost" data-cd="${ci}">🗑 Supprimer le cours</button>` : ''}</div>`; }
@@ -2645,7 +2663,7 @@ function crsRender(){ const B = $('#crsB'); if(!B) return; const prof = !!CFG.pr
 
 /* ---------- jeu : une phrase d'un cours = un « niveau » pour le moteur (comme lrnBuild) ---------- */
 function crsBuild(ci, pi){ const C = CRS.courses[ci], X = C.phrases[pi], lvl = Math.max(1, Math.min(3, X.niv || C.niv || 1)), order = ['P', 'K', 'K~', 'T', 'Ts', 'Pch', 'Pf', 'Spt', 'Fsh', 'L'], ix = x => { const k = order.indexOf(x); return k < 0 ? 99 : k; };
-  const sounds = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))].sort((a, b) => ix(a) - ix(b));
+  const sounds = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.').map(stripInt))].sort((a, b) => ix(a) - ix(b));
   return { id:'crs', ic:'📚', n:C.nom, style:X.n, wi:-1, isl:-1, ex:pi, lv:lvl, lvl:0, niv:pi + 1, lrn:false, crs:[ci, pi], pat:X.m.map(z => z[1]), divs:X.m.map(z => z[0]), div:X.m[0][0], bpm:X.bpm, cycles:X.cyc, win:ADV_ST[lvl].win, lifeK:ADV_ST[lvl].lifeK,
     clk:CFG.clk !== false, boss:false, sounds:sounds.join(' '), mes:lrnMeasures(X.m).length * X.cyc, teach:X.t, prog:[[36, 'maj'], [36, 'maj'], [43, 'maj'], [36, 'maj']], bass:null, perc:null }; }
 function crsLaunch(ci, pi){ if(CRS.starting) return; if(!getCal()){ alert('Fais d\'abord la calibration (micro, latence, sons) : elle ne prend qu\'une minute.'); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(er){} calStep = 0; renderCal(); show('cal'); return; }
@@ -2659,7 +2677,7 @@ function crsBanner(g, stars, why){
   const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
   const msg = why === 'dead' ? 'Plus de cœurs… respire, écoute le clic et retente !' : blue ? 'Rien de faux, tout pile !' : stars === 3 ? '3 étoiles : tout est bien dans le temps !' : stars === 2 ? 'Bravo ! Vise « Parfait » sur chaque son.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour passer. Retente !';
   const nx = r.courseDone ? '<div class="res ok" style="font-weight:900;text-align:center">🎓 Cours terminé !</div>' : '';
-  return `<div class="advend"><div class="advk">📚 ${escH(C ? C.nom : '').toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">Phrase ${a.crs[1] + 1}/${C ? C.phrases.length : '?'} · ${escH(a.style)}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nx}`; }
+  return `<div class="advend"><div class="advk">📚 ${escH(C ? C.nom : '').toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">Phrase ${a.crs[1] + 1}/${C ? C.phrases.length : '?'} · ${escH(a.style)}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div>${intLine(g)}</div>${nx}`; }
 
 { const sc = PLN_SCENE.lb1; if(ADV_SCENE[sc]){ ADV_SCENE.crs = ADV_SCENE[sc]; ADV_FRAME.crs = ADV_FRAME[sc]; } }
 const crsHomeSt = () => { const e = $('#crsHomeSt'); if(e) e.textContent = CRS.courses.length ? CRS.courses.length + ' cours · ★ ' + CRS.courses.reduce((t, C) => t + C.phrases.reduce((u, P) => u + crsStars(C, P), 0), 0) : ''; };
@@ -2852,8 +2870,8 @@ let HEAR_BUF = null, HEAR_LOADING = false;
 async function hearLoad(){ if(HEAR_BUF) return HEAR_BUF; const out = {}; ensure();
   for(const [id, b64] of Object.entries(HEAR_SND)){ try{ const u8 = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); out[id] = await new Promise((ok, ko) => { const pr = ac.decodeAudioData(u8.buffer, ok, ko); if(pr && pr.then) pr.then(ok, ko); }); }catch(e){ console.warn('son', id, e); } }
   HEAR_BUF = out; return out; }
-function sampleAt(t, tok, lane, bus){ const id = SMP_OF[tok] || { grave:'kick', medium:'rimshot', aigu:'hihat-closed' }[lane], buf = HEAR_BUF && HEAR_BUF[id];
-  if(!buf){ drumAt(t, lane, bus); return; } const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf; g.gain.value = 1; src.connect(g); g.connect(bus); src.start(t); }
+function sampleAt(t, tok, lane, bus, dyn){ const iv = intOf(tok), vol = iv != null ? [.2, .6, 1][iv] : dyn ? .6 : 1; tok = stripInt(tok); const id = SMP_OF[tok] || { grave:'kick', medium:'rimshot', aigu:'hihat-closed' }[lane], buf = HEAR_BUF && HEAR_BUF[id];
+  if(!buf){ drumAt(t, lane, bus); return; } const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf; g.gain.value = vol; src.connect(g); g.connect(bus); src.start(t); }
 let HEAR = null;
 function noiseBuf(){ if(!HEAR_NB){ HEAR_NB = ac.createBuffer(1, ac.sampleRate * .3, ac.sampleRate); const d = HEAR_NB.getChannelData(0); for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } return HEAR_NB; }
 let HEAR_NB = null;
@@ -2873,7 +2891,7 @@ async function startHear(){
   ensure(); const spb = 60 / bpm, bus = ac.createGain(); bus.gain.value = .9; bus.connect(ac.destination);
   const T = ac.currentTime + .1, nB = 4 + G.P;
   for(let b = 0; b < nB; b++) clickAt(T + b * spb, b % 4 === 0, bus);
-  G.cells.forEach(c => { if(c.ev) sampleAt(T + (4 + c.b) * spb, c.tok, HERO.laneOf(c.tok), bus); });
+  const dynP = G.cells.some(c => intOf(c.tok) != null); G.cells.forEach(c => { if(c.ev) sampleAt(T + (4 + c.b) * spb, c.tok, HERO.laneOf(c.tok), bus, dynP); });
   const tks = $$('#prev .tk'); let last = -1;
   HEAR = { bus, raf:0 }; $('#bHear').textContent = '■ Stop';
   const tick = () => { if(!HEAR) return; const bt = (ac.currentTime - T) / spb - 4; let cur = -1;
@@ -2885,6 +2903,8 @@ async function startHear(){
 
 /* ---------- état de calibration ---------- */
 const getLat = () => LS.get('bbx-rylat', null);       // { ms, t, n } : partagé avec le labo et l'appli
+/* bilan d'intensité (écran de fin) */
+const intLine = g => { const J = g.J; if(!J || !J.dyn) return ''; const c = J.icnt; return `<div class="small" style="color:#fff;font-weight:800;margin-top:4px">🎚 Intensité : ${c.ok} juste${c.ok > 1 ? 's' : ''}${c.hi ? ' · ' + c.hi + ' trop fort' : ''}${c.lo ? ' · ' + c.lo + ' trop faible' : ''}</div>`; };
 const getCal = () => { const c = LS.get('bbx-hero-cal', null); return c && c.refs ? c : null; };
 const getAdj = () => +LS.get('bbx-hero-adj', 0) || 0;  // décalage fin (ms), ajouté à la latence
 const latEffMs = () => (getLat() ? getLat().ms : 0) + getAdj();
@@ -2967,8 +2987,8 @@ const show = id => { try{ if(G && !G.done) quitGame(false); }catch(e){} stopAll(
 
 /* ---------- calibration (micro → latence → sons → synchro casque) ---------- */
 let calStep = 0, calBusy = false;
-const calSteps = ['Micro', 'Latence', 'Test de sons', 'Synchro casque'];
-function calHead(){ $('#calSub').textContent = 'Étape ' + (calStep + 1) + '/4 · ' + calSteps[calStep]; }
+const calSteps = ['Micro', 'Latence', 'Test de sons', 'Intensité', 'Synchro casque'];
+function calHead(){ $('#calSub').textContent = 'Étape ' + (calStep + 1) + '/5 · ' + calSteps[calStep]; }
 function lvlLoop(rec, id){ const iv = setInterval(() => { const m = $('#' + id); if(!m){ clearInterval(iv); return; } m.style.width = Math.min(100, rec.cur * 160) + '%'; rec.cur *= .7; }, 60); return () => clearInterval(iv); }
 function renderCal(){
   calHead(); const B = $('#calbody'); calBusy = false;
@@ -3035,6 +3055,18 @@ function renderCal(){
     $('#cPrev').onclick = () => { calStep = 1; renderCal(); }; $('#cNext').onclick = () => { calStep = 3; renderCal(); };
     $('#cGo').onclick = soundCheck;
   }
+  else if(calStep === 3){
+    const C0 = getCal(), has = C0 && C0.int;
+    B.innerHTML = `<h2>🎚 Intensité <span class="small muted">(pour les phrases fort / faible)</span></h2>
+      <p>Pour que le jeu sache ce qu'est <b>ton</b> « fort », ton « normal » et ton « faible », je te demande 3 sons (P, K, Ts) chacun à trois forces : <b>normal, fort, faible</b>, 3 fois chaque. Environ 1 minute.</p>
+      <div class="res warn">📏 <b>Garde toujours le micro à la même distance</b> (téléphone ou ordinateur) : ≈ 5–10 cm, sur le côté de la bouche, <b>pareil pour la calibration et pour jouer</b>. Si tu changes de place, de casque ou de micro, refais cette étape.</div>
+      ${has ? '<div class="res ok">✅ Déjà réglé ' + ago(C0.int.t) + ' — tu peux le refaire.</div>' : ''}
+      <div class="row"><button class="b-yel" id="cGo" ${C0 ? '' : 'disabled'}>${has ? 'Refaire l\'intensité' : 'Lancer l\'intensité'}</button><div class="meter"><i id="cLvl"></i></div></div>
+      <div id="scBig"></div><div class="timebar" id="scBar" style="display:none"><i></i></div><div id="cMsg">${C0 ? '' : '<div class="res no">Fais d\'abord le test de sons (étape précédente).</div>'}</div>
+      <div class="row" style="margin-top:10px"><button id="cPrev">← Précédent</button><span class="sp"></span><button class="b-pink" id="cNext">${has ? 'Suivant →' : 'Passer →'}</button></div>`;
+    $('#cPrev').onclick = () => { calStep = 2; renderCal(); }; $('#cNext').onclick = () => { calStep = 4; renderCal(); };
+    $('#cGo').onclick = intCheck;
+  }
   else {
     const adj = getAdj();
     B.innerHTML = `<h2>🎧 Synchro casque <span class="small muted">(facultatif)</span></h2>
@@ -3043,7 +3075,7 @@ function renderCal(){
       <div class="row"><button class="b-yel" id="cGo">Lancer (8 s)</button><div class="meter"><i id="cLvl"></i></div></div>
       <div class="small muted" style="margin-top:6px">Un décalage trop instable (±35 ms) = refais-le. Le réglage est aussi ajustable après chaque partie.</div>
       <div class="row" style="margin-top:10px"><button id="cPrev">← Précédent</button><span class="sp"></span><button id="cReset">Remettre à 0</button><button class="b-pink" id="cDone">Terminé ✓</button></div>`;
-    $('#cPrev').onclick = () => { calStep = 2; renderCal(); };
+    $('#cPrev').onclick = () => { calStep = 3; renderCal(); };
     $('#cReset').onclick = () => { LS.set('bbx-hero-adj', 0); renderCal(); };
     $('#cDone').onclick = () => { if(amiOn()){ amiShow(); return; } renderHome(); show('home'); };
     $('#cGo').onclick = syncTest;
@@ -3087,6 +3119,47 @@ async function soundCheck(){
   }catch(e){ stop(); msg.innerHTML = '<div class="res no">Micro indisponible : ' + (e.message || e) + '</div>'; big.innerHTML = ''; }
   $('#cGo').disabled = false; $('#cGo').textContent = 'Refaire le test'; $('#cPrev').disabled = false; if(getCal() && calOk()) $('#cNext').disabled = false; calBusy = false;
 }
+/* étape « Intensité » : P, K, Ts à trois forces (normal, fort, faible) ; on garde le niveau médian (dB) de chaque force, famille par famille */
+const INT_NAME = ['faible', 'normal', 'fort'], INT_ICON = ['🔉', '🔊', '💥'];
+async function intCheck(){
+  if(calBusy) return; const C0 = getCal(); if(!C0){ $('#cMsg').innerHTML = '<div class="res no">Fais d\'abord le test de sons.</div>'; return; }
+  calBusy = true; $('#cGo').disabled = true; $('#cNext').disabled = true; $('#cPrev').disabled = true;
+  const big = $('#scBig'), msg = $('#cMsg'); msg.innerHTML = ''; const st = { cur:0 }; let stop = lvlLoop(st, 'cLvl');
+  const C = { th:.006, sp:0, phase:'sil', n:0, armed:true };
+  const dots = n => { const e = $('#scDots'); if(e) e.innerHTML = '●'.repeat(Math.min(3, n)) + '<span style="opacity:.35">' + '●'.repeat(Math.max(0, 3 - n)) + '</span>'; };
+  try{
+    const rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p;
+      if(C.phase === 'sil'){ if(p > C.sp) C.sp = p; }
+      else if(C.phase === 'count'){ if(C.armed && p > C.th){ C.n++; C.armed = false; dots(C.n); } else if(!C.armed && p < C.th * .5) C.armed = true; } });
+    big.innerHTML = '<div class="bigletter" style="--c:#9ab">🤫</div><div class="small muted" style="text-align:center">Silence…</div>'; await sleep(1500);
+    C.th = Math.max(C.sp * 3, .006);
+    const plan = [['grave', 'P'], ['medium', 'K'], ['aigu', 'Ts']], order = [1, 2, 0], wins = [];
+    for(const [lane, nm] of plan) for(const lv of order){
+      C.n = 0; C.armed = true; const t0 = ac.currentTime;
+      big.innerHTML = `<div class="bigletter" style="--c:${LC[lane]}">${nm}</div><div style="text-align:center;font:900 1.5rem Nunito,sans-serif;color:#fff">${INT_ICON[lv]} ${INT_NAME[lv].toUpperCase()}</div><div id="scDots" class="small" style="text-align:center;font-size:1.6rem;color:${LC[lane]}"></div><div class="small muted" style="text-align:center">Joue 3 fois « ${nm} » ${lv === 2 ? 'à fond' : lv === 0 ? 'tout doucement, mais franc' : 'normalement'}</div>`; dots(0); C.phase = 'count';
+      const t = Date.now(); while(C.n < 3 && Date.now() - t < 9000) await sleep(40);
+      if(C.n >= 3) await sleep(600);
+      C.phase = 'pause'; wins.push({ lane, lv, t0:t0 - .1, t1:ac.currentTime + .4, heard:C.n });
+      big.innerHTML = '<div class="bigletter" style="--c:#9ab">…</div>'; await sleep(450);
+    }
+    const r = rec.stop(); stop();
+    const ons = HERO.LiveDetector.run(r.x, r.sr, C0.refs, C0.det || {});
+    const lev = {}, cnt = {};
+    wins.forEach(w => { const l = ons.filter(o => o.t >= w.t0 - r.tStart && o.t < w.t1 - r.tStart); (cnt[w.lane] = cnt[w.lane] || {})[w.lv] = l.length; if(!l.length) return;
+      const mx = Math.max(...l.map(o => o.db)), k = l.filter(o => o.db >= mx - 14).slice(0, 5).map(o => o.db); (lev[w.lane] = lev[w.lane] || {})[['w', 'n', 's'][w.lv]] = +HERO.median(k).toFixed(1); });
+    const probs = []; let ok = true;
+    plan.forEach(([lane, nm]) => { const L = lev[lane] || {}, K = cnt[lane] || {};
+      [0, 1, 2].forEach(v => { if((K[v] || 0) < 2){ ok = false; probs.push(nm + ' ' + INT_NAME[v] + ' : je ne l\'ai entendu que ' + (K[v] || 0) + ' fois' + (v === 0 ? ' — joue un peu moins doucement, ou rapproche le micro' : '')); } });
+      if(L.w != null && L.n != null && L.n - L.w < 4){ ok = false; probs.push(nm + ' : faible et normal se ressemblent (' + Math.round(L.n - L.w) + ' dB d\'écart) — joue plus contrasté'); }
+      if(L.s != null && L.n != null && L.s - L.n < 3){ ok = false; probs.push(nm + ' : normal et fort se ressemblent (' + Math.round(L.s - L.n) + ' dB d\'écart) — pousse plus fort'); } });
+    const rows = plan.map(([lane, nm]) => { const L = lev[lane] || {}, K = cnt[lane] || {}; return `<div class="st"><span class="tk" style="--c:${LC[lane]}">${nm}</span> ${[0, 1, 2].map(v => `${INT_ICON[v]} ${['w', 'n', 's'][v] && L[['w', 'n', 's'][v]] != null ? Math.round(L[['w', 'n', 's'][v]]) + ' dB' : '?'} <span class="small muted">(${Math.min(3, K[v] || 0)}/3)</span>`).join(' · ')}</div>`; }).join('');
+    const clip = r.peak > .97, saveInt = () => { const c = getCal(); if(!c) return; c.int = Object.assign({ t:Date.now() }, lev); LS.set('bbx-hero-cal', c); };
+    msg.innerHTML = rows + (ok ? '<div class="res ok">✅ Tes trois forces sont réglées.</div>' : '<div class="res warn">⚠ ' + probs.slice(0, 4).join('<br>⚠ ') + '<br><button id="cIntForce" class="b-cyan" style="margin-top:6px">Enregistrer quand même</button></div>') + (clip ? '<div class="res warn">Ça sature sur les sons forts : éloigne un peu le micro, puis refais l\'étape.</div>' : '') + '<div class="small muted">Le jeu compare ensuite la force de chaque son à ces niveaux, famille par famille. Si tu changes de distance, de casque ou de micro, refais cette étape.</div>';
+    if(ok){ saveInt(); } else { const f = $('#cIntForce'); if(f) f.onclick = () => { saveInt(); f.textContent = 'Enregistré ✓'; f.disabled = true; }; }
+    big.innerHTML = '';
+  }catch(e){ stop(); msg.innerHTML = '<div class="res no">Micro indisponible : ' + (e.message || e) + '</div>'; big.innerHTML = ''; }
+  $('#cGo').disabled = false; $('#cGo').textContent = 'Refaire l\'intensité'; $('#cPrev').disabled = false; $('#cNext').disabled = false; calBusy = false;
+}
 async function syncTest(){
   if(calBusy) return; calBusy = true; $('#cGo').disabled = true; const msg = $('#cMsg'), st = { cur:0 }; let stop = lvlLoop(st, 'cLvl'); msg.textContent = 'Écoute les 4 clics, puis joue P sur les 8 suivants…';
   try{ const C = getCal(); if(!C) throw new Error('fais d\'abord le test de sons'); const bpm = 90, spb = 60 / bpm, rec = await recStart(d => { let p = 0; for(let i = 0; i < d.length; i++){ const a = Math.abs(d[i]); if(a > p) p = a; } if(p > st.cur) st.cur = p; });
@@ -3125,15 +3198,18 @@ async function startGame0(){
   const cal = getCal(); if(!cal) return; stopHear();
   const sd = (!ADV && CFG.style === 'song') ? stemSong() : null, sp = sd ? stemPart() : null, pitch = !!(sp && sp.kind === 'pitch');
   if(sd){ try{ await stemsLoad(); }catch(e){ alert('Boucles audio illisibles : ' + (e.message || e)); return; } }
-  const pat = patOf(), bpm = bpmOf(), BOSS = ADV ? !!ADV.boss : CFG.boss, cycles = ADV ? ADV.cycles : BOSS ? Math.max(3, CFG.cycles) : CFG.cycles;
+  const patRaw = patOf(), pat = patPlain(patRaw), bpm = bpmOf(), BOSS = ADV ? !!ADV.boss : CFG.boss, cycles = ADV ? ADV.cycles : BOSS ? Math.max(3, CFG.cycles) : CFG.cycles;
   let B;
   if(pitch){ const spb0 = 60 / bpm, base = STEMNOTES[sd.id + '|' + sp.id] || [], notes = [];
     for(let c = 0; c < cycles; c++) base.forEach(n => { const beat = 4 + c * sd.loopBeats + n.beat; notes.push({ i:notes.length, cyc:c, cell:0, tok:'', lane:'medium', long:true, beat, rel:beat * spb0, W:.2, P:.1, durB:n.dur, spb:spb0, m:n.m, sndB:n.snd, ms:n.ms }); });
     B = { notes, cells:[], P:sd.loopBeats, spb:spb0, endBeat:4 + cycles * sd.loopBeats }; }
-  else B = HERO.buildNotes(pat, bpm, cycles, ADV ? ADV.win : CFG.niv);
+  else B = HERO.buildNotes(patRaw, bpm, cycles, ADV ? ADV.win : CFG.niv);
   if(!B.notes.length){ alert('Phrase vide.'); return; }
+  const useInt = B.notes.some(n => n.int != null); // phrase d'intensité (fort / normal / faible) : il faut les niveaux de l'élève
+  if(useInt && !cal.int){ if(confirm('Cette phrase travaille l\'intensité (fort / normal / faible). Il faut d\'abord régler tes niveaux dans la calibration (environ 1 minute). On y va ?')){ calStep = 3; renderCal(); show('cal'); } return; }
   ensure(); if(cal.sr && cal.sr !== ac.sampleRate){ alert('La fréquence audio a changé (' + cal.sr + ' → ' + ac.sampleRate + ' Hz) : refais le test de sons.'); return; }
   $('#game').classList.add('on'); fit(); $('#warn').style.display = 'none';
+  if(useInt){ const w = $('#warn'); w.innerHTML = '<span>🎚 Intensité : garde le micro à la même distance que pendant la calibration.</span><button id="warnX" aria-label="Fermer">✕</button>'; w.style.display = 'flex'; $('#warnX').onclick = () => { w.style.display = 'none'; }; setTimeout(() => { w.style.display = 'none'; }, 6000); }
   const lat = latEffMs() / 1000, spb = B.spb;
   const g = G = { adv:ADV, pitch, part:sp ? sp.id : null, B, pat, bpm, cycles, lat, spb, fx:[], parts:[], leak:0, over:false, done:false, chunks:[], f0:null, mic:null, bus:null, T0:0, J:null, D:null, raf:0, lvl:0, why:'' };
   try{
@@ -3156,7 +3232,7 @@ async function startGame0(){
   else if(CFG.style === 'song'){ const F = songFlat(); g.mus = ac.createGain(); g.mus.gain.value = CFG.mvol; g.mus.connect(ac.destination);
     if(CFG.mus && F.ev.length){ g.evs = []; for(let c = 0; c < cycles; c++) F.ev.forEach(e => g.evs.push({ trk:e.trk, fr:e.fr, dur:e.dur, beat:4 + c * B.P + e.beat })); }
     if(USERAUD && CFG.audOn){ const src = ac.createBufferSource(); const rate = CFG.audBpm > 0 ? bpm / CFG.audBpm : 1; src.buffer = stretched(USERAUD.buf, rate, false, 'user' + (USERAUD.name || USERAUD.buf.length)); src.connect(g.mus); const off = +CFG.audOff || 0, st = g.T0 + 4 * spb; if(off >= 0) src.start(st, off / rate); else src.start(st - off * -1 / rate, 0); g.src = src; } }
-  g.J = new (pitch ? HERO.PitchJudge : HERO.Judge)(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2 && !(ADV && ADV.lv === 1), soft:!!(ADV && ADV.lv === 1), lifeDie:ADV ? true : CFG.die || BOSS, boss:BOSS, lifeK:ADV ? ADV.lifeK : 1, fp:cal.fp, lvl:cal.lvl });
+  g.J = new (pitch ? HERO.PitchJudge : HERO.Judge)(B.notes, g.T0, lat, { strict:CFG.strict && cal.sep != null && cal.sep >= 1.2 && !(ADV && ADV.lv === 1), soft:!!(ADV && ADV.lv === 1), lifeDie:ADV ? true : CFG.die || BOSS, boss:BOSS, lifeK:ADV ? ADV.lifeK : 1, fp:cal.fp, lvl:cal.lvl, cint:cal.int });
   g.endAt = g.T0 + B.endBeat * spb + lat + 1.6; g.last = null; musicSchedule(g);
   try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { g.wl = w; }).catch(() => {}); }catch(e){}
   g.raf = requestAnimationFrame(frame);
@@ -3174,8 +3250,9 @@ function fx(e){
   if(e.type === 'miss' || e.type === 'wrong'){ try{ navigator.vibrate && navigator.vibrate(e.type === 'miss' ? 45 : [30, 40, 30]); }catch(x){} }
   const lane = e.note.lane, ms = e.d != null ? Math.round(e.d * 1000) : 0; e.note.fxAt = now; if((e.type === 'miss' || e.type === 'wrong') && g.disp > 5) g.zapAt = now; if(e.type === 'perfect') g.pulseAt = now;
   const m = { perfect:['PARFAIT', V_OK], good:['BIEN', V_GOOD], miss:['RATÉ', V_BAD], wrong:['MAUVAIS SON', V_WRONG] }[e.type];
+  if(e.ihint) m[0] = e.ihint === 'fort' ? 'TROP FORT' : 'TROP FAIBLE';
   g.laneAt = g.laneAt || {}; g.laneCol = g.laneCol || {}; g.laneAt[lane] = now; g.laneCol[lane] = m[1]; if(e.type === 'perfect' || e.type === 'good'){ g.comboAt = now; const PWx = g.adv ? Math.min(VW - 2 * advSide(VH), 520) : Math.min(VW, 520), px = (VW - PWx) / 2 + LORDER.indexOf(lane) * PWx / 3 + PWx / 6; spark(g, px, VH * .8, m[1], e.type === 'perfect' ? 12 : 6, 1); }
-  g.fx.push({ k:e.type, lane, px:e.note.px, t0:now, txt:m[0], col:m[1], sub:e.note.pitch ? '' : e.type === 'perfect' || e.type === 'good' ? (ms > 0 ? '+' : '') + ms + ' ms' : (e.type === 'wrong' ? '(entendu : ' + (e.heardTok || LNAME[e.heard]) + ')' : '') });
+  g.fx.push({ k:e.type, lane, px:e.note.px, t0:now, txt:m[0], col:m[1], sub:e.note.pitch ? '' : e.ihint ? (e.ihint === 'fort' ? 'plus doucement' : 'plus fort') : e.type === 'perfect' || e.type === 'good' ? (ms > 0 ? '+' : '') + ms + ' ms' : (e.type === 'wrong' ? '(entendu : ' + (e.heardTok || LNAME[e.heard]) + ')' : '') });
 }
 function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 function pauseGame(on){ const g = G; if(!g || g.done) return; on = on == null ? !g.paused : on; if(on === !!g.paused) return; g.paused = on; $('#pauseov').classList.toggle('on', on); try{ on ? ac.suspend() : ac.resume(); }catch(e){} }
@@ -3294,16 +3371,17 @@ function draw(g, now){
         ctx.fillStyle = '#17324a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '900 12px ' + RF; const cy = y - hh / 2; if(hh > 40){ ctx.fillText(NM[((Math.round(n.m) % 12) + 12) % 12], n.px, cy - 7); ctx.font = '900 10px ' + RF; ctx.fillText(dt, n.px, cy + 7); } else if(hh >= 20){ ctx.fillText(NM[((Math.round(n.m) % 12) + 12) % 12], n.px, cy); } }
       ctx.globalAlpha = 1; continue; }
     if(y < topY - 30 || y > H + 40) continue;
-    const li = LORDER.indexOf(n.lane), cx = X0 + li * LW + LW / 2, w = LW * .72;
-    const tc = tokCol(n.tok, n.lane); let fill = hexMixW(tc, .88), edge = tc, txt = tc, al = 1, bw = 4, glow = tc, gb = 9;
+    const li = LORDER.indexOf(n.lane), cx = X0 + li * LW + LW / 2, w = LW * (n.int === 2 ? .92 : n.int === 0 ? .46 : .72);
+    const tc = tokCol(n.tok, n.lane), lab = n.tok + (n.int === 2 ? '+' : n.int === 0 ? '−' : ''); let fill = hexMixW(tc, .88), edge = tc, txt = tc, al = 1, bw = 4, glow = tc, gb = 9;
+    if(n.int === 2){ gb = 18; fill = hexMixW(tc, .78); } else if(n.int === 0){ fill = hexMixW(tc, .95); gb = 5; } // fort : large et lumineuse · faible : fine et pâle
     if(n.state !== 0){ const age = n.fxAt ? (tNow - n.fxAt) / 1000 : 0; al = Math.max(0, 1 - Math.max(0, age - .45) / .6); if(al <= 0) continue;
       fill = n.state === 1 ? (n.grade === 'perfect' ? V_OK : V_GOOD) : n.state === 2 ? V_BAD : V_WRONG; glow = fill; gb = 18; edge = '#fff'; bw = 3; txt = (n.state === 1 && n.grade === 'good') ? '#17324a' : '#fff'; }
     ctx.globalAlpha = al; ctx.shadowColor = glow; ctx.shadowBlur = gb;
     ctx.fillStyle = '#0b0620'; pxr(cx - w / 2 - 3, y - nh / 2 - 3, w + 6, nh + 6, 6); ctx.fill(); ctx.fillStyle = edge; pxr(cx - w / 2, y - nh / 2, w, nh, 5); ctx.fill(); ctx.shadowBlur = 0;
     ctx.fillStyle = fill; pxr(cx - w / 2 + ins, y - nh / 2 + ins, w - 2 * ins, nh - 2 * ins, 3); ctx.fill();
     if(nh >= 24){ ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(cx - w / 2 + 8, y - nh / 2 + 6, w - 16, 3); ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(cx - w / 2 + 8, y + nh / 2 - 9, w - 16, 3); }
-    if(nh >= 22){ ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.fillText(n.tok, cx, y + 1); } // notes serrées (triples croches…) : pas de lettre, la couleur de la piste suffit
-    else if(nh >= 14){ ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.font = '900 ' + Math.max(9, Math.round(nh * .62)) + 'px ' + RF; ctx.fillText(n.tok, cx, y + 1); ctx.font = '900 17px ' + RF; }
+    if(nh >= 22){ ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.fillText(lab, cx, y + 1); } // notes serrées (triples croches…) : pas de lettre, la couleur de la piste suffit
+    else if(nh >= 14){ ctx.fillStyle = txt; ctx.textAlign = 'center'; ctx.font = '900 ' + Math.max(9, Math.round(nh * .62)) + 'px ' + RF; ctx.fillText(lab, cx, y + 1); ctx.font = '900 17px ' + RF; }
     ctx.globalAlpha = 1; }
   ctx.restore();
   if(g.pitch && g.dbg){ const d = g.dbg, nm = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B']; const lab = d.m != null && d.conf < .36 ? nm[((Math.round(d.m) % 12) + 12) % 12] + ' ' + Math.round(d.f) + 'Hz' : (d.rms > 0.001 ? 'voix ? ' : '…'); ctx.font = '900 10px ' + RF; ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.textAlign = 'right'; ctx.fillText('micro ' + lab + ' · ' + Math.round(Math.min(1, d.rms * 20) * 100) + '%', W - 8, topY - 6); ctx.textAlign = 'left'; }
@@ -3439,7 +3517,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v55', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v56', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
