@@ -131,7 +131,7 @@ body.advon{overflow:hidden;background:#1b63c4}
 .lrx .lrs{padding:8px 10px;font-size:1.05rem;background:#0d2033;color:#5ef0ff;border:2px solid #5ef0ff;border-radius:6px;box-shadow:0 3px 0 #000}.lrx .lrs.on{background:#5ef0ff;color:#0d2033}
 
 /* défi amis */
-.amiS{display:flex;gap:10px;align-items:center;background:#f2f8fc;border-radius:14px;padding:8px 10px;margin:6px 0}.amiS.next{outline:3px solid #ffd23f}
+.amiS .b-ghost,.amiS .b-yel{flex:none}.amiS{display:flex;gap:10px;align-items:center;background:#f2f8fc;border-radius:14px;padding:8px 10px;margin:6px 0}.amiS.next{outline:3px solid #ffd23f}
 .amiS .n{font-weight:900;font-size:1.2rem;width:26px;text-align:center;color:var(--mut)}.amiS .b{flex:1;min-width:0}.amiS .t{font-weight:900}.amiS .d{font-size:.8rem;color:var(--mut)}.amiS .s{color:#ffb02e;letter-spacing:2px;font-size:1.1rem}
 #ami .card h2{font-size:1.15rem}
 #profEd,#profBox{position:fixed;inset:0;z-index:99998;background:#0a0620e8;overflow:auto;display:none;padding:10px}#profBox{display:block;z-index:99999}
@@ -153,12 +153,13 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="home" class="scr on">
   <h1>🎮 BBX Hero</h1>
   <div id="marq" class="marq"></div>
-  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 54 · 3 nov. 2026 · éditeur de phrases par temps, mode prof, joyaux · Défi amis</span></p>
+  <p class="sub">Prototype · le beatbox façon Guitar Hero. Mets un casque filaire !<br><span style="opacity:.8;font-size:.85rem">Version 55 · 3 nov. 2026 · Mes cours (import/export), éditeur par temps, joyaux · Défi amis</span></p>
 
   <div class="card advcard">
     <h2>🌱 LES SONS · TABLEAU 1</h2>
     <div class="small" style="opacity:.92">Le parcours des débutants, de planète en planète : kick, charleys, caisses claires, puis les beats. Écoute, comprends, puis joue en rythme. Ramasse les étoiles pour ouvrir la suite.</div>
     <div class="row" style="margin-top:10px"><button class="b-yel big" id="bLrn">▶ LES SONS</button><span id="lrnHomeSt" class="small" style="font-weight:800"></span></div>
+    <div class="row" style="margin-top:8px"><button class="b-cyan" id="bCrs">📚 MES COURS</button><span id="crsHomeSt" class="small" style="font-weight:800"></span></div>
   </div>
 
   <div class="card advcard">
@@ -256,12 +257,18 @@ body.advon{overflow:hidden;background:#1b63c4}
 <div id="lrn" class="scr">
   <div id="lrnCol">
     <canvas id="lrnCv" width="120" height="310"></canvas>
-    <div class="advbar"><button id="lrnBack">◀</button><div class="advtt">LES SONS</div><button id="lrnSnd" title="Son">🔊</button><div class="advsc" id="lrnSc"></div></div>
+    <div class="advbar"><button id="lrnBack">◀</button><div class="advtt">LES SONS</div><button id="lrnCrs" title="Mes cours">📚</button><button id="lrnSnd" title="Son">🔊</button><div class="advsc" id="lrnSc"></div></div>
     <div id="lrnLv"></div>
     <div class="advp" id="lrnP"></div>
     <div id="lrnIsl"><button id="lrnIslX">◀ Carte</button><div id="lrnIslB"></div></div>
     <div id="lrnDlg"></div>
   </div>
+</div>
+
+<!-- ================= MES COURS ================= -->
+<div id="crs" class="scr">
+  <h1>📚 BBX Hero</h1>
+  <div id="crsB"></div>
 </div>
 
 <!-- ================= DÉFI AMIS ================= -->
@@ -1128,6 +1135,7 @@ function advSave(a, stars, pct){ const d = advData(), k = advKey(a.id, a.lv), ol
   if(stars > old){ if(old === 0 && stars >= 1 && a.wi + 1 < ADV_W.length && advStarsOf(a.wi + 1, a.lv) === 0) unlocked = a.wi + 1; d.s[k] = stars; }
   if(pct > (d.b[k] || 0)) d.b[k] = pct; LS.set(ADV_LS, d); return { old, unlocked }; }
 function advBanner(g, stars, why){
+  if(g.adv.crs) return crsBanner(g, stars, why);
   if(g.adv.lrn) return lrnBanner(g, stars, why);
   const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = advSave(a, stars, g.J.accuracy()); later(() => advFan(stars, r.unlocked >= 0), 450); }
   const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00';
@@ -1942,10 +1950,10 @@ function profRender(){
     bars.push(`<div class="pm"><div class="pmh"><b>Mesure ${q + 1}</b><span class="pbt"><button data-dup="${q}" title="Dupliquer la mesure">⧉</button><button data-clr="${q}" title="Vider la mesure">⌫</button><button data-del="${q}" title="Supprimer la mesure" ${nBars < 2 ? 'disabled' : ''}>🗑</button></span></div><div class="pbs">${beats}</div></div>`); }
   const selTk = E.sel ? E.bt[E.sel.k].c[E.sel.c] : null, sb = E.sel ? E.bt[E.sel.k] : null;
   const divBtns = (attr, cur) => [1, 2, 3, 4, 8].map(d => `<button ${attr}="${d}" class="${cur === d ? 'on' : ''}">${PROF_DIV[d]}<small>${d === 1 ? '1/temps' : d + '/temps'}</small></button>`).join('');
-  root.innerHTML = `<div class="pbox"><div class="ph"><b>⚙ Éditer l'exercice</b> · ${LRN_I[E.i].ic} ${LRN_I[E.i].n} · ${lrnLvName(E.lv)}<button id="peX" class="pbtn">✕</button></div>
+  root.innerHTML = `<div class="pbox"><div class="ph"><b>⚙ Éditer ${E.custom ? 'la phrase' : 'l\'exercice'}</b> · ${E.custom ? escH(E.custom.title) : LRN_I[E.i].ic + ' ' + LRN_I[E.i].n + ' · ' + lrnLvName(E.lv)}<button id="peX" class="pbtn">✕</button></div>
     <div class="pf"><label>Nom <input id="peN" value="${E.n.replace(/"/g, '&quot;')}"></label></div>
     <div class="pf"><label>Consigne <textarea id="peT" rows="2">${E.t.replace(/</g, '&lt;')}</textarea></label></div>
-    <div class="pf r"><label>BPM <input id="peB" type="number" min="40" max="220" value="${E.bpm}" style="width:70px"></label><label>Tours <input id="peC" type="number" min="1" max="8" value="${E.cyc}" style="width:56px"></label><span class="pi">${nBars} mesure${nBars > 1 ? 's' : ''} · ${E.bt.length} temps</span></div>
+    <div class="pf r"><label>BPM <input id="peB" type="number" min="40" max="220" value="${E.bpm}" style="width:70px"></label><label>Tours <input id="peC" type="number" min="1" max="8" value="${E.cyc}" style="width:56px"></label>${E.custom ? `<label>Niveau <select id="peV">${[1, 2, 3].map(v => `<option value="${v}" ${+E.niv === v ? 'selected' : ''}>N${v}</option>`).join('')}</select></label>` : ''}<span class="pi">${nBars} mesure${nBars > 1 ? 's' : ''} · ${E.bt.length} temps</span></div>
     <div class="pleg">Chaque <b>temps</b> (1·2·3·4) se découpe comme tu veux : <b>noire</b> = 1 case, <b>croches</b> = 2, <b>triolet</b> = 3, <b>doubles</b> = 4. Touche une case, puis un son.</div>
     ${E.text ? `<div class="pg"><textarea id="peTx" rows="${nBars + 2}" spellcheck="false">${profText()}</textarea><div class="pleg">Une mesure par ligne, les temps séparés par « | », les sons par un espace. Ex : <code>P | . | K | Ts Ts Ts</code> (le dernier temps = triolet). « . » = silence.</div><div class="pfoot"><button id="peTxOk" class="pbtn ok">✔ Appliquer</button><button id="peTxNo" class="pbtn">Annuler</button></div></div>` : `<div class="pg">${bars.join('')}<button id="peAdd" class="pbtn" style="margin-top:6px">+ Ajouter une mesure</button> <button id="peTxB" class="pbtn" style="margin-top:6px">✏ Écrire en texte</button></div>`}
     <div class="pal"><div class="pas">${E.sel ? 'Temps <b>' + ((E.sel.k % 4) + 1) + '</b> de la mesure <b>' + (Math.floor(E.sel.k / 4) + 1) + '</b> · case ' + (E.sel.c + 1) + '/' + sb.d + ' : <b>' + (selTk === '.' ? 'silence' : selTk) + '</b>' : 'Touche une case pour la modifier'}</div>
@@ -1953,8 +1961,8 @@ function profRender(){
       <div class="pap pdvb"><span>Mesure :</span>${[1, 2, 3, 4].map(d => `<button data-bar="${d}">${PROF_DIV[d]}</button>`).join('')}</div>
       <div class="pap">${PROF_SND.map(s => `<button data-s="${s}" style="--c:${tokCol(s, HERO.laneOf(s))}">${s}</button>`).join('')}<button data-s="." class="sil">· silence</button></div>
       <div class="pap"><button data-nx="-1">⟵</button><button data-nx="1">⟶</button><button data-mv="-1">◀ décaler</button><button data-mv="1">décaler ▶</button><button id="peUn" ${E.undo.length ? '' : 'disabled'}>↶ Annuler</button></div></div>
-    <div class="pfoot"><button id="peListen" class="pbtn">🔊 Écouter</button><label class="pbtn" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="peLoop" ${E.loop ? 'checked' : ''}> ↻ boucle</label><button id="peSave" class="pbtn ok">💾 Enregistrer</button><button id="peRes" class="pbtn" ${PROF_OV[E.key] ? '' : 'disabled'}>↺ Original</button></div></div>`;
-  const rd = () => { E.n = $('#peN').value; E.t = $('#peT').value; E.bpm = $('#peB').value; E.cyc = $('#peC').value; E.loop = $('#peLoop').checked; };
+    <div class="pfoot"><button id="peListen" class="pbtn">🔊 Écouter</button><label class="pbtn" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="peLoop" ${E.loop ? 'checked' : ''}> ↻ boucle</label><button id="peSave" class="pbtn ok">💾 Enregistrer</button>${E.custom ? '' : `<button id="peRes" class="pbtn" ${PROF_OV[E.key] ? '' : 'disabled'}>↺ Original</button>`}</div></div>`;
+  const rd = () => { E.n = $('#peN').value; E.t = $('#peT').value; E.bpm = $('#peB').value; E.cyc = $('#peC').value; if($('#peV')) E.niv = +$('#peV').value; E.loop = $('#peLoop').checked; };
   $$('#profEd .pc').forEach(b => b.onclick = () => { rd(); const k = +b.dataset.k, c = +b.dataset.c; if(E.sel && E.sel.k === k && E.sel.c === c && E.bt[k].c[c] !== '.'){ profSnap(); E.bt[k].c[c] = '.'; } E.sel = { k, c }; profRender(); });
   $$('#profEd [data-s]').forEach(b => b.onclick = () => { if(!E.sel) return; rd(); profSnap(); E.bt[E.sel.k].c[E.sel.c] = b.dataset.s;
     if(b.dataset.s !== '.' && !PEPLAY){ try{ ensure(); const g = ac.createGain(); g.gain.value = .9; g.connect(ac.destination); sampleAt(ac.currentTime + .02, b.dataset.s, HERO.laneOf(b.dataset.s), g); }catch(e){} }
@@ -1974,18 +1982,22 @@ function profRender(){
   $('#peLoop').onchange = () => { E.loop = $('#peLoop').checked; };
   $('#peListen').onclick = () => { rd(); profListen(); };
   $('#peX').onclick = profClose;
-  $('#peRes').onclick = () => { if(!PROF_OV[E.key]) return; if(!confirm('Revenir à la phrase d\'origine ?')) return; delete PROF_OV[E.key]; profSave(); profClose(true); };
+  const rs = $('#peRes'); if(rs) rs.onclick = () => { if(!PROF_OV[E.key]) return; if(!confirm('Revenir à la phrase d\'origine ?')) return; delete PROF_OV[E.key]; profSave(); profClose(true); };
   $('#peSave').onclick = () => { rd(); const bpm = Math.round(+E.bpm), cyc = Math.round(+E.cyc);
     if(!(bpm >= 40 && bpm <= 220)){ alert('BPM entre 40 et 220.'); return; } if(!(cyc >= 1 && cyc <= 8)){ alert('Tours entre 1 et 8.'); return; }
     if(!E.bt.some(b => b.c.some(x => x !== '.'))){ alert('La phrase est vide : mets au moins un son.'); return; }
-    PROF_OV[E.key] = { n:E.n.trim() || E.n0, t:E.t.trim(), bpm, cyc, m:profFromBeats(E.bt) }; profSave(); profClose(true); }; }
+    const o = { n:E.n.trim() || E.n0, t:E.t.trim(), bpm, cyc, m:profFromBeats(E.bt) }; if(E.custom){ o.niv = E.niv || 1; E.custom.onSave(o); profClose(true); return; } PROF_OV[E.key] = o; profSave(); profClose(true); }; }
 
 function profEdit(i, e){
   const lv = LRNLV, X = lrnExs(i, lv)[e], key = lrnKey(i, e, lv);
   PE = { i, e, lv, key, n:X.n, n0:X.n, t:X.t || '', bpm:X.bpm, cyc:X.cyc || 2, bt:profToBeats(X.m.map(([d, s]) => [d, s])), sel:null, undo:[], text:false, loop:false };
   let el = $('#profEd'); if(!el){ el = document.createElement('div'); el.id = 'profEd'; document.body.appendChild(el); }
   el.style.display = 'block'; profRender(); }
-function profClose(saved){ profStop(); const el = $('#profEd'); if(el){ el.style.display = 'none'; el.innerHTML = ''; } PE = null; if(saved === true && LR && LR.isl >= 0) lrnOpenPl(LR.isl, true); }
+function profEditCustom(X, title, onSave, after){ /* v55 : même éditeur pour une phrase d'un cours (cours.js) */
+  PE = { i:-1, e:0, lv:1, key:'', custom:{ title, onSave }, after, n:X.n, n0:X.n, t:X.t || '', bpm:X.bpm, cyc:X.cyc || 2, niv:X.niv || 1, bt:profToBeats(X.m.map(([d, s]) => [d, s])), sel:null, undo:[], text:false, loop:false };
+  let el = $('#profEd'); if(!el){ el = document.createElement('div'); el.id = 'profEd'; document.body.appendChild(el); }
+  el.style.display = 'block'; profRender(); }
+function profClose(saved){ const cb = PE && PE.after; profStop(); const el = $('#profEd'); if(el){ el.style.display = 'none'; el.innerHTML = ''; } PE = null; if(saved === true){ if(cb) cb(); else if(LR && LR.isl >= 0) lrnOpenPl(LR.isl, true); } }
 
 /* export / import (JSON) */
 function profBox(title, text, onOk, okLabel){ let el = $('#profBox'); if(el) el.remove(); el = document.createElement('div'); el.id = 'profBox';
@@ -2535,6 +2547,123 @@ function amiRecord(a, stars, pct, why){
   let tour = false, newDone = false; if(why !== 'dead' && stars >= 1 && !AMI.done.includes(a.ami)){ AMI.done.push(a.ami); newDone = true; if(AMI.done.length >= amiSteps().length){ AMI.round++; AMI.done = []; tour = true; } }
   amiSave(); return { tour, newDone, round:AMI.round, newBest:oldB == null || pct > oldB }; }
 function amiNoLink(){ show('ami'); $('#amiB').innerHTML = '<div class="card"><h2>🔗 Lien incomplet</h2><p>Ce lien ne contient pas ton invitation personnelle. Reprends le lien exact que Marc t\'a envoyé (il se termine par <b>?i=…</b>).</p></div>'; }
+
+/* =====================================================================
+   MES COURS (v55) — des cours (listes de phrases) venus de BBX Classroom ou écrits ici, jouables dans BBX Hero et dans Adventure.
+   Un cours = { id, nom, niv (1-3), phrases:[{ id, n, t, bpm, cyc, niv, m:[[d,'P . K .'],…], place? }] }.
+   « place » (facultatif) = remplacer un exercice des planètes : { isl:'lp', ex:0, lv:1 } (id d'île de LRN_I, numéro d'exercice, niveau 1-3)
+   → écrit une surcharge dans PROF_OV (même mécanisme que le mode prof).
+   Stockage : localStorage « bbx-crs ». Échange : fichier JSON « pack de cours » (export / import) :
+     { "bbx":"cours", "v":1, "cours":[ { "nom":"Débutant niveau 1", "niv":1, "phrases":[ { "n":"Sur le temps", "bpm":66, "cyc":2, "m":[[1,"P P P P"]] } ] } ] }
+   Une phrase peut aussi s'écrire en texte « Workout » : "txt":"P . K . P P K . | 4: P . P . K . P P . . . . . . . ." (« | » sépare les mesures, « N: » = cases par temps,
+   « cases » = valeur par défaut, 2). Les autres noms de champs courants sont reconnus (nom, titre, consigne, tempo, tours, grille, pattern, difficulté N1/N2/N3).
+   ===================================================================== */
+const CRS_LS = 'bbx-crs';
+let CRS = (() => { const d = LS.get(CRS_LS, null); return d && Array.isArray(d.courses) ? Object.assign({ s:{}, b:{} }, d) : { v:1, courses:[], s:{}, b:{} }; })(), CRS_BACK = 'home', CRS_OPEN = null;
+const crsSave = () => { LS.set(CRS_LS, CRS); try{ crsHomeSt(); }catch(e){} };
+const crsId = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
+const CRS_TOK = /^(\.|[A-Za-z][A-Za-z~]{0,3})$/, CRS_DS = [1, 2, 3, 4, 8];
+
+/* texte « Workout » → blocs [d,'sons'] (une mesure = 4 temps) */
+function crsParseTxt(txt, d0){ const out = [];
+  String(txt).split(/\||\n/).map(s => s.trim()).filter(Boolean).forEach(seg => { let d = CRS_DS.includes(+d0) ? +d0 : 2; const mm = /^(\d):\s*(.*)$/.exec(seg); if(mm){ d = +mm[1]; seg = mm[2]; }
+    if(!CRS_DS.includes(d)) throw new Error('Cases par temps : 1, 2, 3, 4 ou 8 (reçu ' + d + ').');
+    const T = seg.split(/\s+/).filter(Boolean); T.forEach(x => { if(!CRS_TOK.test(x)) throw new Error('Son inconnu : « ' + x + ' »'); });
+    for(let k = 0; k < T.length; k += 4 * d){ const c = T.slice(k, k + 4 * d); while(c.length < 4 * d) c.push('.'); out.push([d, c.join(' ')]); } });
+  if(!out.length) throw new Error('Phrase vide.'); return out; }
+const crsNiv = v => { const n = /(\d)/.exec(String(v == null ? '' : v)); const k = n ? +n[1] : 0; return k >= 1 && k <= 3 ? k : 0; };
+function crsNormPhrase(p, nivC){
+  if(typeof p === 'string') p = { txt:p };
+  let m = null; const src = p.m != null ? p.m : null;
+  if(Array.isArray(src)){ m = src.map(z => { const d = +z[0], s = Array.isArray(z[1]) ? z[1].join(' ') : String(z[1] || ''), T = s.trim().split(/\s+/).filter(Boolean);
+      if(!CRS_DS.includes(d)) throw new Error('Cases par temps : 1, 2, 3, 4 ou 8 (reçu ' + z[0] + ').'); T.forEach(x => { if(!CRS_TOK.test(x)) throw new Error('Son inconnu : « ' + x + ' »'); });
+      while(T.length % d) T.push('.'); return [d, T.join(' ')]; }); }
+  else { const txt = p.txt || p.grille || p.pattern || p.tokens || p.phrase; if(typeof txt !== 'string') throw new Error('Pas de grille (champ « m » ou « txt »).'); m = crsParseTxt(txt, p.cases || p.div || p.d); }
+  if(!m.length || !m.some(([, s]) => s.split(' ').some(x => x !== '.'))) throw new Error('La phrase est vide.');
+  const bpm = Math.max(40, Math.min(220, Math.round(+(p.bpm || p.tempo) || 80))), cyc = Math.max(1, Math.min(8, Math.round(+(p.cyc || p.tours) || 2)));
+  const X = { id:String(p.id || crsId()), n:String(p.n || p.nom || p.name || p.titre || 'Phrase').slice(0, 60), t:String(p.t || p.consigne || p.desc || '').slice(0, 400), bpm, cyc, niv:crsNiv(p.niv || p.difficulte || p.difficulty) || nivC || 1, m };
+  if(p.place && typeof p.place === 'object'){ const i = LRN_I.findIndex(x => x.id === p.place.isl), lv = Math.round(+p.place.lv || 1), ex = Math.round(+p.place.ex);
+    if(i >= 0 && lv >= 1 && lv <= 3 && ex >= 0 && LRN_X[lv][i] && ex < LRN_X[lv][i].length) X.place = { isl:p.place.isl, ex, lv }; else X.placeErr = true; }
+  return X; }
+/* un pack (ou une bibliothèque de phrases, ou une phrase seule) → liste de cours + messages */
+function crsParsePack(text){ let d; try{ d = JSON.parse(text); }catch(e){ throw new Error('Ce n\'est pas un fichier JSON valide.'); }
+  let list = null; if(d && d.bbx === 'cours' && Array.isArray(d.cours)) list = d.cours; else if(Array.isArray(d)) list = d.some(x => x && Array.isArray(x.phrases)) ? d : [{ nom:'Cours importé', phrases:d }];
+  else if(d && Array.isArray(d.phrases)) list = [d]; else if(d && (d.m || d.txt || d.grille || d.pattern)) list = [{ nom:d.nom || 'Cours importé', phrases:[d] }];
+  if(!list || !list.length) throw new Error('Aucun cours reconnu dans ce fichier.');
+  const warn = [], courses = list.map((c, ci) => { const nivC = crsNiv(c.niv || c.difficulte) || 1, nom = String(c.nom || c.titre || c.name || 'Cours ' + (ci + 1)).slice(0, 60), ph = [];
+    (c.phrases || []).forEach((p, pi) => { try{ const X = crsNormPhrase(p, nivC); if(X.placeErr) warn.push(nom + ' › phrase ' + (pi + 1) + ' : emplacement « place » inconnu (ignoré).'); ph.push(X); }catch(e){ warn.push(nom + ' › phrase ' + (pi + 1) + ' : ' + e.message + ' (ignorée)'); } });
+    return { id:String(c.id || crsId()), nom, niv:nivC, phrases:ph }; }).filter(c => c.phrases.length);
+  if(!courses.length) throw new Error('Aucune phrase utilisable.\n' + warn.slice(0, 6).join('\n')); return { courses, warn }; }
+const crsPlaceKey = pl => pl.isl + ':' + pl.ex + (pl.lv > 1 ? '@' + pl.lv : '');
+function crsApply(courses){ let added = 0, replaced = 0, placed = 0;
+  courses.forEach(c => { const k = CRS.courses.findIndex(x => x.id === c.id); if(k >= 0){ CRS.courses[k] = c; replaced++; } else { CRS.courses.push(c); added++; }
+    c.phrases.forEach(p => { if(p.place){ PROF_OV[crsPlaceKey(p.place)] = { n:p.n, t:p.t, bpm:p.bpm, cyc:p.cyc, m:p.m.map(z => z.slice()) }; placed++; } }); });
+  crsSave(); if(placed) profSave(); return { added, replaced, placed }; }
+const crsPack = list => JSON.stringify({ bbx:'cours', v:1, exporte:new Date().toISOString().slice(0, 10), cours:list.map(c => ({ id:c.id, nom:c.nom, niv:c.niv, phrases:c.phrases.map(p => { const o = { id:p.id, n:p.n, t:p.t, bpm:p.bpm, cyc:p.cyc, niv:p.niv, m:p.m }; if(p.place) o.place = p.place; return o; }) })) }, null, 1);
+
+/* ---------- fenêtres import / export ---------- */
+function crsBox(title, text, mode, onOk){ let el = $('#profBox'); if(el) el.remove(); el = document.createElement('div'); el.id = 'profBox';
+  el.innerHTML = `<div class="pbox"><div class="ph"><b>${title}</b><button class="pbtn" id="pbX">✕</button></div>${mode === 'in' ? '<div class="pleg">Colle ici un pack de cours (JSON), ou choisis le fichier :</div><input type="file" id="pbF" accept=".json,.txt,application/json,text/plain" style="margin:4px 0 6px;max-width:100%">' : ''}<textarea id="pbT" rows="10" spellcheck="false"></textarea>
+    <div class="pfoot">${mode === 'in' ? '<button class="pbtn ok" id="pbOk">✔ Importer</button>' : '<button class="pbtn" id="pbCp">📋 Copier</button><button class="pbtn ok" id="pbDl">⬇ Télécharger</button>'}</div></div>`;
+  document.body.appendChild(el); const T = $('#pbT'); T.value = text || ''; $('#pbX').onclick = () => el.remove();
+  if(mode === 'in'){ $('#pbF').onchange = e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { T.value = String(r.result || ''); }; r.readAsText(f); };
+    $('#pbOk').onclick = () => { if(onOk(T.value) !== false) el.remove(); }; }
+  else { $('#pbCp').onclick = () => { T.select(); try{ navigator.clipboard.writeText(T.value); }catch(e){ try{ document.execCommand('copy'); }catch(er){} } $('#pbCp').textContent = '✓ Copié'; };
+    $('#pbDl').onclick = () => { try{ const b = new Blob([T.value], { type:'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = (onOk || 'cours') + '.bbxcours.json'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }catch(e){ alert('Téléchargement impossible : copie le texte.'); } }; } }
+function crsImport(){ crsBox('📥 Importer des cours', '', 'in', txt => { let r; try{ r = crsParsePack(txt); }catch(e){ alert(e.message); return false; }
+  const np = r.courses.reduce((t, c) => t + c.phrases.length, 0), pl = r.courses.reduce((t, c) => t + c.phrases.filter(p => p.place).length, 0);
+  if(!confirm(r.courses.length + ' cours, ' + np + ' phrase(s)' + (pl ? ', dont ' + pl + ' qui remplacent un exercice des planètes' : '') + '.' + (r.warn.length ? '\n\n⚠ ' + r.warn.slice(0, 5).join('\n⚠ ') : '') + '\n\nImporter ?')) return false;
+  const a = crsApply(r.courses); alert('Importé : ' + a.added + ' nouveau(x), ' + a.replaced + ' mis à jour' + (a.placed ? ', ' + a.placed + ' exercice(s) remplacé(s)' : '') + '.'); crsRender(); }); }
+const crsExport = ci => { const L = ci == null ? CRS.courses : [CRS.courses[ci]]; if(!L.length){ alert('Rien à exporter.'); return; } crsBox('📤 Exporter ' + (ci == null ? 'tous les cours' : '« ' + escH(L[0].nom) + ' »'), crsPack(L), 'out', ci == null ? 'mes-cours' : L[0].nom.replace(/[^\w\-]+/g, '_')); };
+
+/* ---------- écran « Mes cours » ---------- */
+const crsStars = (C, P) => Math.min(3, CRS.s[C.id + ':' + P.id] || 0);
+function crsShow(from){ if(from) CRS_BACK = from; show('crs'); try{ stopAll(); }catch(e){} crsRender(); }
+function crsRender(){ const B = $('#crsB'); if(!B) return; const prof = !!CFG.prof;
+  let h = `<div class="card"><div class="row"><h2 style="margin:0">📚 Mes cours</h2><span class="sp"></span><button class="b-ghost" id="crsBack" style="padding:6px 12px">◀ Retour</button></div>
+    <div class="small muted" style="margin-top:4px">Les cours que tu importes depuis BBX Classroom (ou que tu écris ici), à jouer comme les exercices des planètes : mêmes étoiles, même détection.</div>
+    <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="b-yel" id="crsIm">📥 Importer</button><button class="b-ghost" id="crsEx" ${CRS.courses.length ? '' : 'disabled'}>📤 Tout exporter</button>${prof ? '<button class="b-ghost" id="crsNew">➕ Nouveau cours</button>' : ''}</div></div>`;
+  if(!CRS.courses.length) h += `<div class="card"><div class="small">Aucun cours pour l'instant. Clique sur <b>📥 Importer</b> et colle un pack de cours (fichier JSON exporté depuis Classroom).${prof ? '' : ' Pour écrire tes propres phrases ici, coche « 🛠 Mode prof » dans Options.'}</div></div>`;
+  CRS.courses.forEach((C, ci) => { const tot = C.phrases.length * 3, got = C.phrases.reduce((t, P) => t + crsStars(C, P), 0), open = CRS_OPEN === C.id;
+    h += `<div class="card"><div class="row" style="gap:8px"><div style="flex:1;min-width:0"><div style="font-weight:900;font-size:1.05rem">${escH(C.nom)}</div><div class="small muted">${C.phrases.length} phrase${C.phrases.length > 1 ? 's' : ''} · N${C.niv} · ★ ${got}/${tot}</div></div><button class="b-ghost" data-tg="${ci}" style="padding:6px 10px">${open ? '▴' : '▾'}</button></div>`;
+    if(open){ C.phrases.forEach((P, pi) => { const sn = [...new Set(P.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))], st = crsStars(C, P), bb = CRS.b[C.id + ':' + P.id];
+        h += `<div class="amiS"><div class="n">${st ? '✓' : pi + 1}</div><div class="b"><div class="t">${escH(P.n)}${P.place ? ' <span class="small muted">· remplace ' + escH(P.place.isl) + ':' + (P.place.ex + 1) + '</span>' : ''}</div><div class="d">${sn.map(t => `<span class="tk" style="--c:${tokCol(t, HERO.laneOf(t))}">${escH(t)}</span>`).join('')} ${P.bpm} BPM · N${P.niv}${bb != null ? ' · record ' + bb + ' %' : ''}</div></div><div class="s">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</div>
+          ${prof ? `<button class="b-ghost" data-ed="${ci}.${pi}" style="padding:4px 8px" title="Éditer">⚙</button><button class="b-ghost" data-rm="${ci}.${pi}" style="padding:4px 8px" title="Supprimer">🗑</button>` : ''}<button class="b-yel" data-pl="${ci}.${pi}" style="padding:6px 12px">▶</button></div>`; });
+      h += `<div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="b-ghost" data-ce="${ci}">📤 Exporter ce cours</button>${prof ? `<button class="b-ghost" data-pa="${ci}">➕ Phrase</button><button class="b-ghost" data-rn="${ci}">✏ Renommer</button><button class="b-ghost" data-cd="${ci}">🗑 Supprimer le cours</button>` : ''}</div>`; }
+    h += '</div>'; });
+  B.innerHTML = h;
+  $('#crsBack').onclick = () => { if(CRS_BACK === 'lrn') lrnShow(); else { renderHome(); show('home'); } };
+  $('#crsIm').onclick = crsImport; const ex = $('#crsEx'); if(ex) ex.onclick = () => crsExport(null); const nw = $('#crsNew'); if(nw) nw.onclick = () => { const n = (prompt('Nom du cours ?', 'Nouveau cours') || '').trim(); if(!n) return; const C = { id:crsId(), nom:n.slice(0, 60), niv:1, phrases:[] }; CRS.courses.push(C); CRS_OPEN = C.id; crsSave(); crsRender(); };
+  $$('#crsB [data-tg]').forEach(b => b.onclick = () => { const C = CRS.courses[+b.dataset.tg]; CRS_OPEN = CRS_OPEN === C.id ? null : C.id; crsRender(); });
+  $$('#crsB [data-pl]').forEach(b => b.onclick = () => { const [c, p] = b.dataset.pl.split('.').map(Number); crsLaunch(c, p); });
+  $$('#crsB [data-ce]').forEach(b => b.onclick = () => crsExport(+b.dataset.ce));
+  $$('#crsB [data-ed]').forEach(b => b.onclick = () => { const [c, p] = b.dataset.ed.split('.').map(Number), C = CRS.courses[c], P = C.phrases[p]; profEditCustom(P, C.nom, o => { Object.assign(P, o); crsSave(); }, crsRender); });
+  $$('#crsB [data-rm]').forEach(b => b.onclick = () => { const [c, p] = b.dataset.rm.split('.').map(Number), C = CRS.courses[c]; if(confirm('Supprimer la phrase « ' + C.phrases[p].n + ' » ?')){ C.phrases.splice(p, 1); crsSave(); crsRender(); } });
+  $$('#crsB [data-pa]').forEach(b => b.onclick = () => { const C = CRS.courses[+b.dataset.pa], P = { id:crsId(), n:'Nouvelle phrase', t:'', bpm:80, cyc:2, niv:C.niv, m:[[2, 'P . K . P . K .']] }; profEditCustom(P, C.nom, o => { C.phrases.push(Object.assign(P, o)); crsSave(); }, crsRender); });
+  $$('#crsB [data-rn]').forEach(b => b.onclick = () => { const C = CRS.courses[+b.dataset.rn], n = (prompt('Nom du cours ?', C.nom) || '').trim(); if(n){ C.nom = n.slice(0, 60); crsSave(); crsRender(); } });
+  $$('#crsB [data-cd]').forEach(b => b.onclick = () => { const C = CRS.courses[+b.dataset.cd]; if(confirm('Supprimer le cours « ' + C.nom + ' » et ses étoiles ?')){ CRS.courses.splice(+b.dataset.cd, 1); crsSave(); crsRender(); } }); }
+
+/* ---------- jeu : une phrase d'un cours = un « niveau » pour le moteur (comme lrnBuild) ---------- */
+function crsBuild(ci, pi){ const C = CRS.courses[ci], X = C.phrases[pi], lvl = Math.max(1, Math.min(3, X.niv || C.niv || 1)), order = ['P', 'K', 'K~', 'T', 'Ts', 'Pch', 'Pf', 'Spt', 'Fsh', 'L'], ix = x => { const k = order.indexOf(x); return k < 0 ? 99 : k; };
+  const sounds = [...new Set(X.m.map(z => z[1]).join(' ').split(' ').filter(x => x !== '.'))].sort((a, b) => ix(a) - ix(b));
+  return { id:'crs', ic:'📚', n:C.nom, style:X.n, wi:-1, isl:-1, ex:pi, lv:lvl, lvl:0, niv:pi + 1, lrn:false, crs:[ci, pi], pat:X.m.map(z => z[1]), divs:X.m.map(z => z[0]), div:X.m[0][0], bpm:X.bpm, cycles:X.cyc, win:ADV_ST[lvl].win, lifeK:ADV_ST[lvl].lifeK,
+    clk:CFG.clk !== false, boss:false, sounds:sounds.join(' '), mes:lrnMeasures(X.m).length * X.cyc, teach:X.t, prog:[[36, 'maj'], [36, 'maj'], [43, 'maj'], [36, 'maj']], bass:null, perc:null }; }
+function crsLaunch(ci, pi){ if(CRS.starting) return; if(!getCal()){ alert('Fais d\'abord la calibration (micro, latence, sons) : elle ne prend qu\'une minute.'); try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(er){} calStep = 0; renderCal(); show('cal'); return; }
+  CRS.starting = true; advSfx('go'); later(() => { CRS.starting = false; ADV = crsBuild(ci, pi); startGame(); }, 300); }
+const crsNext = a => { const C = CRS.courses[a.crs[0]]; return C && a.crs[1] + 1 < C.phrases.length ? a.crs[1] + 1 : null; };
+function crsRecord(a, stars, pct){ const C = CRS.courses[a.crs[0]], P = C && C.phrases[a.crs[1]]; if(!P) return { old:0 }; const k = C.id + ':' + P.id, old = CRS.s[k] || 0; if(stars > old) CRS.s[k] = stars; if(pct > (CRS.b[k] || 0)) CRS.b[k] = pct; crsSave();
+  const done = C.phrases.every(x => (CRS.s[C.id + ':' + x.id] || 0) >= 1); return { old, newB:pct > 0 && old === 0 && stars >= 1, courseDone:done && !(C.phrases.every(x => x === P || (CRS.s[C.id + ':' + x.id] || 0) >= 1) && old >= 1) }; }
+function crsBanner(g, stars, why){
+  const a = g.adv; let r = LASTRES.advRes; if(!r){ r = LASTRES.advRes = crsRecord(a, stars, g.J.accuracy()); later(() => advFan(stars, r.courseDone), 450); }
+  const S = ADV_ST[a.lv], blue = stars >= 4, n3 = Math.min(3, stars), col = blue ? '#5ef0ff' : '#ffd23f', sh = blue ? '0 0 14px #19b6ff' : '0 3px 0 #a56a00', C = CRS.courses[a.crs[0]];
+  const star = '<span style="font-size:2.4rem;letter-spacing:6px;color:' + col + ';text-shadow:' + sh + '">' + '★'.repeat(n3) + '<span style="color:#3a4a66;text-shadow:none">' + '★'.repeat(3 - n3) + '</span></span>' + (blue ? '<div style="font:900 1rem \'Courier New\',monospace;letter-spacing:.2em;color:#5ef0ff;text-shadow:0 0 10px #19b6ff;margin-top:2px">✦ PARFAIT ✦</div>' : '');
+  const msg = why === 'dead' ? 'Plus de cœurs… respire, écoute le clic et retente !' : blue ? 'Rien de faux, tout pile !' : stars === 3 ? '3 étoiles : tout est bien dans le temps !' : stars === 2 ? 'Bravo ! Vise « Parfait » sur chaque son.' : stars === 1 ? 'Passé ! Encore ' + Math.max(0, S.t2 - g.J.accuracy()) + ' points de précision pour la 2e étoile.' : 'Il faut au moins ' + S.t1 + ' % de précision pour passer. Retente !';
+  const nx = r.courseDone ? '<div class="res ok" style="font-weight:900;text-align:center">🎓 Cours terminé !</div>' : '';
+  return `<div class="advend"><div class="advk">📚 ${escH(C ? C.nom : '').toUpperCase()}</div><div class="small" style="color:#fff;font-weight:800;margin-top:2px">Phrase ${a.crs[1] + 1}/${C ? C.phrases.length : '?'} · ${escH(a.style)}</div><div style="margin:6px 0">${star}</div><div class="small" style="color:#fff;font-weight:800">${msg}</div></div>${nx}`; }
+
+{ const sc = PLN_SCENE.lb1; if(ADV_SCENE[sc]){ ADV_SCENE.crs = ADV_SCENE[sc]; ADV_FRAME.crs = ADV_FRAME[sc]; } }
+const crsHomeSt = () => { const e = $('#crsHomeSt'); if(e) e.textContent = CRS.courses.length ? CRS.courses.length + ' cours · ★ ' + CRS.courses.reduce((t, C) => t + C.phrases.reduce((u, P) => u + crsStars(C, P), 0), 0) : ''; };
+{ const b = $('#bCrs'); if(b) b.onclick = () => crsShow('home'); const m = $('#lrnCrs'); if(m) m.onclick = () => { try{ advMusic(null); }catch(e){} crsShow('lrn'); }; crsHomeSt(); }
 
 const CFG = Object.assign({ style:'rock', niv:1, len:'long', speed:1, bpm:null, cycles:2, die:true, boss:false, unlock:false, prof:false, songId:'bj120', kck:'P', snr:'K', hat:'T', part:'beat', guide:true, mus:true, clk:true, mvol:.55, audOff:0, audBpm:0, strict:true, ptok:'P . K . P P K .', pdiv:2 }, LS.get('bbx-hero-cfg', {}));
 const saveCfg = () => LS.set('bbx-hero-cfg', CFG);
@@ -3234,7 +3363,7 @@ function draw(g, now){
 function quitGame(silent){
   const g = G; if(!g) return; g.done = true; cancelAnimationFrame(g.raf); killAudio(); if(g.paused){ g.paused = false; $('#pauseov').classList.remove('on'); try{ ac.resume(); }catch(e){} }
   try{ if(g.bus){ g.bus.gain.value = 0; g.bus.disconnect(); } if(g.mus){ g.mus.gain.value = 0; g.mus.disconnect(); } if(g.src) g.src.stop(); (g.srcs || []).forEach(x => { try{ x.stop(); }catch(e){} }); }catch(e){} try{ if(g.mic) g.mic.close(); }catch(e){} try{ if(g.wl) g.wl.release(); }catch(e){}
-  $('#game').classList.remove('on'); if(silent !== false){ if(g.adv && g.adv.ami != null){ amiShow(); } else if(g.adv && g.adv.lrn){ lrnShow(g.adv.isl); } else if(g.adv){ ADV_LV = g.adv.lv; advShow(g.adv.wi); } else { renderHome(); show('home'); } } G = null;
+  $('#game').classList.remove('on'); if(silent !== false){ if(g.adv && g.adv.crs){ crsShow(); } else if(g.adv && g.adv.ami != null){ amiShow(); } else if(g.adv && g.adv.lrn){ lrnShow(g.adv.isl); } else if(g.adv){ ADV_LV = g.adv.lv; advShow(g.adv.wi); } else { renderHome(); show('home'); } } G = null;
 }
 $('#quit').onclick = () => quitGame();
 
@@ -3310,7 +3439,7 @@ async function arcade(R){
   ARC_KEY = key; document.addEventListener('keydown', key); draw(); $('#arc').classList.add('on'); }
 $('#bTop').onclick = () => showBoard(boardKey(), null);
 
-const VERSION = 'v54', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
+const VERSION = 'v55', CH = 600000, RECANT = false; // RECANT : passer à true quand le modèle de sons sera assez fiable pour juger en direct
 const FB_CFG = { apiKey:'AIzaSyDe0lJLmnTlRLORBzVpBDjt3KHEEECqCys', authDomain:'bbx-live.firebaseapp.com', databaseURL:'https://bbx-live-default-rtdb.europe-west1.firebasedatabase.app', projectId:'bbx-live', appId:'1:559192276580:web:7820ed3825b8dc3add6971' };
 /* compte Google : le même code d'analyse est retrouvé sur tous les appareils et dans les autres applis (comptes/{uid}/codeAnalyse) */
 async function gLink(){ const st = $('#gSt'); try{ st.textContent = '…';
@@ -3397,7 +3526,7 @@ function renderEnd(){
     $('#endBody').innerHTML = ban + `<div style="text-align:center;margin:4px 0 8px" class="small muted">${pct} % dans le temps</div><div class="row" style="justify-content:center"><button id="bDet" class="small" style="padding:4px 12px;opacity:.75">🔍 Détails de la partie</button></div><div id="endDet" style="display:none">${h}</div>`;
     $('#bDet').onclick = () => { const d = $('#endDet'), on = d.style.display === 'none'; d.style.display = on ? '' : 'none'; $('#bDet').textContent = on ? '▲ Masquer les détails' : '🔍 Détails de la partie'; }; }
   else $('#endBody').innerHTML = ban + h;
-  { const i = g.adv ? g.adv.wi : -1; $('#bMenu').textContent = g.adv ? (g.adv.ami != null ? '🏠 Défi' : '🗺 Carte') : 'Menu'; const nx = $('#bNext'); if(g.adv && g.adv.ami != null){ nx.style.display = why !== 'dead' && g.adv.ami + 1 < amiSteps().length ? '' : 'none'; nx.textContent = 'Étape suivante ▶'; } else if(g.adv && g.adv.lrn){ nx.style.display = why !== 'dead' && (LASTRES.advRes ? lrnNextOf(g.adv) : null) ? '' : 'none'; nx.textContent = 'Exercice suivant ▶'; } else { nx.style.display = g.adv && i + 1 < ADV_W.length && advOpen(i + 1, g.adv.lv) && why !== 'dead' ? '' : 'none'; if(g.adv) nx.textContent = 'Lieu suivant ▶'; } }
+  { const i = g.adv ? g.adv.wi : -1; $('#bMenu').textContent = g.adv ? (g.adv.crs ? '📚 Cours' : g.adv.ami != null ? '🏠 Défi' : '🗺 Carte') : 'Menu'; const nx = $('#bNext'); if(g.adv && g.adv.crs){ nx.style.display = why !== 'dead' && crsNext(g.adv) != null ? '' : 'none'; nx.textContent = 'Phrase suivante ▶'; } else if(g.adv && g.adv.ami != null){ nx.style.display = why !== 'dead' && g.adv.ami + 1 < amiSteps().length ? '' : 'none'; nx.textContent = 'Étape suivante ▶'; } else if(g.adv && g.adv.lrn){ nx.style.display = why !== 'dead' && (LASTRES.advRes ? lrnNextOf(g.adv) : null) ? '' : 'none'; nx.textContent = 'Exercice suivant ▶'; } else { nx.style.display = g.adv && i + 1 < ADV_W.length && advOpen(i + 1, g.adv.lv) && why !== 'dead' ? '' : 'none'; if(g.adv) nx.textContent = 'Lieu suivant ▶'; } }
   if(!LASTRES.arc && !amiOn() && !g.adv){/* v48 : pas de tableau de scores Hero dans le Tableau 1 / l'Adventure (immersion) */ LASTRES.arc = 1; later(() => arcade(LASTRES), perfectRun ? 2600 : 900); }
   { const R = LASTRES, auto = !!LS.get('bbx-hero-send', false) || amiOn();
     if(R.stHtml){ $('#sendSt').style.display = ''; sendMsg(R, R.stHtml, R.stCls); }
@@ -3437,8 +3566,8 @@ async function admLoad(){ const B = $('#admBody'); B.innerHTML = '<p class="smal
 $('#admMenu').onclick = () => { renderHome(); show('home'); };
 $('#bPlay').onclick = () => { ADV = null; startGame(); };
 $('#bAgain').onclick = () => { const a = LASTRES && LASTRES.g.adv; show('home'); ADV = a || null; startGame(); };
-$('#bNext').onclick = () => { const a = LASTRES.g.adv; if(a.ami != null){ if(a.ami + 1 >= amiSteps().length){ amiShow(); return; } amiLaunch(a.ami + 1); return; } show('home'); if(a.lrn){ const n = lrnNextOf(a); if(!n){ lrnShow(a.isl); return; } ADV = lrnBuild(n.i, n.e, a.lvl || undefined); } else ADV = advBuild(a.wi + 1, a.lv); startGame(); };
-$('#bMenu').onclick = () => { const a = LASTRES && LASTRES.g.adv; if(a && a.ami != null){ amiShow(); } else if(a && a.lrn){ lrnShow(a.isl); } else if(a){ ADV_LV = a.lv; advShow(a.wi); } else { renderHome(); show('home'); } };
+$('#bNext').onclick = () => { const a = LASTRES.g.adv; if(a.crs){ const n = crsNext(a); if(n == null){ crsShow(); return; } crsLaunch(a.crs[0], n); return; } if(a.ami != null){ if(a.ami + 1 >= amiSteps().length){ amiShow(); return; } amiLaunch(a.ami + 1); return; } show('home'); if(a.lrn){ const n = lrnNextOf(a); if(!n){ lrnShow(a.isl); return; } ADV = lrnBuild(n.i, n.e, a.lvl || undefined); } else ADV = advBuild(a.wi + 1, a.lv); startGame(); };
+$('#bMenu').onclick = () => { const a = LASTRES && LASTRES.g.adv; if(a && a.crs){ crsShow(); } else if(a && a.ami != null){ amiShow(); } else if(a && a.lrn){ lrnShow(a.isl); } else if(a){ ADV_LV = a.lv; advShow(a.wi); } else { renderHome(); show('home'); } };
 advInitUI(); lrnInit();
 renderHome();
 if(AMI_ONLY){ if(amiInit()) amiShow(); else amiNoLink(); }
