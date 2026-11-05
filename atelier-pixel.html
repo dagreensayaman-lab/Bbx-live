@@ -287,6 +287,15 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
 .previews figure { margin: 0; display: grid; gap: 4px; justify-items: start; min-width: 0; max-width: 100%; }
 .previews figcaption { color: var(--muted); font-size: 12px; }
 
+/* déplacer / sélection */
+#pMove { width: 236px; }
+#pMove .chips button { min-height: 40px; padding: 0 8px; font-size: 13px; }
+.padgrid { display: grid; grid-template-columns: repeat(3, 52px); gap: 6px; justify-content: center; }
+.padgrid button { min-height: 52px; padding: 0; font-size: 22px; line-height: 1; }
+.padgrid .pc { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 11px; text-align: center; }
+.gitlist { display: grid; gap: 6px; }
+.gitlist button { justify-content: flex-start; width: 100%; text-align: left; }
+
 /* popovers, gallery, dialog */
 .scrim { position: absolute; inset: 0; z-index: 30; }
 .pop {
@@ -376,6 +385,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
         <button id="bGrid" class="tb" type="button" aria-pressed="true" aria-label="Grille" title="Grille"><i data-icon="grid"></i></button>
         <button id="bFit" class="tb" type="button" aria-label="Recentrer" title="Recentrer le dessin"><i data-icon="fit"></i></button>
         <button id="bPrev" class="tb" type="button" aria-pressed="false" aria-label="Aperçu" title="Aperçu en taille réelle"><i data-icon="prev"></i></button>
+        <button id="bMove" class="tb" type="button" aria-pressed="false" aria-label="Déplacer" title="Déplacer avec les flèches (calque, tous les calques ou sélection)"><i data-icon="move"></i></button>
         <button id="bLayers" class="tb" type="button" aria-pressed="false" aria-label="Calques" title="Calques"><i data-icon="layers"></i></button>
         <button id="bColor" class="tb" type="button" aria-pressed="false" aria-label="Couleurs" title="Couleurs"><span id="colorDot"></span></button>
         <button id="bExport" class="tb" type="button" aria-label="Exporter" title="Exporter"><i data-icon="share"></i></button>
@@ -395,6 +405,8 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
         <button class="tool" type="button" data-tool="picker" aria-pressed="false"><i data-icon="picker"></i><b>Pipette</b></button>
         <button class="tool" type="button" data-tool="line" aria-pressed="false"><i data-icon="line"></i><b>Ligne</b></button>
         <button class="tool" type="button" data-tool="rect" aria-pressed="false"><i data-icon="rect"></i><b>Rect.</b></button>
+        <button class="tool" type="button" data-tool="select" aria-pressed="false"><i data-icon="select"></i><b>Sélection</b></button>
+        <button class="tool" type="button" data-tool="move" aria-pressed="false"><i data-icon="move"></i><b>Déplacer</b></button>
       </div>
       <div class="sgrp" aria-label="Taille du pinceau">
         <button id="szUp" class="sbtn" type="button" aria-label="Pinceau plus gros"><i data-icon="plus"></i></button>
@@ -450,6 +462,32 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       </div>
     </section>
 
+    <section class="panel slim" id="pMove" data-key="move" hidden aria-label="Déplacer">
+      <header class="phead"><i class="grip" data-icon="grip"></i><h2>Déplacer</h2>
+        <button class="pbtn" type="button" data-act="collapse" aria-label="Réduire"><i data-icon="chev" data-size="20"></i></button>
+        <button class="pbtn" type="button" data-act="close" aria-label="Fermer"><i data-icon="close" data-size="20"></i></button>
+      </header>
+      <div class="pbody">
+        <div class="chips" id="scopeChips" aria-label="Quoi déplacer">
+          <button type="button" data-scope="layer" aria-pressed="true">Ce calque</button>
+          <button type="button" data-scope="all" aria-pressed="false">Tous</button>
+          <button type="button" data-scope="sel" aria-pressed="false" disabled>Sélection</button>
+        </div>
+        <div class="padgrid" aria-label="Flèches">
+          <span></span><button type="button" data-nudge="0,-1" aria-label="Monter">↑</button><span></span>
+          <button type="button" data-nudge="-1,0" aria-label="Gauche">←</button><span class="pc" id="stepLbl">1 px</span><button type="button" data-nudge="1,0" aria-label="Droite">→</button>
+          <span></span><button type="button" data-nudge="0,1" aria-label="Descendre">↓</button><span></span>
+        </div>
+        <div class="chips" id="stepChips" aria-label="Pas">
+          <button type="button" data-step="1" aria-pressed="true">1 px</button>
+          <button type="button" data-step="4" aria-pressed="false">4 px</button>
+          <button type="button" data-step="8" aria-pressed="false">8 px</button>
+        </div>
+        <button id="selClear" type="button">Désélectionner</button>
+        <p class="hint">Outil Déplacer : glisse sur le dessin. Outil Sélection : trace un rectangle, puis glisse dedans pour déplacer son contenu. Flèches du clavier : 1 px (Maj = 8).</p>
+      </div>
+    </section>
+
     <section class="panel slim" id="pPrev" data-key="prev" hidden aria-label="Aperçu">
       <header class="phead"><i class="grip" data-icon="grip"></i><h2>Aperçu</h2>
         <button class="pbtn" type="button" data-act="collapse" aria-label="Réduire"><i data-icon="chev" data-size="20"></i></button>
@@ -484,7 +522,14 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       <button id="mSize" type="button" class="mi"><i data-icon="fit" data-size="20"></i><span>Changer la taille…</span></button>
       <button id="mAddImg" type="button" class="mi"><i data-icon="image" data-size="20"></i><span>Importer des images en calques…</span></button>
       <button id="mOpen" type="button" class="mi"><i data-icon="folder" data-size="20"></i><span>Ouvrir un PNG ou un projet…</span></button>
+      <button id="mGit" type="button" class="mi"><i data-icon="folder" data-size="20"></i><span>Ouvrir depuis GitHub…</span></button>
       <p class="hint">Gestes : un doigt déplace la vue, deux doigts pincés zooment, un tapotement à deux doigts annule, à trois doigts rétablit. Le stylet dessine.</p>
+    </div>
+
+    <div class="pop" id="popGit" hidden>
+      <h3>Ouvrir depuis GitHub</h3>
+      <div class="gitlist" id="gitList"></div>
+      <p class="hint" id="gitHint"></p>
     </div>
 
     <div id="msg" role="status" hidden></div>
@@ -559,6 +604,8 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   ];
   var ICONS = {
     folder: '<path d="M3 6h7l2 2h9v11H3z"/>',
+    move: '<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
+    select: '<path d="M5 5h14v14H5z" stroke-dasharray="3 3"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
     minus: '<path d="M5 12h14"/>',
     mirror: '<path d="M12 3v18" stroke-dasharray="2 2"/><path d="M9 7L3 12l6 5zM15 7l6 5-6 5z"/>',
@@ -605,6 +652,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   var off = document.createElement('canvas');
   var pngCache = new WeakMap();
   var tool = 'pencil', lastDraw = 'pencil';
+  var sel = null, moveScope = 'layer', moveStep = 1;
   var color = '#ff004d', c32 = 0;
   var recent = [];
   var mirror = false, grid = true, size = 1, stylusOnly = true;
@@ -760,6 +808,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       return { id: e.id, name: m.name, vis: m.vis, op: m.op, data: e.data };
     });
     active = Math.min(s.active, layers.length - 1);
+    setSel(null);
     compDirty = true;
     if (dims) fitView();
     commit();
@@ -956,6 +1005,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   /* ---------- project lifecycle ---------- */
   function afterProjectChange() {
     undoStack = []; redoStack = [];
+    setSel(null);
     $('pname').value = proj.name;
     compDirty = true;
     autoFit = true;
@@ -1152,6 +1202,17 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       ctx.stroke();
       ctx.setLineDash([]);
     }
+    if (sel) {
+      var rx = x0 + sel.x0 * S, ry = y0 + sel.y0 * S, rw = (sel.x1 - sel.x0 + 1) * S, rh = (sel.y1 - sel.y0 + 1) * S;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = theme.fg;
+      ctx.setLineDash([]);
+      ctx.strokeRect(rx, ry, rw, rh);
+      ctx.strokeStyle = theme.accent;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(rx, ry, rw, rh);
+      ctx.setLineDash([]);
+    }
     if (hover && S >= 3 && (tool === 'pencil' || tool === 'eraser' || tool === 'line' || tool === 'rect')) {
       var sz = (tool === 'fill' || tool === 'picker') ? 1 : size;
       var o = Math.floor((sz - 1) / 2);
@@ -1256,7 +1317,138 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     var r = cv.getBoundingClientRect();
     return [Math.floor((e.clientX - r.left - ox) / S), Math.floor((e.clientY - r.top - oy) / S)];
   }
+  function inSel(c) { return sel && c[0] >= sel.x0 && c[0] <= sel.x1 && c[1] >= sel.y0 && c[1] <= sel.y1; }
+  function setSel(r) {
+    sel = r;
+    if (r) { moveScope = 'sel'; } else if (moveScope === 'sel') { moveScope = 'layer'; }
+    updateMoveUI();
+    if (typeof sched === 'function' && ready) sched();
+  }
+  function updateMoveUI() {
+    var chips = document.querySelectorAll('#scopeChips button');
+    for (var i = 0; i < chips.length; i++) {
+      var sc = chips[i].dataset.scope;
+      if (sc === 'sel') chips[i].disabled = !sel;
+      chips[i].setAttribute('aria-pressed', String(sc === moveScope));
+    }
+    var st = document.querySelectorAll('#stepChips button');
+    for (var j = 0; j < st.length; j++) st[j].setAttribute('aria-pressed', String(+st[j].dataset.step === moveStep));
+    $('stepLbl').textContent = moveStep + ' px';
+    $('selClear').disabled = !sel;
+  }
+  function contentBox(list) {
+    var x0 = W, y0 = H, x1 = -1, y1 = -1;
+    list.forEach(function (l) {
+      var d = l.data;
+      for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+        if (d[y * W + x] >>> 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      }
+    });
+    return x1 < 0 ? null : { x0: x0, y0: y0, x1: x1, y1: y1 };
+  }
+  function shiftData(base, dx, dy, r) {
+    var out, x, y;
+    if (!r) {
+      out = new Uint32Array(W * H);
+      for (y = 0; y < H; y++) { var ty = y + dy; if (ty < 0 || ty >= H) continue;
+        for (x = 0; x < W; x++) { var tx = x + dx; if (tx >= 0 && tx < W) out[ty * W + tx] = base[y * W + x]; } }
+      return out;
+    }
+    out = base.slice();
+    for (y = r.y0; y <= r.y1; y++) for (x = r.x0; x <= r.x1; x++) out[y * W + x] = 0;
+    for (y = r.y0; y <= r.y1; y++) for (x = r.x0; x <= r.x1; x++) {
+      var v = base[y * W + x];
+      if (!(v >>> 24)) continue;
+      var nx = x + dx, ny = y + dy;
+      if (nx >= 0 && nx < W && ny >= 0 && ny < H) out[ny * W + nx] = v;
+    }
+    return out;
+  }
+  function moveTargets(scope) {
+    return scope === 'all' ? layers.slice() : [cur()];
+  }
+  function limitShift(bb, dx, dy) {
+    return [clamp(dx, -bb.x0, W - 1 - bb.x1), clamp(dy, -bb.y0, H - 1 - bb.y1)];
+  }
+  function nudge(dx, dy) {
+    if (drawing) return;
+    var scope = (moveScope === 'sel' && !sel) ? 'layer' : moveScope;
+    var r = scope === 'sel' ? sel : null;
+    var targets = moveTargets(scope);
+    var bb = r || contentBox(targets);
+    if (!bb) { msg('Rien à déplacer sur ce calque.'); return; }
+    var lim = limitShift(bb, dx, dy);
+    if (!lim[0] && !lim[1]) { msg('Le dessin touche déjà le bord.'); return; }
+    pushState();
+    targets.forEach(function (l) { l.data = shiftData(l.data, lim[0], lim[1], r); });
+    if (r) setSel({ x0: r.x0 + lim[0], y0: r.y0 + lim[1], x1: r.x1 + lim[0], y1: r.y1 + lim[1] });
+    commit();
+  }
+  function startMove(e) {
+    try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ }
+    var c = cellAt(e);
+    c = [clamp(c[0], 0, W - 1), clamp(c[1], 0, H - 1)];
+    stroke = { id: e.pointerId, type: e.pointerType, start: c, last: c, cx: e.clientX, cy: e.clientY, layer: cur() };
+    if (e.pointerType === 'pen') penBusyUntil = Infinity;
+    drawing = true;
+    hover = c;
+    if (tool === 'select' && !inSel(c)) {
+      stroke.kind = 'sel';
+      stroke.prevSel = sel;
+      sel = { x0: c[0], y0: c[1], x1: c[0], y1: c[1] };
+      updateMoveUI();
+    } else {
+      var scope = tool === 'select' ? 'sel' : ((moveScope === 'sel' && !sel) ? 'layer' : moveScope);
+      stroke.kind = 'mv';
+      stroke.scope = scope;
+      stroke.rect = scope === 'sel' ? { x0: sel.x0, y0: sel.y0, x1: sel.x1, y1: sel.y1 } : null;
+      stroke.targets = moveTargets(scope).map(function (l) { return { l: l, base: l.data }; });
+      stroke.bb = stroke.rect || contentBox(stroke.targets.map(function (t) { return t.l; }));
+      stroke.before = snap();
+      stroke.dx = 0; stroke.dy = 0;
+    }
+    sched();
+  }
+  function moveDrag(e) {
+    var c = cellAt(e);
+    stroke.last = c;
+    if (stroke.kind === 'sel') {
+      var cx = clamp(c[0], 0, W - 1), cy = clamp(c[1], 0, H - 1);
+      sel = { x0: Math.min(stroke.start[0], cx), y0: Math.min(stroke.start[1], cy), x1: Math.max(stroke.start[0], cx), y1: Math.max(stroke.start[1], cy) };
+    } else if (stroke.bb) {
+      var lim = limitShift(stroke.bb, c[0] - stroke.start[0], c[1] - stroke.start[1]);
+      stroke.dx = lim[0]; stroke.dy = lim[1];
+      stroke.targets.forEach(function (t) { t.l.data = shiftData(t.base, lim[0], lim[1], stroke.rect); });
+      if (stroke.rect) sel = { x0: stroke.rect.x0 + lim[0], y0: stroke.rect.y0 + lim[1], x1: stroke.rect.x1 + lim[0], y1: stroke.rect.y1 + lim[1] };
+      compDirty = true;
+    }
+    hover = c;
+    updateChip();
+    sched();
+  }
+  function finishMove(cancel) {
+    var s = stroke;
+    stroke = null; drawing = false;
+    if (s.kind === 'sel') {
+      var tap = s.start[0] === clamp(s.last[0], 0, W - 1) && s.start[1] === clamp(s.last[1], 0, H - 1);
+      if (cancel) setSel(s.prevSel); else if (tap) setSel(null); else setSel(sel);
+      render();
+      return;
+    }
+    var moved = !cancel && (s.dx || s.dy);
+    if (!moved) {
+      s.targets.forEach(function (t) { t.l.data = t.base; });
+      if (s.rect) setSel(s.rect);
+      compDirty = true; updateHistoryButtons(); render();
+      return;
+    }
+    undoStack.push(s.before);
+    if (undoStack.length > HISTORY) undoStack.shift();
+    redoStack = [];
+    commit();
+  }
   function startStroke(e) {
+    if (tool === 'move' || tool === 'select') { startMove(e); return; }
     var l = cur();
     if (!l.vis && tool !== 'picker') { msg('Ce calque est masqué. Coche l’œil dans la fenêtre Calques pour dessiner dessus.'); return; }
     try { cv.setPointerCapture(e.pointerId); } catch (err) { /* synthetic or unsupported */ }
@@ -1274,6 +1466,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   }
   function strokeMove(e) {
     stroke.cx = e.clientX; stroke.cy = e.clientY;
+    if (stroke.kind) { moveDrag(e); return; }
     var evs = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
     if (evs && evs.length) {
       for (var i = 0; i < evs.length; i++) { var cc = cellAt(evs[i]); apply(cc[0], cc[1]); }
@@ -1287,6 +1480,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   }
   function finishStroke(cancel) {
     if (!stroke) return;
+    if (stroke.kind) { finishMove(cancel); return; }
     var lyr = stroke.layer, tl = tool, changed = false;
     stroke = null;
     drawing = false;
@@ -1645,11 +1839,12 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   });
 
   /* ---------- floating windows ---------- */
-  var PANEL_IDS = { layers: 'pLayers', colors: 'pColors', prev: 'pPrev' };
-  var PANEL_BTNS = { layers: 'bLayers', colors: 'bColor', prev: 'bPrev' };
+  var PANEL_IDS = { layers: 'pLayers', colors: 'pColors', prev: 'pPrev', move: 'pMove' };
+  var PANEL_BTNS = { layers: 'bLayers', colors: 'bColor', prev: 'bPrev', move: 'bMove' };
   function defaultPos(k, w) {
     if (k === 'layers') return { x: vw - w - 16, y: 16 };
     if (k === 'colors') return { x: vw - 292 - w - 28, y: 16 };
+    if (k === 'move') return { x: 100, y: 16 };
     return { x: Math.max(96, 100), y: Math.max(16, vh - 230) };
   }
   function placePanel(k) {
@@ -1688,7 +1883,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   }
   function initPanels() {
     var wide = vw >= 1000, mid = vw >= 700;
-    var defs = { layers: mid, colors: wide, prev: false };
+    var defs = { layers: mid, colors: wide, prev: false, move: false };
     Object.keys(PANEL_IDS).forEach(function (k) {
       var s = ui.panels[k];
       if (!s || typeof s !== 'object') s = ui.panels[k] = { open: defs[k] };
@@ -2036,6 +2231,81 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   $('mSize').addEventListener('click', function () { openModal('size'); });
   $('mAddImg').addEventListener('click', function () { closePop(); $('fAdd').click(); });
   $('mOpen').addEventListener('click', function () { closePop(); $('fOpen').click(); });
+
+  /* ---------- déplacer : panneau ---------- */
+  $('scopeChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-scope]');
+    if (!b || b.disabled) return;
+    moveScope = b.dataset.scope;
+    updateMoveUI();
+  });
+  $('stepChips').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-step]');
+    if (!b) return;
+    moveStep = +b.dataset.step;
+    updateMoveUI();
+  });
+  document.querySelector('#pMove .padgrid').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-nudge]');
+    if (!b) return;
+    var v = b.dataset.nudge.split(',');
+    nudge(+v[0] * moveStep, +v[1] * moveStep);
+  });
+  $('selClear').addEventListener('click', function () { setSel(null); });
+
+  /* ---------- ouvrir depuis GitHub ---------- */
+  function githubApiUrl() {
+    var m = /^([^.]+)\.github\.io$/.exec(location.hostname);
+    var seg = location.pathname.split('/').filter(Boolean)[0];
+    return m && seg ? 'https://api.github.com/repos/' + m[1] + '/' + seg + '/contents/atelier' : null;
+  }
+  async function listGitFiles() {
+    try {
+      var r = await fetch('atelier/index.json?t=' + Date.now(), { cache: 'no-store' });
+      if (r.ok) {
+        var d = await r.json();
+        var arr = Array.isArray(d) ? d : d.files;
+        if (Array.isArray(arr) && arr.length) return arr.map(function (x) { return typeof x === 'string' ? { file: x } : x; });
+      }
+    } catch (e) { /* essaie l'API */ }
+    var api = githubApiUrl();
+    if (!api) throw new Error('nolist');
+    var r2 = await fetch(api, { cache: 'no-store' });
+    if (!r2.ok) throw new Error('nolist');
+    var items = await r2.json();
+    return items.filter(function (x) { return x.type === 'file' && /\.(json|png)$/i.test(x.name) && x.name !== 'index.json'; })
+      .map(function (x) { return { file: x.name }; });
+  }
+  async function openFromGit(file) {
+    try {
+      var r = await fetch('atelier/' + encodeURIComponent(file) + '?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) throw new Error('http');
+      var f;
+      if (/\.json$/i.test(file)) f = new File([await r.text()], file, { type: 'application/json' });
+      else f = new File([await r.blob()], file, { type: 'image/png' });
+      closePop();
+      await openFiles([f]);
+    } catch (e) { msg('Impossible de charger ' + file + ' depuis GitHub.'); }
+  }
+  $('mGit').addEventListener('click', async function () {
+    showPop('popGit');
+    var box = $('gitList'), hint = $('gitHint');
+    box.textContent = '';
+    hint.textContent = 'Chargement…';
+    try {
+      var files = await listGitFiles();
+      hint.textContent = 'Dossier « atelier » du dépôt. Toujours la dernière version publiée.';
+      files.forEach(function (x) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'mi';
+        b.textContent = x.name || x.file;
+        b.addEventListener('click', function () { openFromGit(x.file); });
+        box.appendChild(b);
+      });
+    } catch (e) {
+      hint.textContent = 'Liste introuvable. Ouvre l’Atelier depuis ton adresse GitHub Pages (pas depuis un aperçu) pour que ce bouton marche.';
+    }
+  });
   $('bMirror').addEventListener('click', function () {
     mirror = !mirror;
     $('bMirror').setAttribute('aria-pressed', String(mirror));
@@ -2077,7 +2347,9 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
     if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    var map = { b: 'pencil', e: 'eraser', g: 'fill', i: 'picker', l: 'line', r: 'rect' };
+    var arrows = { arrowleft: [-1, 0], arrowright: [1, 0], arrowup: [0, -1], arrowdown: [0, 1] };
+    if (arrows[k]) { e.preventDefault(); var stp = e.shiftKey ? 8 : 1; nudge(arrows[k][0] * stp, arrows[k][1] * stp); return; }
+    var map = { b: 'pencil', e: 'eraser', g: 'fill', i: 'picker', l: 'line', r: 'rect', s: 'select', v: 'move' };
     if (map[k]) setTool(map[k]);
     else if (k === 'm') $('bMirror').click();
     else if (k === 'escape') { closePop(); closeModal(); }
