@@ -287,6 +287,20 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
 .previews figure { margin: 0; display: grid; gap: 4px; justify-items: start; min-width: 0; max-width: 100%; }
 .previews figcaption { color: var(--muted); font-size: 12px; }
 
+/* groupes de calques */
+.lgroup { display: flex; align-items: center; gap: 4px; }
+.lgroup .lname { font-weight: 700; min-height: 44px; }
+.lgroup .lname em { font-style: normal; color: var(--muted); font-weight: 400; font-size: 12px; margin-left: auto; padding-left: 6px; flex: none; }
+.lgroup .lname .tw { flex: none; width: 14px; color: var(--muted); }
+.lgroup .lname[aria-pressed="true"] { border-color: var(--accent); }
+.lrow.ing { margin-left: 18px; border-left: 2px solid var(--line); padding-left: 4px; }
+.gsec { display: grid; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 4px; }
+.gsec[hidden] { display: none; }
+.gsec .gbtns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.gsec .gbtns button { min-height: 44px; padding: 0 4px; font-size: 12px; }
+.lfield select { min-height: 44px; }
+.ghint { color: var(--accent); font-size: 12px; margin: 0; font-weight: 700; }
+
 /* déplacer / sélection */
 #pMove { width: 236px; }
 #pMove .chips button { min-height: 40px; padding: 0 8px; font-size: 13px; }
@@ -438,7 +452,18 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
           <button id="lUp" type="button"><i data-icon="up" data-size="18"></i><span>Monter</span></button>
           <button id="lDown" type="button"><i data-icon="down" data-size="18"></i><span>Descendre</span></button>
           <button id="lDel" type="button"><i data-icon="trash" data-size="18"></i><span>Supprimer</span></button>
+          <button id="lGroup" type="button" title="Range plusieurs calques dans un dossier"><i data-icon="folder" data-size="18"></i><span>Grouper</span></button>
         </div>
+        <p class="ghint" id="lGroupHint" hidden>Touche le dernier calque à ranger dans le groupe (depuis le calque actif).</p>
+        <div class="gsec" id="gSec" hidden>
+          <label class="lfield">Groupe <input type="text" id="gNameIn" maxlength="24" autocomplete="off"></label>
+          <div class="gbtns">
+            <button id="gUp" type="button">Groupe ↑</button>
+            <button id="gDown" type="button">Groupe ↓</button>
+            <button id="gUngroup" type="button" title="Garde les calques, retire le dossier">Dégrouper</button>
+          </div>
+        </div>
+        <label class="lfield">Rangé dans <select id="lGrp"></select></label>
         <label class="lfield">Nom <input type="text" id="lNameIn" maxlength="24" autocomplete="off"></label>
         <label class="lfield rng">Opacité <input type="range" id="lOp" min="0" max="100" step="5" value="100"><span id="lOpV">100%</span></label>
         <button id="lClear" type="button" title="Efface tout le calque actif">Effacer ce calque</button>
@@ -470,6 +495,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       <div class="pbody">
         <div class="chips" id="scopeChips" aria-label="Quoi déplacer">
           <button type="button" data-scope="layer" aria-pressed="true">Ce calque</button>
+          <button type="button" data-scope="group" aria-pressed="false" disabled>Ce groupe</button>
           <button type="button" data-scope="all" aria-pressed="false">Tous</button>
           <button type="button" data-scope="sel" aria-pressed="false" disabled>Sélection</button>
         </div>
@@ -580,7 +606,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   var OLD_KEY = 'atelier-pixel-v2';
   var OLD1_KEY = 'atelier-pixel-v1';
   var DB_NAME = 'atelier-pixel';
-  var MAX = 256, MAXLAYERS = 32, HISTORY = 60;
+  var MAX = 256, MAXLAYERS = 64, HISTORY = 60;
   var PNG_PREFIX = 'data:image/png;base64,';
   var PRESETS = [16, 24, 32, 48, 64, 96, 128, 256];
   var SAMPLE_COLORS = { K: '#1d2b53', R: '#ff004d', S: '#ffccaa', B: '#29adff', P: '#ab5236' };
@@ -647,6 +673,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   var active = 0;
   var nextId = 1;
   var metaStore = {};
+  var groups = {}, gsel = null, grouping = null;
   var comp = new Uint32Array(0);
   var compDirty = true;
   var off = document.createElement('canvas');
@@ -719,7 +746,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   /* ---------- layers and compositing ---------- */
   function setMeta(l) { metaStore[l.id] = { name: l.name, vis: l.vis, op: l.op }; }
   function newLayer(name, data) {
-    var l = { id: nextId++, name: name, vis: true, op: 1, data: data || new Uint32Array(W * H) };
+    var l = { id: nextId++, name: name, vis: true, op: 1, gid: null, data: data || new Uint32Array(W * H) };
     setMeta(l);
     return l;
   }
@@ -787,7 +814,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   function snap() {
     return {
       W: W, H: H, active: active,
-      list: layers.map(function (l) { return { id: l.id, name: l.name, vis: l.vis, op: l.op, data: l.data }; })
+      list: layers.map(function (l) { return { id: l.id, name: l.name, vis: l.vis, op: l.op, gid: l.gid || null, data: l.data }; })
     };
   }
   function pushState() {
@@ -805,7 +832,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     W = s.W; H = s.H;
     layers = s.list.map(function (e) {
       var m = metaStore[e.id] || e;
-      return { id: e.id, name: m.name, vis: m.vis, op: m.op, data: e.data };
+      return { id: e.id, name: m.name, vis: m.vis, op: m.op, gid: e.gid || null, data: e.data };
     });
     active = Math.min(s.active, layers.length - 1);
     setSel(null);
@@ -816,6 +843,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   function undo() { if (drawing || !undoStack.length) return; redoStack.push(snap()); restore(undoStack.pop()); }
   function redo() { if (drawing || !redoStack.length) return; undoStack.push(snap()); restore(redoStack.pop()); }
   function commit() {
+    normGroups();
     compDirty = true;
     renderLayers();
     render();
@@ -910,10 +938,10 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     if (kind === 'ok' && dbWarn) el.className = 'err';
   }
   function buildRecord() {
-    var list = layers.map(function (l) { return { name: l.name, vis: l.vis, op: l.op, png: layerPng(l) }; });
+    var list = layers.map(function (l) { return { name: l.name, vis: l.vis, op: l.op, g: l.gid || undefined, png: layerPng(l) }; });
     return {
       meta: { id: proj.id, name: proj.name, W: W, H: H, nl: layers.length, updated: Date.now(), thumb: makeThumb() },
-      data: { id: proj.id, active: active, layers: list }
+      data: { id: proj.id, active: active, layers: list, groups: groupsList() }
     };
   }
   function markDirty() {
@@ -989,12 +1017,15 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   }
   async function buildLayers(d) {
     var out = [];
+    groups = {};
+    if (Array.isArray(d.groups)) d.groups.forEach(function (g) { if (g && typeof g.id === 'string') groups[g.id] = { name: typeof g.name === 'string' && g.name ? g.name.slice(0, 24) : 'Groupe', open: g.open !== false }; });
     for (var i = 0; i < d.layers.length; i++) {
       var e = d.layers[i];
       var r = await decodeSrc(e.png);
       var l = newLayer(typeof e.name === 'string' && e.name ? e.name.slice(0, 24) : 'Calque ' + (i + 1), place(r.data, r.w, r.h, d.W, d.H));
       l.vis = e.vis !== false;
       l.op = typeof e.op === 'number' ? clamp(e.op, 0, 1) : 1;
+      l.gid = typeof e.g === 'string' && groups[e.g] ? e.g : null;
       setMeta(l);
       if (r.w === d.W && r.h === d.H) pngCache.set(l.data, e.png);
       out.push(l);
@@ -1005,6 +1036,8 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   /* ---------- project lifecycle ---------- */
   function afterProjectChange() {
     undoStack = []; redoStack = [];
+    gsel = null; grouping = null;
+    normGroups();
     setSel(null);
     $('pname').value = proj.name;
     compDirty = true;
@@ -1019,6 +1052,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     await flushNow();
     ready = false;
     W = w; H = h;
+    if (!list) groups = {};
     layers = list || [newLayer('Calque 1')];
     active = list ? list.length - 1 : 0;
     proj = { id: newId(), name: (name || 'Sans titre').slice(0, 40) };
@@ -1033,7 +1067,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     try {
       var meta = await sGetMeta(id), data = await sGetData(id);
       if (!meta || !data || !validDims(meta) || !validLayerList(data.layers)) throw new Error('missing');
-      var built = await buildLayers({ W: meta.W, H: meta.H, layers: data.layers });
+      var built = await buildLayers({ W: meta.W, H: meta.H, layers: data.layers, groups: data.groups });
       ready = false;
       W = meta.W; H = meta.H;
       layers = built;
@@ -1329,6 +1363,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     for (var i = 0; i < chips.length; i++) {
       var sc = chips[i].dataset.scope;
       if (sc === 'sel') chips[i].disabled = !sel;
+      if (sc === 'group') chips[i].disabled = !curGroup();
       chips[i].setAttribute('aria-pressed', String(sc === moveScope));
     }
     var st = document.querySelectorAll('#stepChips button');
@@ -1364,7 +1399,13 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     }
     return out;
   }
+  function normScope(sc) {
+    if (sc === 'sel' && !sel) return 'layer';
+    if (sc === 'group' && !curGroup()) return 'layer';
+    return sc;
+  }
   function moveTargets(scope) {
+    if (scope === 'group') { var gg = curGroup(); return layers.filter(function (l) { return l.gid === gg; }); }
     return scope === 'all' ? layers.slice() : [cur()];
   }
   function limitShift(bb, dx, dy) {
@@ -1372,7 +1413,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   }
   function nudge(dx, dy) {
     if (drawing) return;
-    var scope = (moveScope === 'sel' && !sel) ? 'layer' : moveScope;
+    var scope = normScope(moveScope);
     var r = scope === 'sel' ? sel : null;
     var targets = moveTargets(scope);
     var bb = r || contentBox(targets);
@@ -1398,7 +1439,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       sel = { x0: c[0], y0: c[1], x1: c[0], y1: c[1] };
       updateMoveUI();
     } else {
-      var scope = tool === 'select' ? 'sel' : ((moveScope === 'sel' && !sel) ? 'layer' : moveScope);
+      var scope = tool === 'select' ? 'sel' : normScope(moveScope);
       stroke.kind = 'mv';
       stroke.scope = scope;
       stroke.rect = scope === 'sel' ? { x0: sel.x0, y0: sel.y0, x1: sel.x1, y1: sel.y1 } : null;
@@ -1719,39 +1760,159 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     c.style.height = th + 'px';
     return c;
   }
+  function newGid() { var n = 1; while (groups['g' + n]) n++; return 'g' + n; }
+  function groupsList() {
+    var used = {};
+    layers.forEach(function (l) { if (l.gid) used[l.gid] = 1; });
+    return Object.keys(used).filter(function (k) { return groups[k]; }).map(function (k) { return { id: k, name: groups[k].name, open: groups[k].open !== false }; });
+  }
+  function normGroups() {
+    var seen = {}, last = null;
+    layers.forEach(function (l) {
+      if (l.gid && !groups[l.gid]) l.gid = null;
+      if (l.gid) {
+        if (l.gid !== last && seen[l.gid]) l.gid = null; else seen[l.gid] = 1;
+      }
+      last = l.gid;
+    });
+    if (gsel && !groups[gsel]) gsel = null;
+  }
+  function curGroup() {
+    if (gsel && groups[gsel]) return gsel;
+    var l = cur();
+    return l && l.gid && groups[l.gid] ? l.gid : null;
+  }
+  function blockOf(g) {
+    var a = -1, b = -1;
+    layers.forEach(function (l, i) { if (l.gid === g) { if (a < 0) a = i; b = i; } });
+    return a < 0 ? null : [a, b];
+  }
   function renderLayers() {
     if (!ui.panels.layers || !ui.panels.layers.open) { syncLayerFields(); return; }
     var host = $('layers');
     host.innerHTML = '';
-    layers.forEach(function (l, i) {
-      var row = document.createElement('div');
-      row.className = 'lrow';
-      row.dataset.i = String(i);
-      var eye = document.createElement('label');
-      eye.className = 'eye';
-      eye.title = 'Afficher ou masquer';
-      var cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = l.vis;
-      cb.setAttribute('aria-label', 'Afficher le calque ' + l.name);
-      cb.addEventListener('change', function () {
-        l.vis = cb.checked; setMeta(l); compDirty = true; render(); updatePreview(); markDirty();
-      });
-      eye.appendChild(cb);
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'lname';
-      b.setAttribute('aria-pressed', String(i === active));
-      var sp = document.createElement('span');
-      sp.textContent = l.name;
-      b.appendChild(thumb(l));
-      b.appendChild(sp);
-      b.addEventListener('click', function () { active = i; renderLayers(); markDirty(); });
-      row.appendChild(eye);
-      row.appendChild(b);
-      host.insertBefore(row, host.firstChild);
-    });
+    var lastG = null;
+    for (var i = layers.length - 1; i >= 0; i--) {
+      (function (l, i) {
+        if (l.gid && l.gid !== lastG) host.appendChild(groupRow(l.gid));
+        lastG = l.gid || null;
+        if (l.gid && groups[l.gid].open === false) return;
+        var row = document.createElement('div');
+        row.className = 'lrow' + (l.gid ? ' ing' : '');
+        row.dataset.i = String(i);
+        var eye = document.createElement('label');
+        eye.className = 'eye';
+        eye.title = 'Afficher ou masquer';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = l.vis;
+        cb.setAttribute('aria-label', 'Afficher le calque ' + l.name);
+        cb.addEventListener('change', function () {
+          l.vis = cb.checked; setMeta(l); compDirty = true; render(); updatePreview(); markDirty(); renderLayers();
+        });
+        eye.appendChild(cb);
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'lname';
+        b.setAttribute('aria-pressed', String(i === active));
+        var sp = document.createElement('span');
+        sp.textContent = l.name;
+        b.appendChild(thumb(l));
+        b.appendChild(sp);
+        b.addEventListener('click', function () {
+          if (grouping) { makeGroup(grouping.from, i); return; }
+          active = i; gsel = null; renderLayers(); markDirty();
+        });
+        row.appendChild(eye);
+        row.appendChild(b);
+        host.appendChild(row);
+      })(layers[i], i);
+    }
     syncLayerFields();
+  }
+  function groupRow(g) {
+    var kids = layers.filter(function (l) { return l.gid === g; });
+    var row = document.createElement('div');
+    row.className = 'lgroup';
+    var eye = document.createElement('label');
+    eye.className = 'eye';
+    eye.title = 'Afficher ou masquer tout le groupe';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = kids.some(function (l) { return l.vis; });
+    cb.setAttribute('aria-label', 'Afficher le groupe ' + groups[g].name);
+    cb.addEventListener('change', function () {
+      kids.forEach(function (l) { l.vis = cb.checked; setMeta(l); });
+      compDirty = true; render(); updatePreview(); markDirty(); renderLayers();
+    });
+    eye.appendChild(cb);
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lname';
+    b.setAttribute('aria-pressed', String(curGroup() === g));
+    var open = groups[g].open !== false;
+    var tw = document.createElement('span'); tw.className = 'tw'; tw.textContent = open ? '▾' : '▸';
+    var nm = document.createElement('span'); nm.textContent = groups[g].name;
+    var ct = document.createElement('em'); ct.textContent = String(kids.length);
+    b.appendChild(tw); b.appendChild(nm); b.appendChild(ct);
+    b.addEventListener('click', function () {
+      groups[g].open = !open;
+      gsel = g;
+      renderLayers(); markDirty();
+    });
+    row.appendChild(eye);
+    row.appendChild(b);
+    return row;
+  }
+  function makeGroup(a, b) {
+    var lo = Math.min(a, b), hi = Math.max(a, b);
+    grouping = null;
+    var done = {}, ok = true;
+    for (var i = lo; i <= hi; i++) {
+      var g = layers[i].gid;
+      if (g && !done[g]) {
+        done[g] = 1;
+        var bl = blockOf(g);
+        if (bl[0] < lo || bl[1] > hi) ok = false;
+      }
+    }
+    if (!ok) { msg('Cette sélection coupe un autre groupe en deux. Choisis une plage qui le contient en entier.'); renderLayers(); return; }
+    var gid = newGid();
+    pushState();
+    groups[gid] = { name: 'Groupe ' + (groupsList().length + 1), open: true };
+    for (var k = lo; k <= hi; k++) layers[k].gid = gid;
+    gsel = gid;
+    commit();
+    msg('Groupe créé : ' + (hi - lo + 1) + ' calque' + (hi > lo ? 's' : '') + '. Renomme-le dans la fenêtre.');
+  }
+  function setLayerGroup(gid) {
+    var l = cur();
+    if ((l.gid || '') === (gid || '')) return;
+    pushState();
+    var old = l.gid;
+    layers.splice(active, 1);
+    var at;
+    if (gid) { var bl = blockOf(gid); at = bl ? bl[1] + 1 : Math.min(active, layers.length); l.gid = gid; }
+    else { var ob = blockOf(old); at = ob ? ob[1] + 1 : Math.min(active, layers.length); l.gid = null; }
+    layers.splice(at, 0, l);
+    active = at;
+    gsel = null;
+    commit();
+  }
+  function moveGroup(dir) {
+    var g = curGroup(), bl = g && blockOf(g);
+    if (!bl) return;
+    var j = dir > 0 ? bl[1] + 1 : bl[0] - 1;
+    if (j < 0 || j >= layers.length) return;
+    var span = 1, nb = layers[j];
+    if (nb.gid) while (layers[j + dir * span] && layers[j + dir * span].gid === nb.gid) span++;
+    pushState();
+    var keep = cur();
+    var block = layers.splice(bl[0], bl[1] - bl[0] + 1);
+    var pos = dir > 0 ? bl[0] + span : bl[0] - span;
+    Array.prototype.splice.apply(layers, [pos, 0].concat(block));
+    active = layers.indexOf(keep);
+    commit();
   }
   function syncLayerFields() {
     var l = cur();
@@ -1764,13 +1925,27 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     $('lDown').disabled = active <= 0;
     $('lMerge').disabled = active <= 0;
     $('lDel').disabled = layers.length < 2;
+    var cg = curGroup();
+    $('gSec').hidden = !cg;
+    if (cg && document.activeElement !== $('gNameIn')) $('gNameIn').value = groups[cg].name;
+    $('gUngroup').disabled = !cg;
+    var sel2 = $('lGrp'), want = l.gid || '';
+    sel2.innerHTML = '';
+    var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Aucun groupe'; sel2.appendChild(o0);
+    groupsList().forEach(function (g) { var o = document.createElement('option'); o.value = g.id; o.textContent = g.name; sel2.appendChild(o); });
+    sel2.value = want;
+    $('lGroup').setAttribute('aria-pressed', String(!!grouping));
+    $('lGroupHint').hidden = !grouping;
+    updateMoveUI();
     $('lAdd').disabled = layers.length >= MAXLAYERS;
     $('lDup').disabled = layers.length >= MAXLAYERS;
   }
   function addLayer() {
     if (layers.length >= MAXLAYERS) return;
     pushState();
-    layers.splice(active + 1, 0, newLayer('Calque ' + (layers.length + 1)));
+    var nl = newLayer('Calque ' + (layers.length + 1));
+    nl.gid = cur().gid || null;
+    layers.splice(active + 1, 0, nl);
     active++;
     commit();
   }
@@ -1779,7 +1954,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     pushState();
     var c = cur();
     var l = newLayer((c.name + ' copie').slice(0, 24), c.data.slice());
-    l.op = c.op; l.vis = c.vis; setMeta(l);
+    l.op = c.op; l.vis = c.vis; l.gid = c.gid || null; setMeta(l);
     layers.splice(active + 1, 0, l);
     active++;
     commit();
@@ -1795,9 +1970,21 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   function moveLayer(dir) {
     var j = active + dir;
     if (j < 0 || j >= layers.length) return;
+    var me = layers[active], nb = layers[j];
     pushState();
-    var t = layers[active]; layers[active] = layers[j]; layers[j] = t;
-    active = j;
+    if (me.gid && nb.gid !== me.gid) {
+      me.gid = null; gsel = null;
+      msg('Le calque sort du groupe.');
+    } else if (!me.gid && nb.gid) {
+      var k = j;
+      while (layers[k + dir] && layers[k + dir].gid === nb.gid) k += dir;
+      layers.splice(active, 1);
+      layers.splice(k, 0, me);
+      active = k;
+    } else {
+      layers[active] = nb; layers[j] = me;
+      active = j;
+    }
     commit();
   }
   function mergeDown() {
@@ -1816,6 +2003,30 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   $('lUp').addEventListener('click', function () { moveLayer(1); });
   $('lDown').addEventListener('click', function () { moveLayer(-1); });
   $('lMerge').addEventListener('click', mergeDown);
+  $('lGroup').addEventListener('click', function () {
+    grouping = grouping ? null : { from: active };
+    renderLayers();
+  });
+  $('lGrp').addEventListener('change', function (e) { setLayerGroup(e.target.value || null); });
+  $('gNameIn').addEventListener('input', function (e) {
+    var g = curGroup();
+    if (!g) return;
+    groups[g].name = e.target.value.slice(0, 24) || 'Groupe';
+    var hs = document.querySelector('#layers .lgroup .lname[aria-pressed="true"] span:nth-child(2)');
+    if (hs) hs.textContent = groups[g].name;
+    markDirty();
+  });
+  $('gUp').addEventListener('click', function () { moveGroup(1); });
+  $('gDown').addEventListener('click', function () { moveGroup(-1); });
+  $('gUngroup').addEventListener('click', function () {
+    var g = curGroup();
+    if (!g) return;
+    pushState();
+    layers.forEach(function (l) { if (l.gid === g) l.gid = null; });
+    gsel = null;
+    commit();
+    msg('Groupe défait. Les calques sont gardés.');
+  });
   $('lClear').addEventListener('click', function () {
     pushState();
     cur().data = new Uint32Array(W * H);
@@ -2149,7 +2360,8 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     flushSave();
     var data = JSON.stringify({
       app: 'atelier-pixel', v: 2, name: proj.name, W: W, H: H,
-      layers: layers.map(function (l) { return { name: l.name, vis: l.vis, op: l.op, png: layerPng(l) }; })
+      groups: groupsList(),
+      layers: layers.map(function (l) { return { name: l.name, vis: l.vis, op: l.op, g: l.gid || undefined, png: layerPng(l) }; })
     });
     saveFile(slug(proj.name) + '.json', new Blob([data], { type: 'application/json' }), 'Projet enregistré.');
   });
@@ -2201,7 +2413,9 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       W = nw; H = nh;
     }
     items.forEach(function (it) {
-      layers.splice(active + 1, 0, newLayer(it.name, place(it.r.data, it.r.w, it.r.h, W, H)));
+      var il = newLayer(it.name, place(it.r.data, it.r.w, it.r.h, W, H));
+      il.gid = cur().gid || null;
+      layers.splice(active + 1, 0, il);
       active++;
     });
     compDirty = true;
@@ -2375,7 +2589,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       var data = await sGetData(startId);
       try {
         if (!data || !validLayerList(data.layers)) throw new Error('bad');
-        layers = await buildLayers({ W: meta.W, H: meta.H, layers: data.layers });
+        layers = await buildLayers({ W: meta.W, H: meta.H, layers: data.layers, groups: data.groups });
         W = meta.W; H = meta.H;
         active = Number.isInteger(data.active) ? clamp(data.active, 0, layers.length - 1) : layers.length - 1;
         proj = { id: startId, name: meta.name };
