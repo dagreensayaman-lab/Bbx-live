@@ -270,6 +270,7 @@ h3 { font-family: var(--display); font-weight: 400; font-size: 10px; letter-spac
 .lname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .lbtns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .lbtns button { padding: 0 4px; font-size: 12px; flex-direction: column; gap: 1px; min-height: 48px; }
+.lbtns.two { grid-template-columns: 1fr 1fr; }
 .lfield { display: grid; gap: 4px; color: var(--muted); }
 .lfield.rng { display: flex; align-items: center; gap: 8px; }
 #lOpV { min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; color: var(--fg); }
@@ -464,6 +465,11 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
           </div>
         </div>
         <label class="lfield">Rangé dans <select id="lGrp"></select></label>
+        <div class="lbtns two">
+          <button id="lCopy" type="button" title="Copie ce calque pour le coller dans un autre projet"><i data-icon="share" data-size="18"></i><span>Copier ce calque</span></button>
+          <button id="lPaste" type="button" title="Colle le calque copié dans ce projet" disabled><i data-icon="download" data-size="18"></i><span>Coller le calque</span></button>
+        </div>
+        <p class="hint" id="clipInfo">Rien de copié pour l’instant.</p>
         <label class="lfield">Nom <input type="text" id="lNameIn" maxlength="24" autocomplete="off"></label>
         <label class="lfield rng">Opacité <input type="range" id="lOp" min="0" max="100" step="5" value="100"><span id="lOpV">100%</span></label>
         <button id="lClear" type="button" title="Efface tout le calque actif">Effacer ce calque</button>
@@ -657,7 +663,8 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     trash: '<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>',
     copy: '<path d="M9 9h11v11H9zM4 4h11v3M4 4v11h3"/>',
     grip: '<path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="4" stroke-linecap="round"/>',
-    image: '<path d="M4 5h16v14H4z"/><path d="M4 16l5-5 4 4 3-3 4 4"/>'
+    image: '<path d="M4 5h16v14H4z"/><path d="M4 16l5-5 4 4 3-3 4 4"/>',
+    download: '<path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 12v8h14v-8"/>'
   };
   function svg(name, size) {
     return '<svg viewBox="0 0 24 24" width="' + (size || 22) + '" height="' + (size || 22) + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true" focusable="false">' + (ICONS[name] || '') + '</svg>';
@@ -695,6 +702,7 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
   var mem = { meta: {}, data: {} };
   var ui = { panels: {} };
   var theme = { ca: '#dfe3ea', cb: '#cdd3de', grid: 'rgba(0,0,0,.2)', accent: '#087a5a', fg: '#171b26', muted: '#5d667a' };
+  var clip = null;
   var exScale = 1;
   var modalMode = 'new';
   var pendingFiles = 'open';
@@ -885,6 +893,15 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
       var t = db.transaction(data ? ['meta', 'data'] : ['meta'], 'readwrite');
       t.objectStore('meta').put(meta);
       if (data) t.objectStore('data').put(data);
+      t.oncomplete = function () { res(); };
+      t.onerror = t.onabort = function () { rej(t.error); };
+    });
+  }
+  function sPutRaw(rec) {
+    if (!db) { mem.data[rec.id] = rec; return Promise.resolve(); }
+    return new Promise(function (res, rej) {
+      var t = db.transaction('data', 'readwrite');
+      t.objectStore('data').put(rec);
       t.oncomplete = function () { res(); };
       t.onerror = t.onabort = function () { rej(t.error); };
     });
@@ -1939,6 +1956,42 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     updateMoveUI();
     $('lAdd').disabled = layers.length >= MAXLAYERS;
     $('lDup').disabled = layers.length >= MAXLAYERS;
+    $('lPaste').disabled = !clip || layers.length >= MAXLAYERS;
+    $('clipInfo').textContent = clip
+      ? 'Copié : « ' + clip.name + ' » (' + clip.w + ' × ' + clip.h + ' px). Il se colle au même endroit, en haut à gauche, et reste copié pour d’autres projets.'
+      : 'Rien de copié pour l’instant.';
+  }
+  function copyLayer() {
+    var l = cur();
+    clip = { id: '__clip', name: l.name, op: l.op, w: W, h: H, png: layerPng(l) };
+    sPutRaw(clip).catch(function () { /* kept in memory for this session */ });
+    syncLayerFields();
+    msg('Calque « ' + l.name + ' » copié. Ouvre un autre projet puis touche « Coller le calque ».');
+  }
+  async function pasteLayer() {
+    if (!clip) return;
+    if (layers.length >= MAXLAYERS) { msg('Limite de ' + MAXLAYERS + ' calques atteinte.'); return; }
+    try {
+      var r = await decodeSrc(clip.png);
+      pushState();
+      var nw = Math.max(W, r.w), nh = Math.max(H, r.h), grew = nw !== W || nh !== H;
+      if (grew) {
+        layers.forEach(function (l) { l.data = place(l.data, W, H, nw, nh); });
+        W = nw; H = nh;
+      }
+      var nl = newLayer(clip.name, place(r.data, r.w, r.h, W, H));
+      nl.op = typeof clip.op === 'number' ? clamp(clip.op, 0, 1) : 1;
+      setMeta(nl);
+      nl.gid = cur().gid || null;
+      layers.splice(active + 1, 0, nl);
+      active++;
+      compDirty = true;
+      if (grew) fitView();
+      commit();
+      msg('Calque « ' + clip.name + ' » collé' + (grew ? ', taille du projet agrandie à ' + W + ' × ' + H + ' px.' : '.'));
+    } catch (e) {
+      msg('Impossible de coller ce calque.');
+    }
   }
   function addLayer() {
     if (layers.length >= MAXLAYERS) return;
@@ -2027,6 +2080,8 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     commit();
     msg('Groupe défait. Les calques sont gardés.');
   });
+  $('lCopy').addEventListener('click', copyLayer);
+  $('lPaste').addEventListener('click', pasteLayer);
   $('lClear').addEventListener('click', function () {
     pushState();
     cur().data = new Uint32Array(W * H);
@@ -2578,6 +2633,10 @@ input[type="color"] { width: 56px; height: 44px; padding: 2px; border: 1px solid
     try {
       db = await Promise.race([idbOpen(), new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, 3000); })]);
     } catch (e) { db = null; dbWarn = true; }
+    try {
+      var c = await sGetData('__clip');
+      if (c && typeof c.png === 'string' && c.png.indexOf(PNG_PREFIX) === 0 && typeof c.name === 'string') clip = c;
+    } catch (e) { clip = null; }
     var metas = [];
     try { metas = await sAllMeta(); } catch (e) { metas = []; }
     var startId = null;
