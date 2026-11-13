@@ -1837,7 +1837,7 @@ function onStepSeen(){
   if(lastStepSeen !== null && st.step !== lastStepSeen){
     const step = plan.steps[st.step];
     if(step && step.type === 'fin' && ac && (IS_PROF ? S.profSound : S.sound)){ ensureAudio(); SND.fanfare(ac.currentTime + .05); }
-    if(step && step.type === 'fin' && IS_PROF) finalizeAttendance();
+    if(step && step.type === 'fin' && IS_PROF) finalizeAttendance().then(function(ok){ if(ok && window.grindCours) window.grindCours(); }).catch(function(){});
   }
   lastStepSeen = st.step;
 }
@@ -7024,6 +7024,69 @@ function studentBlocked(msg){
   S.joined = false; Sync.unlistenAll(); stopFuture();
   $('#app').innerHTML = `<div class="join">${LOGO}<div class="card" style="text-align:center"><div class="h2">${esc(msg)}</div><div class="hint">Si c'est une erreur, contacte ton prof.</div></div></div>`;
 }
+</script>
+<script>
+/* ===== Pont vers Grind RPG : à la fin d'un cours (mode prof), envoie le cours dans la boîte aux lettres Grind ===== */
+(function(){
+var GRIND_CFG={apiKey:"AIzaSyBNRI1qAelHwZF5Ij-mI15DX9aTdEg41m4",authDomain:"grind-rpg-43c33.firebaseapp.com",projectId:"grind-rpg-43c33",storageBucket:"grind-rpg-43c33.firebasestorage.app",messagingSenderId:"901981027885",appId:"1:901981027885:web:c9b83f5610c7b8a85b42a4"};
+var QK="bbx-grind-queue",SK="bbx-grind-sent",FK="bbx-grind-on";
+function lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+try{if(new URLSearchParams(location.search).has('grind'))lsSet(FK,1);}catch(e){}
+function enabled(){return IS_PROF&&!!lsGet(FK,0);}
+var app=null,auth=null,db=null,user=null,ready=null,badge=null;
+function init(){
+  if(ready)return ready;
+  ready=(async function(){
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js');
+    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js');
+    app=firebase.initializeApp(GRIND_CFG,'grind');auth=app.auth();db=app.firestore();
+    user=await new Promise(function(res){var off=null;off=auth.onAuthStateChanged(function(u){if(typeof off==='function')off();res(u);});});
+  })();
+  ready.catch(function(){ready=null;});
+  return ready;
+}
+function paint(msg,btn){
+  if(!enabled())return;
+  if(!badge){badge=document.createElement('div');badge.id='grindLink';badge.style.cssText='position:fixed;left:10px;bottom:10px;z-index:99999;background:#0f172a;color:#fff;font:600 12px system-ui,sans-serif;padding:8px 12px;border-radius:12px;opacity:.92;display:flex;gap:8px;align-items:center;max-width:80vw';document.body.appendChild(badge);}
+  badge.innerHTML='<span>🔗 Grind : '+msg+'</span>'+(btn?'<button style="background:#0891b2;color:#fff;border:0;border-radius:8px;padding:4px 8px;font-weight:700;cursor:pointer">'+btn+'</button>':'');
+  var b=badge.querySelector('button');if(b)b.onclick=login;
+}
+async function flush(){
+  if(!enabled())return;
+  var q=lsGet(QK,[]);
+  try{await init();}catch(e){paint(q.length?q.length+' en attente (hors ligne)':'hors ligne');return;}
+  if(!user){paint(q.length?q.length+' cours à envoyer':'non connecté','Connecter');return;}
+  var sent=lsGet(SK,[]),left=[];
+  for(var i=0;i<q.length;i++){
+    var e=q[i];
+    if(sent.indexOf(e.id)>=0)continue;
+    try{await db.collection('users').doc(user.uid).collection('inbox').doc(e.id).set({kind:e.kind,t:e.t,min:e.min,students:e.students,title:e.title||''});sent.push(e.id);}
+    catch(err){left.push(e);}
+  }
+  lsSet(SK,sent.slice(-200));lsSet(QK,left);
+  paint(left.length?left.length+' en attente':'connecté ('+(user.email||'')+')');
+}
+async function login(){
+  try{await init();await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());user=auth.currentUser;flush();}
+  catch(e){paint('connexion impossible','Réessayer');}
+}
+window.grindCours=function(){
+  try{
+    if(!enabled()||ROOM==='DEMO')return;
+    var start=csFresh(S.state.courseStart)?+S.state.courseStart:0;
+    var n=Object.keys(TRACK).filter(function(c){var t=TRACK[c];return t&&t.ms>=presMin()&&(S.eleves||{})[c];}).length;
+    var mins=start?Math.min(240,Math.max(1,Math.round((Date.now()-start)/60000))):0;
+    var id='cours-'+ROOM+'-'+(start||Date.now());
+    var q=lsGet(QK,[]),sent=lsGet(SK,[]);
+    if(sent.indexOf(id)>=0)return;
+    for(var i=0;i<q.length;i++){if(q[i].id===id)return;}
+    q.push({id:id,kind:'cours',t:Date.now(),min:mins,students:n,title:ROOM});
+    lsSet(QK,q);flush();
+  }catch(e){}
+};
+if(enabled()){setTimeout(function(){paint('…');flush();},1500);}
+})();
 </script>
 </body>
 </html>
