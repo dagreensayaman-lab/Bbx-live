@@ -7038,8 +7038,8 @@ var app=null,auth=null,db=null,user=null,ready=null,badge=null;
 function init(){
   if(ready)return ready;
   ready=(async function(){
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js');
-    await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js');
+    if(!firebase.auth)await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js');
+    if(!firebase.firestore)await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js');
     app=firebase.initializeApp(GRIND_CFG,'grind');auth=app.auth();db=app.firestore();
     user=await new Promise(function(res){var off=null;off=auth.onAuthStateChanged(function(u){if(typeof off==='function')off();res(u);});});
   })();
@@ -7068,7 +7068,7 @@ async function flush(){
   paint(left.length?left.length+' en attente':'connecté ('+(user.email||'')+')');
 }
 async function login(){
-  try{await init();await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());user=auth.currentUser;flush();}
+  try{await init();if(!auth.currentUser)await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());user=auth.currentUser;flush();}
   catch(e){paint('connexion impossible','Réessayer');}
 }
 window.grindCours=function(){
@@ -7085,7 +7085,7 @@ window.grindCours=function(){
     lsSet(QK,q);flush();
   }catch(e){}
 };
-if(enabled()){setTimeout(function(){paint('…');flush();},1500);}
+if(enabled()){setTimeout(function(){var n=lsGet(QK,[]).length;paint(n?n+' cours en attente':'prêt (envoi à la fin du cours)','Connecter / vérifier');},3000);} // aucun chargement réseau avant la fin du cours
 })();
 </script>
 </body>
