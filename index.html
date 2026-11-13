@@ -7092,24 +7092,37 @@ if(enabled()){setTimeout(function(){var n=lsGet(QK,[]).length;paint(n?n+' cours 
 /* ===== Diagnostic : ouvrir le lien prof avec &diag pour mesurer la taille des blocs de données ===== */
 (function(){
 try{if(!(IS_PROF&&new URLSearchParams(location.search).has('diag')))return;}catch(e){return;}
-var NODES=['stats','solo','profil','devoirs','jardin','scene','historique','presences','replay','retours','temps','demandes','eleves','classes','sauvegardes'];
+var NODES=['stats','solo','profil','devoirs','jardin','scene','historique','presences','replay','retours','temps','demandes','eleves','classes','sauvegardes','analyse','hero','ami','devoirsAudio','sonsPub','profProfil','collecte','comptes','biblio'];
 var box=document.createElement('div');
-box.style.cssText='position:fixed;right:10px;top:10px;z-index:99999;background:#0f172a;color:#fff;font:12px/1.5 system-ui,sans-serif;padding:12px 14px;border-radius:12px;max-width:320px;max-height:80vh;overflow:auto;white-space:pre-line';
+box.style.cssText='position:fixed;right:10px;top:10px;z-index:99999;background:#0f172a;color:#fff;font:12px/1.5 system-ui,sans-serif;padding:12px 14px;border-radius:12px;max-width:340px;max-height:80vh;overflow:auto;white-space:pre-line';
 box.textContent='🔎 Diagnostic : attente de la connexion…';document.body.appendChild(box);
-var lines=[];function show(){box.textContent='🔎 Taille des blocs de données\n'+lines.join('\n');}
+var lines=[],pending=0;
+function show(){var l=lines.slice().sort();box.textContent='🔎 Taille des blocs de données\n'+l.join('\n')+(pending>0?'\n… '+pending+' en cours':'\n— terminé —');}
 var tries=0,t=setInterval(function(){
   tries++;
   if(typeof Sync!=='undefined'&&Sync.db&&Sync.auth&&Sync.auth.currentUser){clearInterval(t);run();}
   else if(tries>40){clearInterval(t);box.textContent='🔎 Diagnostic : connexion introuvable (es-tu connecté avec Google ?)';}
 },1000);
+function probe(base,p,tok){
+  var ctl=new AbortController(),total=0,LIMIT=3*1024*1024,fin=false,t0=Date.now();
+  function end(msg){if(fin)return;fin=true;clearTimeout(timer);try{ctl.abort();}catch(e){}lines.push(msg);pending--;show();}
+  var timer=setTimeout(function(){end('⚠️ '+p+' : trop long (plus de 25 s)');},25000);
+  fetch(base+'/'+p+'.json?auth='+encodeURIComponent(tok),{signal:ctl.signal}).then(function(r){
+    if(!r.ok)return r.text().then(function(tx){end('❌ '+p+' : HTTP '+r.status+' '+tx.replace(/\s+/g,' ').slice(0,70));});
+    var rd=r.body.getReader();
+    function pump(){return rd.read().then(function(x){
+      if(x.done){end((total>500*1024?'⚠️ ':'')+p+' : '+Math.round(total/1024)+' Ko ('+Math.round((Date.now()-t0)/100)/10+' s)');return;}
+      total+=x.value.length;
+      if(total>LIMIT){end('⚠️ '+p+' : plus de '+Math.round(LIMIT/1048576)+' Mo');return;}
+      return pump();});}
+    return pump();
+  }).catch(function(e){end('❌ '+p+' : '+(e&&e.message||'erreur'));});
+}
 function run(){
-  var done=0;
-  NODES.forEach(function(p){
-    var t0=Date.now();
-    Sync.db.ref(p).once('value').then(function(s){
-      var v=s.val();var n=Math.round(JSON.stringify(v===null?{}:v).length/1024);
-      lines.push((n>5000?'⚠️ ':'')+p+' : '+n+' Ko ('+Math.round((Date.now()-t0)/100)/10+' s)');
-    },function(e){lines.push('❌ '+p+' : '+(e&&(e.code||e.message)||'erreur'));}).then(function(){done++;lines.sort();show();if(done===NODES.length){lines.push('— terminé —');show();}});
+  var base=FIREBASE_CONFIG.databaseURL;
+  Sync.auth.currentUser.getIdToken().then(function(tok){
+    pending=NODES.length;show();
+    NODES.forEach(function(p){probe(base,p,tok);});
   });
 }
 })();
