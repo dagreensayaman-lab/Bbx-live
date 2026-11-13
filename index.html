@@ -4367,14 +4367,14 @@ function packEndHTML(){
 // téléchargeable ; + rappel du fichier complet chaque semaine, mémorisé en ligne (tous ses appareils).
 const AUTOBK = { done:false, liste:{}, last:0 };
 async function autoBackup(){
-  if(AUTOBK.done || !isAdmin() || Sync.mode !== 'firebase') return; AUTOBK.done = true;
+  if(AUTOBK.done || !isAdmin() || Sync.mode !== 'firebase' || HAS_SALLE) return; AUTOBK.done = true;
   try{
     AUTOBK.liste = (await G('sauvegardes/liste').once('value')).val() || {};
     try{ AUTOBK.last = +((await G('profProfil/' + myKey() + '/lastBackup').once('value')).val() || 0); }catch(e){}
     const day = dayKey();
     if(!AUTOBK.liste[day]){
-      const out = {}; const all = (await Sync.db.ref('/').once('value')).val() || {};
-      Object.entries(all).forEach(([k, v]) => { if(k !== 'sauvegardes' && k !== 'devoirsAudio') out[k] = v; });
+      const out = {}; // bloc par bloc (lire la racine d'un coup dépasse la limite Firebase) ; les très gros blocs sont ignorés
+      for(const n of BACKUP_NODES){ if(n === 'devoirsAudio') continue; try{ const v = (await G(n).once('value')).val(); if(v != null) out[n] = v; }catch(e){} }
       const txt = JSON.stringify(out);
       if(txt.length < 9.5e6){ await G('sauvegardes/j/' + day).set(txt); await G('sauvegardes/liste/' + day).set({ t:Date.now(), ko:Math.round(txt.length / 1024) }); AUTOBK.liste[day] = { t:Date.now(), ko:Math.round(txt.length / 1024) }; }
       const ks = Object.keys(AUTOBK.liste).sort(); while(ks.length > 14){ const k = ks.shift(); await G('sauvegardes/j/' + k).remove(); await G('sauvegardes/liste/' + k).remove(); delete AUTOBK.liste[k]; }
@@ -4418,7 +4418,7 @@ async function migratePF(){
 const ANA = { done:false, code:null };
 const anaPseudo = (x, p) => { let h = 2166136261; for(const ch of String(x)){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (p || 'e') + (h >>> 0).toString(36); };
 async function anaRelay(force){
-  if(!isAdmin() || Sync.mode !== 'firebase' || (ANA.done && !force)) return; ANA.done = true;
+  if(!isAdmin() || Sync.mode !== 'firebase' || (ANA.done && !force) || (HAS_SALLE && !force)) return; ANA.done = true;
   try{
     const code = ANA.code = (await G('sauvegardes/anaCode').once('value')).val() || null; renderAnaBox(); if(!code || code.length < 24) return;
     const last = +((await G('sauvegardes/anaLast').once('value')).val() || 0), now = Date.now(), base = 'analyse/' + code + '/'; let n = 0;
