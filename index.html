@@ -3166,7 +3166,10 @@ const soundVisible = n => { const e = libSoundByNota(n); return !e || e.base || 
 
 // ---------- historique des cours donnés ----------
 const HIST = { list:{}, salle:'*', done:{}, inited:false };
-const histId = () => ROOM + '_' + dayKey();
+// début du cours en cours, ou du dernier cours terminé (pour les retardataires : ressentis, vœux…)
+const courseStartTs = () => { const st = S.state || {}; return csFresh(st.courseStart) ? +st.courseStart : (+st.lastStart || 0); };
+// un historique PAR COURS (classe + jour + heure de début) : plusieurs cours le même jour ne se mélangent plus
+const histId = () => { const t = courseStartTs(); if(!t) return ROOM + '_' + dayKey(); const d = new Date(t); return ROOM + '_' + dayKey(d) + '_' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0'); };
 function histInit(){
   if(HIST.inited || !libOn()) return; HIST.inited = true;
   G('historique').on('value', s => { HIST.list = s.val() || {}; libRefresh(); }, e => console.warn('historique', e));
@@ -3177,7 +3180,7 @@ async function histTouch(){
   try{
     const ex = (await G('historique/' + id).once('value')).val() || {};
     const lid = curLibId(), le = LIB.cours[lid];
-    await G('historique/' + id).set(clean({ ...ex, salle:ROOM, jour:dayKey(), debut:ex.debut || Date.now(), prof:myKey(), profNom:profName(),
+    await G('historique/' + id).set(clean({ ...ex, salle:ROOM, jour:dayKey(), debut:ex.debut || courseStartTs() || Date.now(), prof:myKey(), profNom:profName(),
       libId:le ? lid : (ex.libId || ''), ...courseMeta(S.plan), plan:clean({ ...S.plan, fiches:undefined }) }));
   }catch(e){ console.warn('historique', e); }
 }
@@ -3211,7 +3214,7 @@ function renderHist(el){
         <div class="hdate"><b>${esc((h.jour || '').split('-').reverse().slice(0, 2).join('.'))}</b><span>${h.debut ? new Date(h.debut).toTimeString().slice(0, 5) : ''}</span></div>
         <div class="hmain"><div class="row" style="gap:6px"><b class="lt">${esc(h.titre || 'Cours')}</b><span class="ctag">${esc(h.salle || '')}</span>${h.prof !== myKey() ? `<span class="muted small">👤 ${esc(h.profNom || '?')}</span>` : ''}</div>
           <div class="muted small">⏱ ${fmtMin(h.duree || 0)} · ${h.etapes || 0} étapes · ${h.n != null ? `👥 ${h.n} élève${h.n > 1 ? 's' : ''}` : 'présences non enregistrées'}${h.n ? ` <span class="hnames">(${esc(Object.values(h.presents || {}).join(', '))})</span>` : ''}</div>
-          ${h.ressentis ? `<div class="small">💬 ${Object.entries(AVIS).map(([k, a]) => `${a.e} ${h.ressentis[k] || 0}`).join(' · ')}</div>` : ''}
+          ${h.ressentis ? `<details class="small" style="margin-top:4px"><summary>💬 ${Object.entries(AVIS).map(([k, a]) => `${a.e} ${h.ressentis[k] || 0}`).join(' · ')} <span class="muted">· détail</span></summary>${Object.values(h.ressentis.liste || {}).map(r => `<div style="margin:3px 0">${(AVIS[r.avis] || {}).e || '?'} <b>${esc(r.nom || '?')}</b>${r.msg ? ` — « ${esc(r.msg)} »` : ''}</div>`).join('') || '<div class="muted">Aucun détail enregistré.</div>'}</details>` : ''}
           ${(h.sons || []).length ? `<div class="libtags">${h.sons.map(tagHTML).join('')}</div>` : ''}</div>
         <div class="dact"><button class="mini b-cyan" data-lib="redo" data-id="${esc(id)}">↺ Refaire ce cours</button>${LIB.cours[h.libId] ? `<button class="mini" data-lib="golib" data-id="${esc(h.libId)}">📚 Voir</button>` : ''}</div>
       </div>`).join('')}</div></div>`).join('')}`;
@@ -3230,7 +3233,7 @@ function histRedo(id){
    ===================================================================== */
 const AVIS = { facile:{ e:'😌', t:'Trop facile', c:'#22B573' }, ok:{ e:'👌', t:'Ça va', c:'#2F80ED' }, dur:{ e:'🥵', t:'Trop dur', c:'#F06EA0' } };
 const RS = { avis:'', msg:'', sent:false };
-const rsKey = () => 'bbx-rs-' + ROOM + '-' + dayKey();
+const rsKey = () => 'bbx-rs-' + ROOM + '-' + dayKey() + '-' + (courseStartTs() || '');
 function rsBoxHTML(){
   return `<div class="h2" style="margin:0">Comment c'était pour toi ?</div>
     <div class="muted small">Tu étais en ${lvlName(S.level)}. Ton avis aide le prof à te proposer le bon niveau.</div>
@@ -3253,11 +3256,11 @@ function rsInit(){
 }
 function rsSend(){
   if(Sync.mode !== 'firebase') return;
-  Sync.ref('ressentis/' + Sync.uid()).set(clean({ code:S.myCode || null, nom:S.name || '', avis:RS.avis, msg:(RS.msg || '').trim().slice(0, 300), lvl:S.level, jour:dayKey(), t:Date.now() })).then(() => { const st = $('#rsstate'); if(st) st.textContent = '✓ Envoyé, merci !'; }).catch(e => { RS.sent = false; LS.set(rsKey(), RS); toast(String(e.code || e.message).toLowerCase().includes('permission') ? 'Envoi refusé : ton prof doit mettre à jour les règles Firebase' : 'Erreur : ' + (e.code || e.message)); const b = $('#rsbox'); if(b) b.innerHTML = rsBoxHTML(); });
+  Sync.ref('ressentis/' + Sync.uid()).set(clean({ code:S.myCode || null, nom:S.name || '', avis:RS.avis, msg:(RS.msg || '').trim().slice(0, 300), lvl:S.level, jour:dayKey(), t:Sync.now() })).then(() => { const st = $('#rsstate'); if(st) st.textContent = '✓ Envoyé, merci !'; }).catch(e => { RS.sent = false; LS.set(rsKey(), RS); toast(String(e.code || e.message).toLowerCase().includes('permission') ? 'Envoi refusé : ton prof doit mettre à jour les règles Firebase' : 'Erreur : ' + (e.code || e.message)); const b = $('#rsbox'); if(b) b.innerHTML = rsBoxHTML(); });
 }
 // ----- côté prof -----
 let rsCopied = {};
-const rsToday = () => Object.entries(S.ressentis || {}).filter(([u, r]) => r && r.jour === dayKey()).map(([u, r]) => ({ u, ...r }));
+const rsToday = () => { const t0 = courseStartTs(); return Object.entries(S.ressentis || {}).filter(([u, r]) => r && (t0 ? +r.t >= t0 : r.jour === dayKey())).map(([u, r]) => ({ u, ...r })); }; // ressentis de CE cours (pas ceux d'un cours précédent du même jour)
 function onRessentis(v){
   S.ressentis = v || {};
   renderRessentis();
@@ -6671,7 +6674,7 @@ document.addEventListener('click', async e => {
 async function endCourse(){
   try{ if(Sync.mode === 'firebase'){ await finalizeAttendance(); await lrsSave(); await vxSave(true); const ch = chronoTake(); if(ch.length) await G('historique/' + histId() + '/chrono').set(ch); } }catch(err){}
   try{ if(Sync.mode === 'firebase'){ Sync.ref('visioOk').remove(); Sync.ref('visioReq').remove(); } }catch(e){}
-  pushState({ running:false, closed:Date.now(), courseStart:0 }); // le prochain lancement = un nouveau cours (compté à part, même le même jour)
+  pushState({ running:false, closed:Date.now(), courseStart:0, lastStart:courseStartTs() }); // le prochain lancement = un nouveau cours (compté à part, même le même jour)
   profLiveOff(); pushState({ pause:false });
   toast('Cours terminé : présences enregistrées, les élèves retournent dans leur espace');
 }
