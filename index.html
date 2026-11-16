@@ -7048,9 +7048,14 @@ function init(){
 }
 function paint(msg,btn){
   if(!enabled())return;
-  if(!badge){badge=document.createElement('div');badge.id='grindLink';badge.style.cssText='position:fixed;left:10px;bottom:10px;z-index:99999;background:#0f172a;color:#fff;font:600 12px system-ui,sans-serif;padding:8px 12px;border-radius:12px;opacity:.92;display:flex;gap:8px;align-items:center;max-width:80vw';document.body.appendChild(badge);}
+  if(!badge){badge=document.createElement('div');badge.id='grindLink';badge.style.cssText='position:fixed;right:8px;top:6px;z-index:2147483000;background:#0f172a;color:#fff;font:600 11px system-ui,sans-serif;padding:4px 8px;border-radius:10px;opacity:.9;display:flex;gap:6px;align-items:center;max-width:60vw;cursor:pointer';document.body.appendChild(badge);}
   badge.innerHTML='<span>🔗 Grind : '+msg+'</span>'+(btn?'<button style="background:#0891b2;color:#fff;border:0;border-radius:8px;padding:4px 8px;font-weight:700;cursor:pointer">'+btn+'</button>':'');
   var b=badge.querySelector('button');if(b)b.onclick=login;
+  // discret : réduit à une pastille 🔗 au bout de 4 s quand aucune action n'est demandée ; un clic la rouvre
+  badge.title='Grind : '+msg;
+  clearTimeout(badge._t);
+  if(!btn){badge._t=setTimeout(function(){var sp=badge.querySelector('span');if(sp)sp.textContent='🔗';badge._small=true;},4000);}
+  badge.onclick=function(e){if(e.target&&e.target.tagName==='BUTTON')return;var sp=badge.querySelector('span');if(sp){if(badge._small){sp.textContent='🔗 Grind : '+msg;badge._small=false;clearTimeout(badge._t);badge._t=setTimeout(function(){sp.textContent='🔗';badge._small=true;},4000);}else{sp.textContent='🔗';badge._small=true;}}};
 }
 async function flush(){
   if(!enabled())return;
