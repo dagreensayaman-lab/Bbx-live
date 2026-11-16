@@ -1982,7 +1982,7 @@ function renderCtlList(){
   const tot = totalSecs(S.plan);
   el.innerHTML = `<div class="row"><b class="f">${esc(S.plan.titre)}</b><span class="sp"></span><span class="muted small">≈ ${fmtMin(tot)}</span></div>
     <ul class="steps" style="margin-top:8px">${(() => { let n = 0; return S.plan.steps.map((s, i) => { if(s.off) return `<li class="off"><span class="n">–</span>${esc(stepTitle(s))}<span class="d">désactivé</span></li>`; n++; const done = i < S.state.step || (i === S.state.step && s.type === 'fin'); return `<li data-go="${i}" class="${i === S.state.step ? 'on' : ''}${done ? ' done' : ''}"><span class="n">${done ? '✓' : n}</span>${esc(stepTitle(s))}<span class="d">${fmtMin(stepSeconds(s))}</span></li>`; }).join(''); })()}</ul>
-    <div class="row" style="margin-top:8px"><button class="mini b-ghost" data-act="resetCourse">Revenir au début</button><span class="sp"></span><button class="mini b-del" data-end="1" title="Enregistre les présences, ferme le cours et renvoie les élèves dans leur espace">⏹ Terminer le cours</button></div>`;
+    <div class="row" style="margin-top:8px"><button class="mini b-ghost" data-act="resetCourse">Revenir au début</button></div>`;
 }
 function renderQuick(){
   const el = $('#ctl-quick'); if(!el) return;
@@ -4667,6 +4667,8 @@ document.addEventListener('keydown', e => {
 let CTLT = { step:-1, t0:0 };
 function ctlTimeTxt(){
   const st = S.state, plan = S.plan; if(!st || !plan) return ''; const steps = plan.steps, cur = steps[st.step]; if(!cur) return '';
+  if(st.closed) return '✅ Cours terminé';
+  if(cur.type === 'fin') return '🏁 Fin du cours';
   const now = Sync.now(); if(CTLT.step !== st.step){ CTLT = { step:st.step, t0:now }; }
   let left;
   if(TIMED.has(cur.type)){ const tl = getTL(cur), b = st.running ? beatAt(st, now) : st.beat0; left = Math.max(0, tl.total - Math.max(0, b)) * 60 / (st.bpm || 90); }
@@ -6736,7 +6738,7 @@ function statsRange(per){
   if(per === 's') return [k(new Date(seasonOf(now.getTime()), 8, 1)), today];
   return ['0000-00-00', today];
 }
-const stProfName = k => k === myKey() ? profName() : ((STATS.profs || {})[k] || {}).nom || Object.values(HIST.list || {}).find(h => h && h.prof === k && h.profNom)?.profNom || (Object.values(DASH.eleves || {}).find(e => e && e.prof === k) || {}).profNom || (k === emailKey(ADMIN_EMAIL) ? 'Responsable' : String(k || '?').split('@')[0]);
+const stProfName = k => k === myKey() ? profName() : ((STATS.profs || {})[k] || {}).nom || (Object.values(HIST.list || {}).find(h => h && h.prof === k && h.profNom) || {}).profNom || (Object.values(DASH.eleves || {}).find(e => e && e.prof === k) || {}).profNom || (k === emailKey(ADMIN_EMAIL) ? 'Responsable' : String(k || '?').split('@')[0]);
 // Calcule tout ce que l'écran affiche, pour une période et un périmètre (moi / toute l'école / un prof)
 function statsCompute(per, scope){
   const [d0, d1] = statsRange(per), inR = j => !!j && j >= d0 && j <= d1;
