@@ -4346,7 +4346,7 @@ document.addEventListener('click', async e => {
   const b = e.target.closest('[data-suivi]'); if(!b || !IS_PROF) return;
   const x = SUIVI.pend.find(y => String(y.ck) === b.dataset.ck); if(!x) return;
   if(b.dataset.suivi === 'no'){ if(!armed(b, 'Sûr ? Personne ne sera compté')) return; await suiviDone(x.ck, x.day, {}, true); toast('Cours non compté'); return; }
-  b.disabled = true; const ok = await finalizeAttendance({ ck:x.ck, day:x.day, t:x.t, eleves:x.eleves }); if(!ok) b.disabled = false;
+  b.disabled = true; const ok = await finalizeAttendance({ ck:x.ck, day:x.day, t:x.t, eleves:x.eleves }); if(!ok) b.disabled = false; else if(window.grindCours) try{ window.grindCours({ ck:x.ck, t:x.t, eleves:x.eleves }); }catch(e){}
 });
 // Le prof ne quitte pas un cours sans le terminer
 function profMustEnd(){ const st = S.state || {}; if(!IS_PROF || Sync.mode !== 'firebase') return false; const ck = csFresh(st.courseStart) ? String(st.courseStart) : ''; return !!(PL.on || (ck && !st.closed && LS.get('bbx-fin-' + ROOM, '') !== ck && Object.keys(TRACK).length)); }
@@ -6828,7 +6828,7 @@ document.addEventListener('click', async e => {
   await endCourse();
 });
 async function endCourse(){
-  try{ if(Sync.mode === 'firebase'){ await finalizeAttendance(); await lrsSave(); await vxSave(true); const ch = chronoTake(); if(ch.length) await G('historique/' + histId() + '/chrono').set(ch); } }catch(err){}
+  try{ if(Sync.mode === 'firebase'){ const okP = await finalizeAttendance(); if(okP && window.grindCours) try{ window.grindCours(); }catch(e){} await lrsSave(); await vxSave(true); const ch = chronoTake(); if(ch.length) await G('historique/' + histId() + '/chrono').set(ch); } }catch(err){}
   try{ if(Sync.mode === 'firebase'){ Sync.ref('visioOk').remove(); Sync.ref('visioReq').remove(); } }catch(e){}
   pushState({ running:false, closed:Date.now(), courseStart:0, lastStart:courseStartTs() }); // le prochain lancement = un nouveau cours (compté à part, même le même jour)
   profLiveOff(); pushState({ pause:false });
@@ -7237,17 +7237,19 @@ async function login(){
   try{await init();if(!auth.currentUser)await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());user=auth.currentUser;flush();}
   catch(e){paint('connexion impossible','Réessayer');}
 }
-window.grindCours=function(){
+window.grindCours=function(rec){ // rec : cours retrouvé (« ✅ Compter ce cours ») → { ck, t, eleves }
   try{
     if(!enabled()||ROOM==='DEMO')return;
-    var start=csFresh(S.state.courseStart)?+S.state.courseStart:0;
-    var n=Object.keys(TRACK).filter(function(c){var t=TRACK[c];return t&&t.ms>=presMin()&&(S.eleves||{})[c];}).length;
-    var mins=start?Math.min(240,Math.max(1,Math.round((Date.now()-start)/60000))):0;
+    var TR=rec?(rec.eleves||{}):TRACK;
+    var start=rec?(+rec.ck||0):(csFresh(S.state.courseStart)?+S.state.courseStart:0);
+    var endT=rec?(+rec.t||Date.now()):Date.now();
+    var n=Object.keys(TR).filter(function(c){var t=TR[c];return t&&t.ms>=presMin()&&(S.eleves||{})[c];}).length;
+    var mins=start?Math.min(240,Math.max(1,Math.round((endT-start)/60000))):0;
     var id='cours-'+ROOM+'-'+(start||Date.now());
     var q=lsGet(QK,[]),sent=lsGet(SK,[]);
     if(sent.indexOf(id)>=0)return;
     for(var i=0;i<q.length;i++){if(q[i].id===id)return;}
-    q.push({id:id,kind:'cours',t:Date.now(),min:mins,students:n,title:ROOM});
+    q.push({id:id,kind:'cours',t:endT,min:mins,students:n,title:ROOM});
     lsSet(QK,q);flush();
   }catch(e){}
 };
