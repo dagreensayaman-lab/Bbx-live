@@ -7241,12 +7241,38 @@ function lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 try{if(new URLSearchParams(location.search).has('grind'))lsSet(FK,1);}catch(e){}
 function enabled(){return IS_PROF&&!!lsGet(FK,0);}
+// Grind RPG est sur le même site (github.io) : si on y est déjà connecté dans ce navigateur, on reprend cette connexion
+// (copie de la session Firebase de Grind vers l'appli « grind » de Classroom) → plus besoin de &grind ni de « Connecter ».
+var GK='firebase:authUser:'+GRIND_CFG.apiKey+':';
+function idbOpen(){return new Promise(function(res){try{var r=indexedDB.open('firebaseLocalStorageDb');r.onsuccess=function(){res(r.result);};r.onerror=function(){res(null);};r.onupgradeneeded=function(){try{r.transaction.abort();}catch(e){}res(null);};}catch(e){res(null);}});}
+async function adoptGrind(){
+  try{
+    var mine=null,theirs=null;try{theirs=JSON.parse(localStorage.getItem(GK+'[DEFAULT]')||'null');mine=localStorage.getItem(GK+'grind');}catch(e){}
+    var db=await idbOpen();
+    if(db&&db.objectStoreNames.contains('firebaseLocalStorage')){
+      var st=db.transaction('firebaseLocalStorage','readonly').objectStore('firebaseLocalStorage');
+      var get=function(k){return new Promise(function(r){var q=st.get(k);q.onsuccess=function(){r(q.result?q.result.value:null);};q.onerror=function(){r(null);};});};
+      var a=await get(GK+'[DEFAULT]'),b=await get(GK+'grind');
+      if(b)mine=mine||b;if(a)theirs=a;
+      if(theirs&&!mine){
+        var v=JSON.parse(JSON.stringify(theirs));v.appName='grind';
+        await new Promise(function(r){var t=db.transaction('firebaseLocalStorage','readwrite');t.objectStore('firebaseLocalStorage').put({fbase_key:GK+'grind',value:v});t.oncomplete=r;t.onerror=r;t.onabort=r;});
+        mine=v;
+      }
+      db.close();
+    }else if(db)db.close();
+    if(theirs&&!mine){try{var v2=JSON.parse(JSON.stringify(theirs));v2.appName='grind';localStorage.setItem(GK+'grind',JSON.stringify(v2));mine=v2;}catch(e){}}
+    if(mine||theirs)lsSet(FK,1);
+    return !!(mine||theirs);
+  }catch(e){return false;}
+}
 var app=null,auth=null,db=null,user=null,ready=null,badge=null;
 function init(){
   if(ready)return ready;
   ready=(async function(){
     if(!firebase.auth)await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js');
     if(!firebase.firestore)await loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js');
+    await adoptGrind();
     app=firebase.initializeApp(GRIND_CFG,'grind');auth=app.auth();db=app.firestore();
     user=await new Promise(function(res){var off=null;off=auth.onAuthStateChanged(function(u){if(typeof off==='function')off();res(u);});});
   })();
@@ -7265,6 +7291,7 @@ function paint(msg,btn){
   badge.onclick=function(e){if(e.target&&e.target.tagName==='BUTTON')return;var sp=badge.querySelector('span');if(sp){if(badge._small){sp.textContent='🔗 Grind : '+msg;badge._small=false;clearTimeout(badge._t);badge._t=setTimeout(function(){sp.textContent='🔗';badge._small=true;},4000);}else{sp.textContent='🔗';badge._small=true;}}};
 }
 async function flush(){
+  if(IS_PROF&&!enabled())await adoptGrind();
   if(!enabled())return;
   var q=lsGet(QK,[]);
   try{await init();}catch(e){paint(q.length?q.length+' en attente (hors ligne)':'hors ligne');return;}
@@ -7285,7 +7312,7 @@ async function login(){
 }
 window.grindCours=function(rec){ // rec : cours retrouvé (« ✅ Compter ce cours ») → { ck, t, eleves }
   try{
-    if(!enabled()||ROOM==='DEMO')return;
+    if(!IS_PROF||ROOM==='DEMO')return; // toujours mis en file (même sans &grind) : envoyé dès que Grind est connecté dans ce navigateur
     var TR=rec?(rec.eleves||{}):TRACK;
     var start=rec?(+rec.ck||0):(csFresh(S.state.courseStart)?+S.state.courseStart:0);
     var endT=rec?(+rec.t||Date.now()):Date.now();
@@ -7296,10 +7323,15 @@ window.grindCours=function(rec){ // rec : cours retrouvé (« ✅ Compter ce cou
     if(sent.indexOf(id)>=0)return;
     for(var i=0;i<q.length;i++){if(q[i].id===id)return;}
     q.push({id:id,kind:'cours',t:endT,min:mins,students:n,title:ROOM});
-    lsSet(QK,q);flush();
+    lsSet(QK,q.slice(-30));flush();
   }catch(e){}
 };
-if(enabled()){setTimeout(function(){var n=lsGet(QK,[]).length;paint(n?n+' cours en attente':'prêt (envoi à la fin du cours)','Connecter / vérifier');},3000);} // aucun chargement réseau avant la fin du cours
+if(IS_PROF){setTimeout(async function(){ // cours en attente (pas encore arrivés dans Grind) : on réessaie dès l'ouverture
+  if(!enabled())await adoptGrind();
+  var n=lsGet(QK,[]).length;
+  if(n&&enabled())flush();
+  else if(enabled())paint('prêt (envoi à la fin du cours)','Connecter / vérifier');
+},3000);}
 })();
 </script>
 <script>
